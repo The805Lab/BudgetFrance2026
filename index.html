@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BudgetLab 2024 — Simulateur</title>
+  <style>
+    :root{
+      --bg:#0f172a;--panel:#111827;--muted:#94a3b8;--ok:#16a34a;--warn:#eab308;--bad:#ef4444;--accent:#60a5fa;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#e5e7eb}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    h1{font-size:1.4rem;margin:0 0 8px}
+    .card{background:var(--panel);border-radius:14px;padding:16px;margin:12px 0;border:1px solid #1f2937}
+    .grid{display:grid;gap:12px}
+    .grid3{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:720px){.grid3{grid-template-columns:1fr}}
+    .kpi{background:#0b1220;border:1px solid #1e293b;border-radius:12px;padding:12px}
+    .kpi .title{font-size:.85rem;color:var(--muted)}
+    .kpi .val{font-size:1.2rem;margin-top:6px}
+    .bar{height:10px;background:#1f2937;border-radius:999px;overflow:hidden;margin-top:10px}
+    .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok));width:0%}
+    .row{margin:16px 0}
+    .label{font-weight:700;font-size:1.05rem}
+    .hint{color:var(--muted);font-size:.9rem;margin:4px 0 10px}
+    input[type=range]{width:100%}
+    .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;color:#cbd5e1}
+    .btn{display:inline-flex;align-items:center;gap:.5rem; padding:10px 14px;border-radius:999px;background:#1e40af;border:0;color:white;cursor:pointer}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .footer{font-size:.85rem;color:var(--muted);margin-top:20px}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b1220;border:1px solid #1e293b;color:#cbd5e1}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>À vous de trouver 40 Md€ — <span class="pill">Budget APU 2024</span></h1>
+    <div class="card">
+      <div class="grid grid3">
+        <div class="kpi"><div class="title">Économie visée</div><div class="val">40 000–45 000 M€</div></div>
+        <div class="kpi"><div class="title">Économie actuelle</div><div id="kpiSaving" class="val">0 M€</div></div>
+        <div class="kpi"><div class="title">Écart restant</div><div id="kpiGap" class="val">≥40 000 M€</div></div>
+      </div>
+      <div class="bar"><span id="bar"></span></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Dépenses</div>
+      <div id="expContainer"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Recettes</div>
+      <div id="revContainer"></div>
+    </div>
+
+    <div class="card">
+      <button id="validateBtn" class="btn" disabled>Valider mon budget</button>
+      <span id="validateHint" class="hint" style="margin-left:10px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</span>
+    </div>
+
+    <div class="footer">
+      Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certaines dépenses (pensions, intérêts) sont difficiles à modifier à court terme ; intérêts non modifiables ici.
+    </div>
+  </div>
+
+<script>
+// ========== CONFIG ==========
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
+const CFG = {
+  title: "À vous de trouver 40 Md€ — Budget APU 2024",
+  unit: "M€",
+  target:{min:40000, max:45000},
+  // bases 2024 en M€ (Md€ * 1000)
+  expenses: [
+    {k:"prot_soc",label:"Protection sociale",base:701400,info:"(Retraites, allocations familiales, chômage, minima sociaux.)",locked:false},
+    {k:"sante",label:"Santé",base:250500,info:"(Assurance maladie, hôpitaux…)",locked:false},
+    {k:"education",label:"Éducation",base:167000,info:"(Écoles, collèges, lycées, universités…)",locked:false},
+    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,info:"(Administration générale, exécutif, législatif…)",locked:false},
+    {k:"interets_dette",label:"Charges d’intérêts de la dette (non modifiable)",base:58700,info:"(Service de la dette — verrouillé.)",locked:true},
+    {k:"aff_econ",label:"Affaires économiques",base:167000,info:"(Transports, industrie, agriculture, emploi…)",locked:false},
+    {k:"defense",label:"Défense",base:75200,info:"",locked:false},
+    {k:"ordre_secu",label:"Ordre & sécurité publics",base:50100,info:"(Police, gendarmerie, justice pénale…)",locked:false},
+    {k:"logement",label:"Logement & équipements collectifs",base:30100,info:"(Urbanisme, services communaux…)",locked:false},
+    {k:"environnement",label:"Protection de l’environnement",base:30100,info:"",locked:false},
+    {k:"culture",label:"Culture, loisirs et cultes",base:20000,info:"",locked:false},
+  ],
+  revenues: [
+    {k:"imp_prod",label:"Impôts sur la production et importations",base:570000},
+    {k:"cotis",label:"Cotisations sociales",base:480000},
+    {k:"ir",label:"Impôt sur le revenu",base:120000},
+    {k:"is",label:"Impôt sur les sociétés",base:80000},
+    {k:"autres_rec",label:"Autres recettes",base:252000},
+  ]
+};
+
+// ========== STATE ==========
+const state = {
+  expPct: CFG.expenses.map(x=>0),
+  revPct: CFG.revenues.map(x=>0),
+};
+
+// ========== HELPERS ==========
+function fmtM(n){ return (Math.round(n)).toLocaleString("fr-FR"); }
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+function compute(){
+  const newExp = CFG.expenses.map((b,i)=> Math.round(b.base * (1 + (b.locked?0:state.expPct[i])/100)) );
+  const newRev = CFG.revenues.map((b,i)=> Math.round(b.base * (1 + state.revPct[i]/100)) );
+  const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
+  const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
+  const newExpM = newExp.reduce((s,x)=>s+x,0);
+  const newRevM = newRev.reduce((s,x)=>s+x,0);
+  const newDef = newExpM - newRevM;
+  const baseDef = BASE_EXP - BASE_REV;
+  const savingM = baseDef - newDef; // économies (+) si déficit baisse
+  return {BASE_EXP, BASE_REV, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM};
+}
+
+function buildCompactPayload(){
+  const res = compute();
+  return {
+    dataset: CFG.title,
+    unit: "M€",
+    totals2024: { expenses: res.BASE_EXP, revenues: res.BASE_REV, deficit: (res.BASE_EXP - res.BASE_REV) },
+    target: { min: CFG.target.min, max: CFG.target.max },
+    savingsM: res.savingM,
+    e: state.expPct.slice(),      // pourcentages dépenses (11)
+    r: state.revPct.slice(),      // pourcentages recettes (5)
+    newExpM: res.newExpM,
+    newRevM: res.newRevM,
+    newDeficitM: res.newDeficitM,
+    meta: { ua: navigator.userAgent },
+    ts: new Date().toISOString()
+  };
+}
+
+function sendToSheet(payload){
+  try{
+    fetch(ENDPOINT_URL, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){ /* silencieux */ }
+}
+
+// ========== UI RENDER ==========
+function renderBlock(container, list, kind){
+  list.forEach((b,idx)=>{
+    const box = document.createElement("div");
+    box.className = "row";
+    const pctId = `${kind}_${idx}`;
+
+    box.innerHTML = `
+      <div class="label">${b.label}</div>
+      ${b.info ? `<div class="hint">${b.info}</div>` : ""}
+      <div class="hint">Base : ${Math.round(b.base/1000)} Md€</div>
+      <input type="range" id="${pctId}" min="-30" max="30" step="1" ${b.locked?"value='0' disabled": "value='0'"} />
+      <div class="valLine">
+        <div><span id="${pctId}_pct">0</span>%</div>
+        <div><span id="${pctId}_new">${fmtM(b.base)}</span> M€</div>
+      </div>
+    `;
+    container.appendChild(box);
+
+    const rng = box.querySelector(`#${pctId}`);
+    const pctEl = box.querySelector(`#${pctId}_pct`);
+    const newEl = box.querySelector(`#${pctId}_new`);
+
+    function updateFromSlider(){
+      const pct = Number(rng.value)||0;
+      if(kind==="exp") state.expPct[idx] = pct;
+      else state.revPct[idx] = pct;
+      const base = b.base;
+      const newVal = Math.round(base * (1 + (b.locked?0:pct)/100));
+      pctEl.textContent = pct;
+      newEl.textContent = fmtM(newVal);
+      updateKPIs();
+    }
+    rng.addEventListener("input", updateFromSlider);
+    updateFromSlider();
+  });
+}
+
+function updateKPIs(){
+  const r = compute();
+  const saving = r.savingM;
+  document.getElementById("kpiSaving").textContent = `${fmtM(saving)} M€`;
+  const gapMin = CFG.target.min - saving;
+  const gapMax = CFG.target.max - saving;
+  let gapText;
+  if (saving < CFG.target.min) gapText = `≥${fmtM(Math.abs(gapMin))} M€ à trouver`;
+  else if (saving > CFG.target.max) gapText = `≤${fmtM(Math.abs(gapMax))} M€ à retirer`;
+  else gapText = "OK (dans la cible)";
+  document.getElementById("kpiGap").textContent = gapText;
+  const pct = clamp((saving/CFG.target.max)*100,0,100);
+  document.getElementById("bar").style.width = pct+"%";
+  const enable = (saving>=CFG.target.min && saving<=CFG.target.max);
+  document.getElementById("validateBtn").disabled = !enable;
+}
+
+function init(){
+  renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
+  renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
+  document.getElementById("validateBtn").addEventListener("click", ()=>{
+    const payload = buildCompactPayload();
+    sendToSheet(payload);
+    document.getElementById("validateHint").textContent = "Réponse envoyée ✔ (vérifiez la feuille Google)";
+  });
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
