@@ -3,145 +3,153 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BudgetLab 2024 — Simulateur</title>
+<title>BudgetLab 2024 — Simulateur (comparaison normalisée)</title>
 <style>
   :root{
-    --bg:#0b1020; --panel:#121a2b; --panel-2:#0f172a;
-    --muted:#9fb0c8; --text:#e6eefc;
-    --brand:#60a5fa; --brand2:#38bdf8;
+    --bg:#0b1020; --panel:#10192b; --panel-2:#0e1628;
+    --ring:#223357; --text:#e8f0ff; --muted:#a9b8d2;
     --ok:#16a34a; --warn:#eab308; --bad:#ef4444;
-    --exp:#1d3557;   /* dépenses */
-    --rev:#0b3a2a;   /* recettes */
-    --ring:#1f2b46;
+    --expBg:#0f2243; /* fond DEP */
+    --revBg:#0c2e24; /* fond REC */
+    --chip:#0b1326;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
-  h1{margin:0 0 8px;font-size:1.35rem}
-  .pill{display:inline-block;padding:2px 8px;border:1px solid #26406c;border-radius:999px;background:#0b1220;color:#cfe1ff;font-size:.9rem}
+  h1{margin:0 0 8px;font-size:1.32rem}
+  .pill{display:inline-block;padding:2px 10px;border:1px solid var(--ring);border-radius:999px;background:#0a1222;color:#cfe1ff;font-size:.9rem}
+
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
-  .section{border-radius:16px;overflow:hidden;border:1px solid var(--ring);margin:14px 0}
-  .section .head{padding:12px 14px;font-weight:700;display:flex;gap:10px;align-items:center}
-  .section.exp{background:linear-gradient(0deg,rgba(29,53,87,.12),transparent)}
-  .section.exp .head{background:rgba(29,53,87,.35)}
-  .section.rev{background:linear-gradient(0deg,rgba(11,58,42,.12),transparent)}
-  .section.rev .head{background:rgba(11,58,42,.35)}
-  .head .badge{font-size:.8rem;padding:2px 8px;border-radius:999px;border:1px solid #294264;background:#0b1220;color:#cfe1ff}
-  .row{padding:12px 14px;border-top:1px dashed #1c2946}
-  .label{font-weight:700}
-  .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
-  input[type=range]{width:100%;margin:8px 0}
-  .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
-  .delta{font-variant-numeric:tabular-nums}
-  .delta.positive{color:var(--bad)}
-  .delta.negative{color:var(--ok)}
   .kpiGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   @media (max-width:760px){.kpiGrid{grid-template-columns:1fr}}
   .kpi{background:var(--panel-2);border:1px solid var(--ring);border-radius:12px;padding:10px}
   .kpi .title{font-size:.85rem;color:var(--muted)}
-  .kpi .val{margin-top:6px;font-size:1.1rem}
-  .bar{height:10px;background:#1f2a45;border-radius:999px;overflow:hidden;margin-top:8px}
+  .kpi .val{margin-top:6px;font-size:1.08rem}
+  .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin-top:8px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok));width:0%}
-  .btn{display:inline-flex;gap:.6rem;align-items:center;background:#1e40af;color:#fff;border:0;border-radius:999px;padding:10px 14px;cursor:pointer}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
+
+  /* Sections très contrastées */
+  .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overflow:hidden}
+  .section.exp{background:var(--expBg)}
+  .section.rev{background:var(--revBg)}
+  .head{padding:12px 14px;background:rgba(255,255,255,.04);display:flex;gap:12px;align-items:center;font-weight:700}
+  .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:var(--chip);color:#dce7ff;font-size:.8rem}
+  .row{padding:12px 14px;border-top:1px dashed #274067}
+  .label{font-weight:700}
+  .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
+  input[type=range]{width:100%;margin:8px 0}
+
+  .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
+  .delta{font-variant-numeric:tabular-nums}
+  .delta.gain{color:var(--ok)}
+  .delta.loss{color:var(--bad)}
 
   /* Bandeau mobile collant */
-  .stickyHud{
-    position:sticky; bottom:0; z-index:20; margin-top:10px;
-    background:#0a1222;border:1px solid var(--ring);border-radius:12px;padding:10px;
-  }
+  .stickyHud{position:sticky;bottom:0;z-index:20;margin-top:12px;background:#0a1222;border:1px solid var(--ring);border-radius:12px;padding:10px}
   .hudRow{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-  .chip{padding:4px 8px;border-radius:999px;border:1px solid #2b3d66;background:#0d1730;color:#d7e6ff;font-size:.9rem}
+  .chip{padding:4px 8px;border-radius:999px;border:1px solid var(--ring);background:var(--chip);color:#d7e6ff;font-size:.9rem}
   .thin{height:6px}
 
-  /* Résultats */
+  /* Bouton */
+  .btn{display:inline-flex;gap:.6rem;align-items:center;background:#1e40af;color:#fff;border:0;border-radius:999px;padding:10px 14px;cursor:pointer}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Résultats : cartes poste par poste */
   .results{display:none}
-  .table{width:100%;border-collapse:collapse;margin-top:8px}
-  .table th,.table td{padding:8px;border-bottom:1px dotted #274067;text-align:right;font-variant-numeric:tabular-nums}
-  .table th:first-child,.table td:first-child{text-align:left}
-  .sep{height:1px;background:#213153;margin:6px 0}
+  .cmpCard{display:grid;grid-template-columns:1fr auto;gap:6px;padding:10px;border:1px dashed #2a3c64;border-radius:10px;margin:8px 0;background:rgba(255,255,255,.02)}
+  .cmpTitle{font-weight:700}
+  .cmpVals{font-variant-numeric:tabular-nums;text-align:right}
+  .cmpLine{display:flex;justify-content:space-between;color:var(--muted);font-size:.92rem}
+
+  .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:50;display:none}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>À vous de trouver 40 Md€ — <span class="pill">Budget APU 2024</span></h1>
+<div class="wrap">
+  <h1>À vous de trouver 40 Md€ — <span class="pill">Budget APU 2024</span></h1>
 
-    <!-- KPIs -->
-    <div class="card">
-      <div class="kpiGrid">
-        <div class="kpi"><div class="title">Économie visée</div><div class="val">40 000–45 000 M€</div></div>
-        <div class="kpi"><div class="title">Économie actuelle</div><div id="kpiSaving" class="val">0 M€</div></div>
-        <div class="kpi"><div class="title">Écart</div><div id="kpiGap" class="val">≥40 000 M€</div></div>
+  <!-- KPIs -->
+  <div class="card">
+    <div class="kpiGrid">
+      <div class="kpi"><div class="title">Économie visée</div><div class="val">40 000–45 000 M€</div></div>
+      <div class="kpi"><div class="title">Économie actuelle</div><div id="kpiSaving" class="val">0 M€</div></div>
+      <div class="kpi"><div class="title">Écart</div><div id="kpiGap" class="val">≥40 000 M€</div></div>
+    </div>
+    <div class="bar"><span id="bar"></span></div>
+
+    <!-- HUD collant -->
+    <div class="stickyHud">
+      <div class="hudRow">
+        <span class="chip">Cible : 40–45 Md€</span>
+        <span class="chip">Actuelle : <strong id="hudSaving">0 M€</strong></span>
+        <span class="chip">Écart : <strong id="hudGap">≥40 000 M€</strong></span>
+        <span class="chip">Réponses : <strong id="hudCount">—</strong></span>
       </div>
-      <div class="bar"><span id="bar"></span></div>
-
-      <!-- HUD collant pour mobile -->
-      <div class="stickyHud">
-        <div class="hudRow">
-          <span class="chip">Cible : 40–45 Md€</span>
-          <span class="chip">Actuelle : <strong id="hudSaving">0 M€</strong></span>
-          <span class="chip">Écart : <strong id="hudGap">≥40 000 M€</strong></span>
-        </div>
-        <div class="bar thin"><span id="barSticky"></span></div>
-      </div>
-    </div>
-
-    <!-- Dépenses -->
-    <div class="section exp">
-      <div class="head">Dépenses <span class="badge">curseurs −30 % à +30 %</span></div>
-      <div id="expContainer"></div>
-    </div>
-
-    <!-- Recettes -->
-    <div class="section rev">
-      <div class="head">Recettes <span class="badge">curseurs −30 % à +30 %</span></div>
-      <div id="revContainer"></div>
-    </div>
-
-    <!-- Actions -->
-    <div class="card">
-      <button id="validateBtn" class="btn" disabled>Valider mon budget</button>
-      <span id="validateHint" class="hint" style="margin-left:10px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</span>
-    </div>
-
-    <!-- Résultats -->
-    <div id="results" class="card results">
-      <h2 style="margin:0 0 6px;font-size:1.15rem">Mes résultats</h2>
-      <div id="resultsKpis" class="kpiGrid" style="margin-top:6px"></div>
-      <div class="sep"></div>
-      <div style="font-weight:700;margin-bottom:6px">Détail par poste</div>
-      <table class="table" id="resultsTable">
-        <thead>
-          <tr><th>Poste</th><th>Base 2024 (M€)</th><th>Nouveau (M€)</th><th>Delta (M€)</th><th>Δ %</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div class="footer">
-      Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certaines dépenses (pensions, intérêts) sont difficiles à modifier à court terme ; intérêts non modifiables ici.
+      <div class="bar thin"><span id="barSticky"></span></div>
     </div>
   </div>
 
+  <!-- Dépenses -->
+  <div class="section exp">
+    <div class="head">Dépenses <span class="badge">curseurs −30 % à +30 %</span></div>
+    <div id="expContainer"></div>
+  </div>
+
+  <!-- Recettes -->
+  <div class="section rev">
+    <div class="head">Recettes <span class="badge">curseurs −30 % à +30 %</span></div>
+    <div id="revContainer"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <button id="validateBtn" class="btn" disabled>Valider mon budget</button>
+    <span id="validateHint" class="hint" style="margin-left:10px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</span>
+  </div>
+
+  <!-- Résultats -->
+  <div id="results" class="card results">
+    <h2 style="margin:0 0 6px;font-size:1.1rem">Mes résultats — comparaison normalisée</h2>
+    <div class="hint" id="normNote"></div>
+
+    <div class="section exp" style="margin-top:10px">
+      <div class="head">Dépenses — tes choix vs moyenne normalisée</div>
+      <div id="cmpExp"></div>
+    </div>
+    <div class="section rev" style="margin-top:10px">
+      <div class="head">Recettes — tes choix vs moyenne normalisée</div>
+      <div id="cmpRev"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certaines dépenses (pensions, intérêts) sont difficiles à modifier à court terme ; intérêts non modifiables ici.
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
 <script>
-// ========== CONFIG ==========
+/* --------- CONFIG ---------- */
 const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
+
 const CFG = {
-  title: "À vous de trouver 40 Md€ — Budget APU 2024",
   unit: "M€",
-  target:{min:40000, max:45000},
-  // bases 2024 en M€ (Md€ * 1000)
+  target: {min:40000, max:45000},
+  // bases 2024 (M€)
   expenses: [
-    {k:"prot_soc",label:"Protection sociale",base:701400,info:"(Retraites, allocations familiales, chômage, minima sociaux.)",locked:false},
+    {k:"prot_soc",label:"Protection sociale",base:701400,info:"(Retraites, allocations, chômage, minima sociaux.)",locked:false},
     {k:"sante",label:"Santé",base:250500,info:"(Assurance maladie, hôpitaux…)",locked:false},
-    {k:"education",label:"Éducation",base:167000,info:"(Écoles, collèges, lycées, universités…)",locked:false},
-    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,info:"(Administration générale, exécutif, législatif…)",locked:false},
+    {k:"education",label:"Éducation",base:167000,info:"",locked:false},
+    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,info:"",locked:false},
     {k:"interets_dette",label:"Charges d’intérêts de la dette (non modifiable)",base:58700,info:"(Service de la dette — verrouillé.)",locked:true},
-    {k:"aff_econ",label:"Affaires économiques",base:167000,info:"(Transports, industrie, agriculture, emploi…)",locked:false},
+    {k:"aff_econ",label:"Affaires économiques",base:167000,info:"",locked:false},
     {k:"defense",label:"Défense",base:75200,info:"",locked:false},
-    {k:"ordre_secu",label:"Ordre & sécurité publics",base:50100,info:"(Police, gendarmerie, justice pénale…)",locked:false},
-    {k:"logement",label:"Logement & équipements collectifs",base:30100,info:"(Urbanisme, services communaux…)",locked:false},
+    {k:"ordre_secu",label:"Ordre & sécurité publics",base:50100,info:"",locked:false},
+    {k:"logement",label:"Logement & équipements collectifs",base:30100,info:"",locked:false},
     {k:"environnement",label:"Protection de l’environnement",base:30100,info:"",locked:false},
     {k:"culture",label:"Culture, loisirs et cultes",base:20000,info:"",locked:false},
   ],
@@ -154,60 +162,60 @@ const CFG = {
   ]
 };
 
-// ========== STATE ==========
+/* --------- STATE ---------- */
 const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
+  stats: null // {count, avgExpPct[], avgRevPct[]}
 };
 
-// ========== HELPERS ==========
+/* --------- UTILS ---------- */
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 
 function compute(){
-  const newExp = CFG.expenses.map((b,i)=> Math.round(b.base * (1 + (b.locked?0:state.expPct[i])/100)) );
-  const newRev = CFG.revenues.map((b,i)=> Math.round(b.base * (1 + state.revPct[i]/100)) );
+  const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) );
+  const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+state.revPct[i]/100)) );
+
   const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
+  const baseDef = BASE_EXP - BASE_REV;
+
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
-  const baseDef = BASE_EXP - BASE_REV;
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef; // économies (+) si déficit baisse
+
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM};
 }
 
 function updateKPIs(){
   const r = compute();
   const saving = r.savingM;
-  const gapMin = CFG.target.min - saving;
-  const gapMax = CFG.target.max - saving;
+  const pct = clamp((saving/CFG.target.max)*100,0,100);
+  const inRange = (saving>=CFG.target.min && saving<=CFG.target.max);
 
-  // KPIs + HUD
   document.getElementById("kpiSaving").textContent = `${fmtM(saving)} M€`;
   document.getElementById("hudSaving").textContent = `${fmtM(saving)} M€`;
 
   let gapText;
-  if (saving < CFG.target.min) gapText = `≥${fmtM(Math.abs(gapMin))} M€ à trouver`;
-  else if (saving > CFG.target.max) gapText = `≤${fmtM(Math.abs(gapMax))} M€ à retirer`;
-  else gapText = "OK (dans la cible)";
+  if (!inRange){
+    if (saving < CFG.target.min) gapText = `≥${fmtM(CFG.target.min - saving)} M€ à trouver`;
+    else gapText = `≤${fmtM(saving - CFG.target.max)} M€ à retirer`;
+  } else gapText = "OK (dans la cible)";
 
   document.getElementById("kpiGap").textContent = gapText;
   document.getElementById("hudGap").textContent = gapText;
-
-  const pct = clamp((saving/CFG.target.max)*100,0,100);
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("barSticky").style.width = pct+"%";
-
-  document.getElementById("validateBtn").disabled = !(saving>=CFG.target.min && saving<=CFG.target.max);
+  document.getElementById("validateBtn").disabled = !inRange;
 }
 
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
-    row.className = "row";
-    const id = `${kind}_${idx}`;
-
+    row.className="row";
+    const id=`${kind}_${idx}`;
     row.innerHTML = `
       <div class="label">${b.label}</div>
       ${b.info?`<div class="hint">${b.info}</div>`:""}
@@ -219,27 +227,29 @@ function renderBlock(container, list, kind){
           <div><strong><span id="${id}_new">${fmtM(b.base)}</span> M€</strong></div>
           <div class="delta" id="${id}_delta">0 M€</div>
         </div>
-      </div>
-    `;
+      </div>`;
     container.appendChild(row);
 
-    const slider = row.querySelector(`#${id}`);
-    const pctEl  = row.querySelector(`#${id}_pct`);
-    const newEl  = row.querySelector(`#${id}_new`);
-    const delEl  = row.querySelector(`#${id}_delta`);
+    const slider=row.querySelector(`#${id}`);
+    const pctEl=row.querySelector(`#${id}_pct`);
+    const newEl=row.querySelector(`#${id}_new`);
+    const delEl=row.querySelector(`#${id}_delta`);
 
-    const update = ()=>{
-      const pct = Number(slider.value)||0;
+    const update=()=>{
+      const pct=Number(slider.value)||0;
       if(kind==="exp") state.expPct[idx]=pct; else state.revPct[idx]=pct;
 
-      const newVal = Math.round(b.base * (1 + (b.locked?0:pct)/100));
-      const delta = newVal - b.base;
+      const newVal = Math.round(b.base*(1+(b.locked?0:pct)/100));
+      const delta  = newVal - b.base;
 
       pctEl.textContent = pct;
       newEl.textContent = fmtM(newVal);
-      delEl.textContent = `${delta>=0?"+":""}${fmtM(delta)} M€`;
-      delEl.classList.toggle("positive", delta>0);
-      delEl.classList.toggle("negative", delta<0);
+      delEl.textContent = `${delta>=0?'+':''}${fmtM(delta)} M€`;
+
+      const isExpense = (kind==="exp");
+      const gain = isExpense ? (delta<0) : (delta>0);
+      delEl.classList.toggle("gain", gain);
+      delEl.classList.toggle("loss", !gain && delta!==0);
 
       updateKPIs();
     };
@@ -248,17 +258,11 @@ function renderBlock(container, list, kind){
   });
 }
 
-function buildCompactPayload(){
-  const r = compute();
-  return {
-    dataset: CFG.title, unit:"M€",
-    totals2024: {expenses:r.BASE_EXP, revenues:r.BASE_REV, deficit:r.baseDef},
-    target: {min:CFG.target.min, max:CFG.target.max},
-    savingsM: r.savingM,
-    e: state.expPct.slice(), r: state.revPct.slice(),
-    newExpM: r.newExpM, newRevM: r.newRevM, newDeficitM: r.newDeficitM,
-    meta:{ua:navigator.userAgent}, ts:new Date().toISOString()
-  };
+/* --------- BACK (POST/GET) ---------- */
+function toast(msg){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.style.display="block";
+  setTimeout(()=>{el.style.display="none"}, 2600);
 }
 
 function sendToSheet(payload){
@@ -268,68 +272,133 @@ function sendToSheet(payload){
       headers:{"Content-Type":"text/plain;charset=utf-8"},
       body: JSON.stringify(payload)
     });
-  }catch(_) {}
+  }catch(e){}
 }
 
-function showResults(){
-  const r = compute();
-
-  // KPIs résultats
-  const resKpis = document.getElementById("resultsKpis");
-  resKpis.innerHTML = `
-    <div class="kpi"><div class="title">Déficit initial</div><div class="val">${fmtM(r.baseDef)} M€</div></div>
-    <div class="kpi"><div class="title">Déficit simulé</div><div class="val">${fmtM(r.newDeficitM)} M€</div></div>
-    <div class="kpi"><div class="title">Économie totale</div><div class="val">${fmtM(r.savingM)} M€</div></div>
-  `;
-
-  // Tableau détaillé
-  const tbody = document.querySelector("#resultsTable tbody");
-  tbody.innerHTML = "";
-
-  // Dépenses
-  CFG.expenses.forEach((b,i)=>{
-    const base=b.base, nv=r.newExp[i], delta=nv-base, pct= b.locked?0:state.expPct[i];
-    const tr=document.createElement("tr");
-    tr.innerHTML = `
-      <td>${b.label}</td>
-      <td>${fmtM(base)}</td>
-      <td>${fmtM(nv)}</td>
-      <td style="color:${delta<0?'#16a34a':(delta>0?'#ef4444':'#cbd5e1')}">${delta>=0?'+':''}${fmtM(delta)}</td>
-      <td>${pct>=0?'+':''}${pct}%</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // Recettes
-  CFG.revenues.forEach((b,i)=>{
-    const base=b.base, nv=r.newRev[i], delta=nv-base, pct=state.revPct[i];
-    const tr=document.createElement("tr");
-    tr.innerHTML = `
-      <td>${b.label}</td>
-      <td>${fmtM(base)}</td>
-      <td>${fmtM(nv)}</td>
-      <td style="color:${delta>0?'#16a34a':(delta<0?'#ef4444':'#cbd5e1')}">${delta>=0?'+':''}${fmtM(delta)}</td>
-      <td>${pct>=0?'+':''}${pct}%</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  const res=document.getElementById("results");
-  res.style.display="block";
-  res.scrollIntoView({behavior:"smooth",block:"start"});
+async function fetchStats(){
+  try{
+    const url = ENDPOINT_URL + "?stats=1";
+    const r = await fetch(url, {method:"GET", cache:"no-cache"});
+    if(!r.ok) return null;
+    const data = await r.json();
+    if(!data || !data.ok) return null;
+    return data; // {count, avgExpPct[], avgRevPct[]}
+  }catch(e){ return null }
 }
 
+/* --------- NORMALISATION ---------- */
+/* calcule les économies (M€) à partir de pct[] moyens */
+function savingsFromPct(avgExpPct, avgRevPct){
+  const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:avgExpPct[i])/100)) );
+  const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+avgRevPct[i]/100)) );
+  const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
+  const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
+  const baseDef  = BASE_EXP - BASE_REV;
+  const newDef   = newExp.reduce((s,x)=>s+x,0) - newRev.reduce((s,x)=>s+x,0);
+  return (baseDef - newDef); // M€
+}
+
+function buildCompactPayload(){
+  const r=compute();
+  return {
+    dataset:"Budget APU 2024 — normalisation sur le répondant",
+    unit:"M€",
+    totals2024:{expenses:r.BASE_EXP, revenues:r.BASE_REV, deficit:r.baseDef},
+    target:CFG.target, savingsM:r.savingM,
+    e: state.expPct.slice(), r: state.revPct.slice(),
+    newExpM:r.newExpM, newRevM:r.newRevM, newDeficitM:r.newDeficitM,
+    meta:{ua:navigator.userAgent}, ts:new Date().toISOString()
+  };
+}
+
+/* --------- RÉSULTATS (comparaison normalisée) ---------- */
+function renderComparison(avgExpPct, avgRevPct, respondentSavingsM){
+  // 1) Calcule économies moyenne brute depuis les pct moyens
+  const avgSavingsM = savingsFromPct(avgExpPct, avgRevPct) || 1;
+  // 2) Facteur de normalisation pour égaler l'économie du répondant
+  const k = respondentSavingsM / avgSavingsM;
+
+  const expWrap = document.getElementById("cmpExp");
+  const revWrap = document.getElementById("cmpRev");
+  expWrap.innerHTML=""; revWrap.innerHTML="";
+
+  // Helper d’une carte
+  const makeCard = (parent, label, base, yourPct, meanPct, isExpense, locked=false)=>{
+    const yourNew = Math.round(base*(1+(locked?0:yourPct)/100));
+    const meanNew = Math.round(base*(1+(locked?0:(meanPct*k))/100)); // moyenne *normalisée*
+    const yourDelta = yourNew - base;
+    const meanDelta = meanNew - base;
+
+    // codes couleurs logique éco
+    const gainYou  = isExpense ? (yourDelta<0) : (yourDelta>0);
+    const gainMean = isExpense ? (meanDelta<0) : (meanDelta>0);
+
+    const div=document.createElement("div");
+    div.className="cmpCard";
+    div.innerHTML=`
+      <div class="cmpTitle">${label}${locked?` <span class="badge">verrouillé</span>`:""}</div>
+      <div class="cmpVals"></div>
+      <div class="cmpLine">
+        <span>Toi&nbsp;:</span>
+        <span style="color:${gainYou?'#16a34a':(yourDelta!==0?'#ef4444':'#a9b8d2')}">
+          ${yourPct>=0?'+':''}${yourPct}% · ${yourDelta>=0?'+':''}${fmtM(yourDelta)} M€
+        </span>
+      </div>
+      <div class="cmpLine">
+        <span>Moyenne (normalisée)&nbsp;:</span>
+        <span style="color:${gainMean?'#16a34a':(meanDelta!==0?'#ef4444':'#a9b8d2')}">
+          ${meanPct*k>=0?'+':''}${(meanPct*k).toFixed(1)}% · ${meanDelta>=0?'+':''}${fmtM(meanDelta)} M€
+        </span>
+      </div>`;
+    parent.appendChild(div);
+  };
+
+  CFG.expenses.forEach((b,i)=> makeCard(expWrap, b.label, b.base, state.expPct[i], (avgExpPct[i]||0), true, b.locked));
+  CFG.revenues.forEach((b,i)=> makeCard(revWrap, b.label, b.base, state.revPct[i], (avgRevPct[i]||0), false));
+}
+
+async function onValidate(){
+  const payload = buildCompactPayload();
+  // POST (no-cors)
+  sendToSheet(payload);
+
+  // GO résultats + fetch stats
+  document.getElementById("validateHint").textContent="Réponse envoyée ✔ — Calcul des comparaisons…";
+  const resEl = document.getElementById("results");
+  resEl.style.display="block";
+
+  const stats = await fetchStats(); // {count, avgExpPct, avgRevPct}
+  if(stats){
+    state.stats = stats;
+    document.getElementById("hudCount").textContent = stats.count;
+
+    // Normalisation : sur l'économie du répondant
+    const mySavings = compute().savingM;
+    renderComparison(stats.avgExpPct||[], stats.avgRevPct||[], mySavings);
+
+    document.getElementById("normNote").textContent =
+      `Comparaison normalisée : la moyenne est ajustée pour égaler votre économie totale (${fmtM(mySavings)} M€). Réponses dans la base : ${stats.count}.`;
+
+    toast(`Réponse envoyée · Réponses : ${stats.count}`);
+    resEl.scrollIntoView({behavior:"smooth",block:"start"});
+    document.getElementById("validateHint").textContent="Résultats affichés ci-dessous.";
+  }else{
+    document.getElementById("normNote").textContent =
+      "Comparaison indisponible (statistiques non accessibles). Votre réponse a été enregistrée.";
+    toast("Réponse envoyée");
+  }
+}
+
+/* --------- INIT ---------- */
 function init(){
   renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
   renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
   updateKPIs();
 
-  document.getElementById("validateBtn").addEventListener("click", ()=>{
-    const payload = buildCompactPayload();
-    sendToSheet(payload);
-    document.getElementById("validateHint").textContent="Réponse envoyée ✔ — résultats ci-dessous";
-    showResults();
-  });
+  document.getElementById("validateBtn").addEventListener("click", onValidate);
+
+  // Optionnel : tenter de charger le count dès l’ouverture
+  fetchStats().then(s=>{ if(s && s.count){ document.getElementById("hudCount").textContent=s.count; } });
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
