@@ -1,62 +1,122 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BudgetLab 2024 — Simulateur</title>
-  <style>
-    :root{
-      --bg:#0f172a;--panel:#111827;--muted:#94a3b8;--ok:#16a34a;--warn:#eab308;--bad:#ef4444;--accent:#60a5fa;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#e5e7eb}
-    .wrap{max-width:980px;margin:0 auto;padding:20px}
-    h1{font-size:1.4rem;margin:0 0 8px}
-    .card{background:var(--panel);border-radius:14px;padding:16px;margin:12px 0;border:1px solid #1f2937}
-    .grid{display:grid;gap:12px}
-    .grid3{grid-template-columns:repeat(3,1fr)}
-    @media (max-width:720px){.grid3{grid-template-columns:1fr}}
-    .kpi{background:#0b1220;border:1px solid #1e293b;border-radius:12px;padding:12px}
-    .kpi .title{font-size:.85rem;color:var(--muted)}
-    .kpi .val{font-size:1.2rem;margin-top:6px}
-    .bar{height:10px;background:#1f2937;border-radius:999px;overflow:hidden;margin-top:10px}
-    .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok));width:0%}
-    .row{margin:16px 0}
-    .label{font-weight:700;font-size:1.05rem}
-    .hint{color:var(--muted);font-size:.9rem;margin:4px 0 10px}
-    input[type=range]{width:100%}
-    .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;color:#cbd5e1}
-    .btn{display:inline-flex;align-items:center;gap:.5rem; padding:10px 14px;border-radius:999px;background:#1e40af;border:0;color:white;cursor:pointer}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-    .footer{font-size:.85rem;color:var(--muted);margin-top:20px}
-    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b1220;border:1px solid #1e293b;color:#cbd5e1}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>BudgetLab 2024 — Simulateur</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#121a2b; --panel-2:#0f172a;
+    --muted:#9fb0c8; --text:#e6eefc;
+    --brand:#60a5fa; --brand2:#38bdf8;
+    --ok:#16a34a; --warn:#eab308; --bad:#ef4444;
+    --exp:#1d3557;   /* dépenses */
+    --rev:#0b3a2a;   /* recettes */
+    --ring:#1f2b46;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:16px}
+  h1{margin:0 0 8px;font-size:1.35rem}
+  .pill{display:inline-block;padding:2px 8px;border:1px solid #26406c;border-radius:999px;background:#0b1220;color:#cfe1ff;font-size:.9rem}
+  .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
+  .section{border-radius:16px;overflow:hidden;border:1px solid var(--ring);margin:14px 0}
+  .section .head{padding:12px 14px;font-weight:700;display:flex;gap:10px;align-items:center}
+  .section.exp{background:linear-gradient(0deg,rgba(29,53,87,.12),transparent)}
+  .section.exp .head{background:rgba(29,53,87,.35)}
+  .section.rev{background:linear-gradient(0deg,rgba(11,58,42,.12),transparent)}
+  .section.rev .head{background:rgba(11,58,42,.35)}
+  .head .badge{font-size:.8rem;padding:2px 8px;border-radius:999px;border:1px solid #294264;background:#0b1220;color:#cfe1ff}
+  .row{padding:12px 14px;border-top:1px dashed #1c2946}
+  .label{font-weight:700}
+  .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
+  input[type=range]{width:100%;margin:8px 0}
+  .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
+  .delta{font-variant-numeric:tabular-nums}
+  .delta.positive{color:var(--bad)}
+  .delta.negative{color:var(--ok)}
+  .kpiGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:760px){.kpiGrid{grid-template-columns:1fr}}
+  .kpi{background:var(--panel-2);border:1px solid var(--ring);border-radius:12px;padding:10px}
+  .kpi .title{font-size:.85rem;color:var(--muted)}
+  .kpi .val{margin-top:6px;font-size:1.1rem}
+  .bar{height:10px;background:#1f2a45;border-radius:999px;overflow:hidden;margin-top:8px}
+  .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok));width:0%}
+  .btn{display:inline-flex;gap:.6rem;align-items:center;background:#1e40af;color:#fff;border:0;border-radius:999px;padding:10px 14px;cursor:pointer}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
+
+  /* Bandeau mobile collant */
+  .stickyHud{
+    position:sticky; bottom:0; z-index:20; margin-top:10px;
+    background:#0a1222;border:1px solid var(--ring);border-radius:12px;padding:10px;
+  }
+  .hudRow{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .chip{padding:4px 8px;border-radius:999px;border:1px solid #2b3d66;background:#0d1730;color:#d7e6ff;font-size:.9rem}
+  .thin{height:6px}
+
+  /* Résultats */
+  .results{display:none}
+  .table{width:100%;border-collapse:collapse;margin-top:8px}
+  .table th,.table td{padding:8px;border-bottom:1px dotted #274067;text-align:right;font-variant-numeric:tabular-nums}
+  .table th:first-child,.table td:first-child{text-align:left}
+  .sep{height:1px;background:#213153;margin:6px 0}
+</style>
 </head>
 <body>
   <div class="wrap">
     <h1>À vous de trouver 40 Md€ — <span class="pill">Budget APU 2024</span></h1>
+
+    <!-- KPIs -->
     <div class="card">
-      <div class="grid grid3">
+      <div class="kpiGrid">
         <div class="kpi"><div class="title">Économie visée</div><div class="val">40 000–45 000 M€</div></div>
         <div class="kpi"><div class="title">Économie actuelle</div><div id="kpiSaving" class="val">0 M€</div></div>
-        <div class="kpi"><div class="title">Écart restant</div><div id="kpiGap" class="val">≥40 000 M€</div></div>
+        <div class="kpi"><div class="title">Écart</div><div id="kpiGap" class="val">≥40 000 M€</div></div>
       </div>
       <div class="bar"><span id="bar"></span></div>
+
+      <!-- HUD collant pour mobile -->
+      <div class="stickyHud">
+        <div class="hudRow">
+          <span class="chip">Cible : 40–45 Md€</span>
+          <span class="chip">Actuelle : <strong id="hudSaving">0 M€</strong></span>
+          <span class="chip">Écart : <strong id="hudGap">≥40 000 M€</strong></span>
+        </div>
+        <div class="bar thin"><span id="barSticky"></span></div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="label">Dépenses</div>
+    <!-- Dépenses -->
+    <div class="section exp">
+      <div class="head">Dépenses <span class="badge">curseurs −30 % à +30 %</span></div>
       <div id="expContainer"></div>
     </div>
 
-    <div class="card">
-      <div class="label">Recettes</div>
+    <!-- Recettes -->
+    <div class="section rev">
+      <div class="head">Recettes <span class="badge">curseurs −30 % à +30 %</span></div>
       <div id="revContainer"></div>
     </div>
 
+    <!-- Actions -->
     <div class="card">
       <button id="validateBtn" class="btn" disabled>Valider mon budget</button>
       <span id="validateHint" class="hint" style="margin-left:10px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</span>
+    </div>
+
+    <!-- Résultats -->
+    <div id="results" class="card results">
+      <h2 style="margin:0 0 6px;font-size:1.15rem">Mes résultats</h2>
+      <div id="resultsKpis" class="kpiGrid" style="margin-top:6px"></div>
+      <div class="sep"></div>
+      <div style="font-weight:700;margin-bottom:6px">Détail par poste</div>
+      <table class="table" id="resultsTable">
+        <thead>
+          <tr><th>Poste</th><th>Base 2024 (M€)</th><th>Nouveau (M€)</th><th>Delta (M€)</th><th>Δ %</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
 
     <div class="footer">
@@ -96,13 +156,13 @@ const CFG = {
 
 // ========== STATE ==========
 const state = {
-  expPct: CFG.expenses.map(x=>0),
-  revPct: CFG.revenues.map(x=>0),
+  expPct: CFG.expenses.map(()=>0),
+  revPct: CFG.revenues.map(()=>0),
 };
 
 // ========== HELPERS ==========
-function fmtM(n){ return (Math.round(n)).toLocaleString("fr-FR"); }
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
+const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 
 function compute(){
   const newExp = CFG.expenses.map((b,i)=> Math.round(b.base * (1 + (b.locked?0:state.expPct[i])/100)) );
@@ -111,103 +171,164 @@ function compute(){
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
-  const newDef = newExpM - newRevM;
   const baseDef = BASE_EXP - BASE_REV;
+  const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef; // économies (+) si déficit baisse
-  return {BASE_EXP, BASE_REV, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM};
-}
-
-function buildCompactPayload(){
-  const res = compute();
-  return {
-    dataset: CFG.title,
-    unit: "M€",
-    totals2024: { expenses: res.BASE_EXP, revenues: res.BASE_REV, deficit: (res.BASE_EXP - res.BASE_REV) },
-    target: { min: CFG.target.min, max: CFG.target.max },
-    savingsM: res.savingM,
-    e: state.expPct.slice(),      // pourcentages dépenses (11)
-    r: state.revPct.slice(),      // pourcentages recettes (5)
-    newExpM: res.newExpM,
-    newRevM: res.newRevM,
-    newDeficitM: res.newDeficitM,
-    meta: { ua: navigator.userAgent },
-    ts: new Date().toISOString()
-  };
-}
-
-function sendToSheet(payload){
-  try{
-    fetch(ENDPOINT_URL, {
-      method:"POST",
-      mode:"no-cors",
-      headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
-  }catch(e){ /* silencieux */ }
-}
-
-// ========== UI RENDER ==========
-function renderBlock(container, list, kind){
-  list.forEach((b,idx)=>{
-    const box = document.createElement("div");
-    box.className = "row";
-    const pctId = `${kind}_${idx}`;
-
-    box.innerHTML = `
-      <div class="label">${b.label}</div>
-      ${b.info ? `<div class="hint">${b.info}</div>` : ""}
-      <div class="hint">Base : ${Math.round(b.base/1000)} Md€</div>
-      <input type="range" id="${pctId}" min="-30" max="30" step="1" ${b.locked?"value='0' disabled": "value='0'"} />
-      <div class="valLine">
-        <div><span id="${pctId}_pct">0</span>%</div>
-        <div><span id="${pctId}_new">${fmtM(b.base)}</span> M€</div>
-      </div>
-    `;
-    container.appendChild(box);
-
-    const rng = box.querySelector(`#${pctId}`);
-    const pctEl = box.querySelector(`#${pctId}_pct`);
-    const newEl = box.querySelector(`#${pctId}_new`);
-
-    function updateFromSlider(){
-      const pct = Number(rng.value)||0;
-      if(kind==="exp") state.expPct[idx] = pct;
-      else state.revPct[idx] = pct;
-      const base = b.base;
-      const newVal = Math.round(base * (1 + (b.locked?0:pct)/100));
-      pctEl.textContent = pct;
-      newEl.textContent = fmtM(newVal);
-      updateKPIs();
-    }
-    rng.addEventListener("input", updateFromSlider);
-    updateFromSlider();
-  });
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM};
 }
 
 function updateKPIs(){
   const r = compute();
   const saving = r.savingM;
-  document.getElementById("kpiSaving").textContent = `${fmtM(saving)} M€`;
   const gapMin = CFG.target.min - saving;
   const gapMax = CFG.target.max - saving;
+
+  // KPIs + HUD
+  document.getElementById("kpiSaving").textContent = `${fmtM(saving)} M€`;
+  document.getElementById("hudSaving").textContent = `${fmtM(saving)} M€`;
+
   let gapText;
   if (saving < CFG.target.min) gapText = `≥${fmtM(Math.abs(gapMin))} M€ à trouver`;
   else if (saving > CFG.target.max) gapText = `≤${fmtM(Math.abs(gapMax))} M€ à retirer`;
   else gapText = "OK (dans la cible)";
+
   document.getElementById("kpiGap").textContent = gapText;
+  document.getElementById("hudGap").textContent = gapText;
+
   const pct = clamp((saving/CFG.target.max)*100,0,100);
   document.getElementById("bar").style.width = pct+"%";
-  const enable = (saving>=CFG.target.min && saving<=CFG.target.max);
-  document.getElementById("validateBtn").disabled = !enable;
+  document.getElementById("barSticky").style.width = pct+"%";
+
+  document.getElementById("validateBtn").disabled = !(saving>=CFG.target.min && saving<=CFG.target.max);
+}
+
+function renderBlock(container, list, kind){
+  list.forEach((b,idx)=>{
+    const row = document.createElement("div");
+    row.className = "row";
+    const id = `${kind}_${idx}`;
+
+    row.innerHTML = `
+      <div class="label">${b.label}</div>
+      ${b.info?`<div class="hint">${b.info}</div>`:""}
+      <div class="hint">Base : ${Math.round(b.base/1000)} Md€</div>
+      <input type="range" id="${id}" min="-30" max="30" step="1" ${b.locked?"value='0' disabled":"value='0'"} />
+      <div class="valLine">
+        <div><span id="${id}_pct">0</span>%</div>
+        <div style="text-align:right">
+          <div><strong><span id="${id}_new">${fmtM(b.base)}</span> M€</strong></div>
+          <div class="delta" id="${id}_delta">0 M€</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(row);
+
+    const slider = row.querySelector(`#${id}`);
+    const pctEl  = row.querySelector(`#${id}_pct`);
+    const newEl  = row.querySelector(`#${id}_new`);
+    const delEl  = row.querySelector(`#${id}_delta`);
+
+    const update = ()=>{
+      const pct = Number(slider.value)||0;
+      if(kind==="exp") state.expPct[idx]=pct; else state.revPct[idx]=pct;
+
+      const newVal = Math.round(b.base * (1 + (b.locked?0:pct)/100));
+      const delta = newVal - b.base;
+
+      pctEl.textContent = pct;
+      newEl.textContent = fmtM(newVal);
+      delEl.textContent = `${delta>=0?"+":""}${fmtM(delta)} M€`;
+      delEl.classList.toggle("positive", delta>0);
+      delEl.classList.toggle("negative", delta<0);
+
+      updateKPIs();
+    };
+    slider.addEventListener("input", update);
+    update();
+  });
+}
+
+function buildCompactPayload(){
+  const r = compute();
+  return {
+    dataset: CFG.title, unit:"M€",
+    totals2024: {expenses:r.BASE_EXP, revenues:r.BASE_REV, deficit:r.baseDef},
+    target: {min:CFG.target.min, max:CFG.target.max},
+    savingsM: r.savingM,
+    e: state.expPct.slice(), r: state.revPct.slice(),
+    newExpM: r.newExpM, newRevM: r.newRevM, newDeficitM: r.newDeficitM,
+    meta:{ua:navigator.userAgent}, ts:new Date().toISOString()
+  };
+}
+
+function sendToSheet(payload){
+  try{
+    fetch(ENDPOINT_URL,{
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(payload)
+    });
+  }catch(_) {}
+}
+
+function showResults(){
+  const r = compute();
+
+  // KPIs résultats
+  const resKpis = document.getElementById("resultsKpis");
+  resKpis.innerHTML = `
+    <div class="kpi"><div class="title">Déficit initial</div><div class="val">${fmtM(r.baseDef)} M€</div></div>
+    <div class="kpi"><div class="title">Déficit simulé</div><div class="val">${fmtM(r.newDeficitM)} M€</div></div>
+    <div class="kpi"><div class="title">Économie totale</div><div class="val">${fmtM(r.savingM)} M€</div></div>
+  `;
+
+  // Tableau détaillé
+  const tbody = document.querySelector("#resultsTable tbody");
+  tbody.innerHTML = "";
+
+  // Dépenses
+  CFG.expenses.forEach((b,i)=>{
+    const base=b.base, nv=r.newExp[i], delta=nv-base, pct= b.locked?0:state.expPct[i];
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td>${b.label}</td>
+      <td>${fmtM(base)}</td>
+      <td>${fmtM(nv)}</td>
+      <td style="color:${delta<0?'#16a34a':(delta>0?'#ef4444':'#cbd5e1')}">${delta>=0?'+':''}${fmtM(delta)}</td>
+      <td>${pct>=0?'+':''}${pct}%</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Recettes
+  CFG.revenues.forEach((b,i)=>{
+    const base=b.base, nv=r.newRev[i], delta=nv-base, pct=state.revPct[i];
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td>${b.label}</td>
+      <td>${fmtM(base)}</td>
+      <td>${fmtM(nv)}</td>
+      <td style="color:${delta>0?'#16a34a':(delta<0?'#ef4444':'#cbd5e1')}">${delta>=0?'+':''}${fmtM(delta)}</td>
+      <td>${pct>=0?'+':''}${pct}%</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const res=document.getElementById("results");
+  res.style.display="block";
+  res.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function init(){
   renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
   renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
+  updateKPIs();
+
   document.getElementById("validateBtn").addEventListener("click", ()=>{
     const payload = buildCompactPayload();
     sendToSheet(payload);
-    document.getElementById("validateHint").textContent = "Réponse envoyée ✔ (vérifiez la feuille Google)";
+    document.getElementById("validateHint").textContent="Réponse envoyée ✔ — résultats ci-dessous";
+    showResults();
   });
 }
 document.addEventListener("DOMContentLoaded", init);
