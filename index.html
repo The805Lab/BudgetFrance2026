@@ -2,11 +2,12 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BudgetLab — Trouver 40 Md€ sur le budget 2026</title>
+<!-- Empêche le double-tap zoom sur iOS pour des boutons +/− plus fluides -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>BudgetLab — Trouver 40 Md€ pour le budget 2026</title>
 <style>
   :root{
-    /* Palette bleue unifiée (pas de vert) */
+    /* Palette bleue unifiée (pas de vert de fond) */
     --bg:#0a1022; 
     --panel:#0f1a33; 
     --panel2:#0b1530;
@@ -16,55 +17,63 @@
     --ok:#16a34a; 
     --bad:#ef4444;
 
-    /* Sections */
-    --expBg:#0e254f;   /* Dépenses (bleu profond) */
-    --revBg:#0b1f45;   /* Recettes (bleu différent) */
+    /* Sections distinctes en bleus */
+    --expBg:#0e254f;   /* Dépenses */
+    --revBg:#0b1f45;   /* Recettes */
 
     --chip:#0c1636;
     --brand:#2563eb;
-    --brandDim:#1e3a8a;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    touch-action: pan-y; /* laisse défiler verticalement, évite les conflits */
+  }
   .wrap{max-width:980px;margin:0 auto;padding:16px}
-  h1{margin:0 0 8px;font-size:1.28rem}
-  .pill{display:inline-block;padding:2px 10px;border:1px solid var(--ring);border-radius:999px;background:#09122b;color:#cfe1ff;font-size:.9rem}
 
-  .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
-  .kpiGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  @media (min-width:760px){.kpiGrid{grid-template-columns:repeat(3,1fr)}}
-  .kpi{background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:10px}
-  .kpi .title{font-size:.85rem;color:var(--muted)}
-  .kpi .val{margin-top:6px;font-size:1.08rem}
-  .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin-top:8px}
+  /* En-tête minimal, lisible */
+  h1{margin:0 0 6px;font-size:1.22rem;line-height:1.25}
+  .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
+
+  /* Barre de progression compacte sous le titre */
+  .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
 
-  /* Sections très contrastées, toutes en bleu */
+  .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
+
+  /* Sections très contrastées (bleus) */
   .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overflow:hidden; overscroll-behavior:contain}
   .section.exp{background:var(--expBg)}
   .section.rev{background:var(--revBg)}
   .head{padding:12px 14px;background:rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;font-weight:700}
-  .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:var(--chip);color:#dce7ff;font-size:.8rem}
+  .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:#0b152f;color:#dce7ff;font-size:.8rem}
   .row{padding:12px 14px;border-top:1px dashed #274067}
 
   .label{font-weight:700}
   .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
 
-  /* Sliders : taille et “touch” améliorés */
-  .sliderWrap{display:grid;grid-template-columns:36px 1fr 36px;gap:8px;align-items:center}
-  .nudge{width:36px;height:36px;border-radius:10px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700}
+  /* Sliders : amplitude -15/+15, bouton +/− avec auto-repeat, meilleure prise en main */
+  .sliderWrap{display:grid;grid-template-columns:42px 1fr 42px;gap:8px;align-items:center}
+  .nudge{
+    width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);
+    background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;
+    touch-action: manipulation; /* évite double-tap zoom */
+  }
   .nudge:active{transform:scale(.98)}
-  input[type=range]{width:100%;margin:8px 0;height:34px;touch-action:none}
-  input[type=range]::-webkit-slider-runnable-track{height:8px;background:#2a3c69;border-radius:999px}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-6px;width:24px;height:24px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
-  input[type=range]::-moz-range-track{height:8px;background:#2a3c69;border-radius:999px}
-  input[type=range]::-moz-range-thumb{width:22px;height:22px;border:none;border-radius:50%;background:var(--brand)}
+  input[type=range]{width:100%;margin:8px 0;height:36px; /* hauteur plus grande */
+    touch-action: pan-y;  /* autorise le drag et empêche conflits */
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
+  input[type=range]::-moz-range-track{height:10px;background:#2a3c69;border-radius:999px}
+  input[type=range]::-moz-range-thumb{width:24px;height:24px;border:none;border-radius:50%;background:var(--brand)}
   .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)}
   .delta.loss{color:var(--bad)}
 
-  /* Bulle fixe qui suit l’écran (mobile & desktop) */
+  /* Bulle fixe qui suit l’écran : économie & écart (mobile & desktop) */
   .floatBubble{
     position:fixed; right:14px; bottom:14px; z-index:50;
     background:#0b172f;border:1px solid var(--ring); border-radius:12px; padding:10px 12px;
@@ -73,18 +82,31 @@
   .floatBubble strong{color:#fff}
 
   /* Bouton Valider plus visible */
-  .btn{display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1rem}
+  .btn{
+    display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;
+    border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem
+  }
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
   .btn.wide{width:100%}
   @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
 
-  /* Résultats : cartes par poste, titre pleine largeur */
+  /* Résultats : figure + détail par postes */
   .results{display:none}
+  .figure{
+    background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:12px;margin-bottom:12px
+  }
+  .figureTitle{font-weight:700;margin-bottom:8px}
+  .bars{display:grid;gap:10px}
+  .barH{height:14px;background:#1f2c4e;border:1px solid #2a3c69;border-radius:999px;overflow:hidden}
+  .barH>span{display:block;height:100%}
+  .barExp{background:#0ea5e9} /* bleu clair pour dépenses */
+  .barRev{background:#60a5fa} /* bleu différent pour recettes */
+
   .cmpCard{padding:10px;border:1px dashed #2a3c64;border-radius:10px;margin:8px 0;background:rgba(255,255,255,.03)}
   .cmpTitle{font-weight:700;margin-bottom:6px}
   .cmpLine{display:flex;justify-content:space-between;color:var(--muted);font-size:.95rem}
   .cmpLine span:last-child{font-variant-numeric:tabular-nums}
-  .legend{color:var(--muted);font-size:.9rem;margin:4px 0 8px}
+  .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
 
   .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
@@ -92,27 +114,20 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>À vous de trouver 40 Md€ — <span class="pill">budget 2026 (base 2024)</span></h1>
-
-  <!-- KPIs simplifiés (pas de doublon) -->
-  <div class="card">
-    <div class="kpiGrid">
-      <div class="kpi"><div class="title">Économie actuelle</div><div id="kpiSaving" class="val">0 M€</div></div>
-      <div class="kpi"><div class="title">Écart vers la cible (40–45 Md€)</div><div id="kpiGap" class="val">≥40 000 M€</div></div>
-      <div class="kpi" style="display:none" id="kpiCountBox"><div class="title">Réponses dans la base</div><div id="kpiCount" class="val">—</div></div>
-    </div>
-    <div class="bar"><span id="bar"></span></div>
-  </div>
+  <!-- Titre ajusté : objectif 2026, mention base 2024 discrète -->
+  <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
+  <div class="subtitle">Référence : <em>base 2024</em></div>
+  <div class="bar"><span id="bar"></span></div>
 
   <!-- Dépenses -->
   <div class="section exp">
-    <div class="head">Dépenses <span class="badge">curseurs −30 % à +30 %</span></div>
+    <div class="head">Dépenses <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="expContainer"></div>
   </div>
 
   <!-- Recettes -->
   <div class="section rev">
-    <div class="head">Recettes <span class="badge">curseurs −30 % à +30 %</span></div>
+    <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="revContainer"></div>
   </div>
 
@@ -124,9 +139,25 @@
 
   <!-- Résultats -->
   <div id="results" class="card results">
-    <h2 style="margin:0 0 2px;font-size:1.06rem">Mes résultats — comparaison normalisée</h2>
-    <div class="legend" id="normNote">Comparaison : <strong>Vous</strong> vs <strong>Moyenne</strong> (normalisée à votre économie).</div>
+    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparaison normalisée</h2>
+    <div class="legend" id="normNote">Comparaison : <strong>Vous</strong> vs <strong>Moyenne</strong> (normalisée à votre économie). <span id="ansCount"></span></div>
 
+    <!-- Figure synthèse -->
+    <div class="figure">
+      <div class="figureTitle">Synthèse de votre ajustement</div>
+      <div class="bars">
+        <div>
+          <div class="cmpLine" style="margin-bottom:4px"><span>Économies sur dépenses</span><span id="figExpVal">0 M€ (0%)</span></div>
+          <div class="barH"><span id="figExpBar" class="barExp" style="width:0%"></span></div>
+        </div>
+        <div>
+          <div class="cmpLine" style="margin-bottom:4px"><span>Recettes supplémentaires</span><span id="figRevVal">0 M€ (0%)</span></div>
+          <div class="barH"><span id="figRevBar" class="barRev" style="width:0%"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Détail par postes -->
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — Δ par poste (M€ / %)</div>
       <div id="cmpExp"></div>
@@ -176,7 +207,8 @@ const CFG = {
     {k:"ir",label:"Impôt sur le revenu",base:120000},
     {k:"is",label:"Impôt sur les sociétés",base:80000},
     {k:"autres_rec",label:"Autres recettes",base:252000},
-  ]
+  ],
+  range:{min:-15,max:15}
 };
 
 /* --------- STATE ---------- */
@@ -208,17 +240,25 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef; // économies (+) si déficit baisse
 
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM};
+  // figure: économies dépense (seulement si delta<0) + hausses de recettes (delta>0)
+  const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
+    const nv = newExp[i]; const d = nv - b.base;
+    return sum + (d<0 ? -d : 0);
+  },0);
+  const incRev = CFG.revenues.reduce((sum,b,i)=>{
+    const nv = newRev[i]; const d = nv - b.base;
+    return sum + (d>0 ? d : 0);
+  },0);
+
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev};
 }
 
-function updateKPIs(){
+function updateKPIs_andHUD(){
   const r = compute();
   const saving = r.savingM;
   const pct = clamp((saving/CFG.target.max)*100,0,100);
   const inRange = (saving>=CFG.target.min && saving<=CFG.target.max);
 
-  // Unique affichage (pas de doublons)
-  document.getElementById("kpiSaving").textContent = `${fmtM(saving)} M€`;
   document.getElementById("hudSaving").textContent = `${fmtM(saving)} M€`;
 
   let gapText;
@@ -226,12 +266,19 @@ function updateKPIs(){
     if (saving < CFG.target.min) gapText = `≥${fmtM(CFG.target.min - saving)} M€ à trouver`;
     else gapText = `≤${fmtM(saving - CFG.target.max)} M€ à retirer`;
   } else gapText = "OK (dans la cible)";
-
-  document.getElementById("kpiGap").textContent = gapText;
   document.getElementById("hudGap").textContent = gapText;
 
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("validateBtn").disabled = !inRange;
+
+  // figure live (utile même avant validation)
+  const total = Math.max(1, r.cutsExp + r.incRev);
+  const expPct = r.cutsExp / total * 100;
+  const revPct = r.incRev / total * 100;
+  document.getElementById("figExpBar").style.width = expPct.toFixed(1) + "%";
+  document.getElementById("figRevBar").style.width = revPct.toFixed(1) + "%";
+  document.getElementById("figExpVal").textContent = `${fmtM(r.cutsExp)} M€ (${expPct.toFixed(0)}%)`;
+  document.getElementById("figRevVal").textContent = `${fmtM(r.incRev)} M€ (${revPct.toFixed(0)}%)`;
 }
 
 /* --------- UI RENDER ---------- */
@@ -247,7 +294,7 @@ function renderBlock(container, list, kind){
       <div class="hint">Base : ${Math.round(b.base/1000)} Md€</div>
       <div class="sliderWrap">
         <button class="nudge" data-id="${id}" data-d="-1">−</button>
-        <input type="range" id="${id}" min="-30" max="30" step="1" ${b.locked?"value='0' disabled":"value='0'"} />
+        <input type="range" id="${id}" min="${CFG.range.min}" max="${CFG.range.max}" step="1" ${b.locked?"value='0' disabled":"value='0'"} />
         <button class="nudge" data-id="${id}" data-d="+1">+</button>
       </div>
       <div class="valLine">
@@ -277,23 +324,44 @@ function renderBlock(container, list, kind){
       const gain = isExpense ? (delta<0) : (delta>0);
       delEl.classList.toggle("gain", gain);
       delEl.classList.toggle("loss", !gain && delta!==0);
-      updateKPIs();
+      updateKPIs_andHUD();
     };
 
-    // Meilleure UX tactile : empêcher le scroll pendant le glissement
-    slider.addEventListener("touchstart", e=>{ e.preventDefault(); }, {passive:false});
-    slider.addEventListener("touchmove",  e=>{ e.preventDefault(); }, {passive:false});
     slider.addEventListener("input", update);
     update();
 
-    // Boutons +/- pour ajuster de 1%
+    // Boutons +/- : auto-repeat au maintien (évite double-tap zoom)
+    let timer=null, stepper=null;
+    const startRepeat = (dir)=>{
+      const d = Number(dir);
+      const tick = ()=>{
+        const next = Math.max(CFG.range.min, Math.min(CFG.range.max, Number(slider.value)+d));
+        if(Number(slider.value) !== next){
+          slider.value = String(next);
+          update();
+        }
+      };
+      tick();
+      // accélération douce
+      let interval = 280;
+      stepper = setInterval(()=>{ tick(); }, interval);
+      timer = setTimeout(()=>{
+        clearInterval(stepper);
+        interval = 120;
+        stepper = setInterval(()=>{ tick(); }, interval);
+      }, 600);
+    };
+    const stopRepeat = ()=>{
+      if(timer){ clearTimeout(timer); timer=null; }
+      if(stepper){ clearInterval(stepper); stepper=null; }
+    };
     row.querySelectorAll(".nudge").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const d = Number(btn.dataset.d);
-        const next = Math.max(-30, Math.min(30, Number(slider.value)+d));
-        slider.value = String(next);
-        update();
-      });
+      const dir = btn.dataset.d === "+1" ? +1 : -1;
+      // pointer events = fiable mobile/desktop, évite double-tap
+      btn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
+      btn.addEventListener("pointerup",   ()=> stopRepeat());
+      btn.addEventListener("pointercancel",()=> stopRepeat());
+      btn.addEventListener("pointerleave", ()=> stopRepeat());
     });
   });
 }
@@ -302,7 +370,7 @@ function renderBlock(container, list, kind){
 function buildCompactPayload(){
   const r=compute();
   return {
-    dataset:"Budget APU 2024 — normalisation répondant",
+    dataset:"Budget 2026 (base 2024) — normalisation répondant",
     unit:"M€",
     totals2024:{expenses:r.BASE_EXP, revenues:r.BASE_REV, deficit:r.baseDef},
     target:CFG.target, savingsM:r.savingM,
@@ -393,29 +461,27 @@ async function onValidate(){
   const mySavings = compute().savingM;
 
   if(stats){
-    state.stats = stats;
-    document.getElementById("kpiCountBox").style.display = "block";
-    document.getElementById("kpiCount").textContent = stats.count;
+    document.getElementById("ansCount").textContent = `— Réponses dans la base : ${stats.count}`;
     renderComparison(stats.avgExpPct||[], stats.avgRevPct||[], mySavings);
-    document.getElementById("normNote").textContent =
-      `Comparaison normalisée à votre économie totale (${fmtM(mySavings)} M€). Réponses dans la base : ${stats.count}.`;
-    toast(`Réponse envoyée · Réponses : ${stats.count}`);
+    document.getElementById("normNote").style.display = "block";
+    document.getElementById("validateHint").textContent="Réponse envoyée ✔ — résultats affichés ci-dessous.";
   }else{
+    document.getElementById("ansCount").textContent = "";
     document.getElementById("normNote").textContent =
       "Comparaison indisponible (statistiques non accessibles). Votre réponse a été enregistrée.";
-    toast("Réponse envoyée");
   }
+
+  // Scroll vers résultats
+  document.getElementById("results").scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 /* --------- INIT ---------- */
 function init(){
   renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
   renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
-  updateKPIs();
+  updateKPIs_andHUD();
 
   document.getElementById("validateBtn").addEventListener("click", onValidate);
-  // Précharger le compteur si possible
-  fetchStats().then(s=>{ if(s && s.count){ document.getElementById("kpiCountBox").style.display="block"; document.getElementById("kpiCount").textContent=s.count; } });
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
