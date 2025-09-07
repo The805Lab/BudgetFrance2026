@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BudgetLab – Test Violin</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    body{font-family:Inter,system-ui,Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:16px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:14px;padding:16px;margin:12px 0}
+    h1{font-size:20px;margin:0 0 8px}
+    .caption{color:#a1a1aa;font-size:12px;margin-top:6px}
+    /* Conteneur responsive pour Plotly */
+    #violin-prot-soc {width:100%; height:220px;}
+    .legendRow{display:flex;gap:12px;align-items:center;margin-top:8px;font-size:13px;color:#cbd5e1}
+    .pill{width:14px;height:8px;border-radius:4px;background:#f3d9a7}
+    .pillMean{width:12px;height:12px;border-left:3px solid #eab308}
+    .pillMine{width:12px;height:12px;border:2px solid #38bdf8;border-radius:3px}
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Protection sociale – dispersion des réponses (Δ en M€)</h1>
+    <div id="violin-prot-soc"></div>
+    <div class="legendRow">
+      <span class="pill"></span> Distribution (base)
+      <span class="pillMean"></span> Médiane (base)
+      <span class="pillMine"></span> Votre valeur
+    </div>
+    <div id="ps-stats" class="caption"></div>
+  </div>
+
+<script>
+(async function(){
+  // 👉 1) RENSEIGNE TON ENDPOINT
+  const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
+
+  // 👉 2) TA VALEUR pour cette catégorie (Δ en M€) – ici exemple -42 084 M€
+  //    Remplace par la valeur issue de ton simulateur si tu intègres dans ta page principale.
+  const myValueME = -42084;
+
+  // 3) On récupère la distribution depuis Google Sheet (via Apps Script)
+  let data = { ok:false };
+  try {
+    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent("E_prot_soc_delta_M€");
+    const res = await fetch(url, { method:"GET" });
+    data = await res.json();
+  } catch(e) {
+    console.warn("Fetch error, on bascule sur des données mock pour tester.", e);
+  }
+
+  // 4) Données fallback si la base est vide (pour voir le rendu)
+  if (!data.ok || !Array.isArray(data.values) || data.values.length === 0) {
+    data = {
+      ok: true,
+      field: "E_prot_soc_delta_M€",
+      values: [-70000,-52000,-49000,-43000,-41000,-38000,-30000,-15000,-5000, 2000, 8000, 12000],
+      stats: { count:12, min:-70000, max:12000, mean:-27500, median:-35500 }
+    };
+  }
+
+  const values = data.values;
+  const stats  = data.stats || {min:0,max:0,median:0,count:values.length};
+
+  // 5) Trace violin (horizontal) + médiane + votre point
+  const violin = {
+    type: "violin",
+    orientation: "h",
+    x: values,         // Δ en M€
+    y: values.map(_ => ""), // une seule “ligne”
+    name: "Base",
+    points: false,     // pas de points individuels
+    fillcolor: "rgba(245, 203, 92, 0.35)",   // beige translucide
+    line: { color: "rgba(0,0,0,0)" },        // pas de contour
+    meanline: { visible: false },            // on gère la médiane via shape
+    hovertemplate: "%{x:.0f} M€<extra></extra>"
+  };
+
+  // Médiane (trait vertical jaune)
+  const medianX = (typeof stats.median === "number") ? stats.median : 0;
+
+  // Votre valeur (losange bleu)
+  const me = {
+    type: "scatter",
+    mode: "markers",
+    x: [myValueME],
+    y: [0],
+    marker: { color: "#38bdf8", size: 12, symbol: "diamond" },
+    name: "Votre valeur",
+    hovertemplate: "Vous : %{x:.0f} M€<extra></extra>"
+  };
+
+  // Mise en page
+  const margin = Math.max(10, (stats.max - stats.min) * 0.02);
+  const layout = {
+    paper_bgcolor: "#111827",
+    plot_bgcolor: "#111827",
+    font: { color: "#e2e8f0" },
+    margin: { l: 10, r: 10, t: 10, b: 30 },
+    xaxis: {
+      title: "Δ (M€) – dépenses négatives = économies",
+      gridcolor: "#334155",
+      zerolinecolor: "#334155",
+      range: [ (stats.min ?? -100) - margin, (stats.max ?? 100) + margin ],
+      tickformat: ",.0f"
+    },
+    yaxis: { showticklabels: false },
+    shapes: [
+      // médiane
+      {
+        type: "line",
+        x0: medianX, x1: medianX,
+        y0: -0.6, y1: 0.6,
+        line: { color: "#eab308", width: 3 }
+      },
+      // zéro (référence)
+      {
+        type: "line",
+        x0: 0, x1: 0,
+        y0: -0.8, y1: 0.8,
+        line: { color: "rgba(148,163,184,0.45)", width: 2, dash: "dot" }
+      }
+    ],
+    showlegend: false
+  };
+
+  Plotly.newPlot("violin-prot-soc", [violin, me], layout, {responsive:true, displayModeBar:false});
+
+  // Petit rappel stats
+  const el = document.getElementById("ps-stats");
+  el.textContent = `n=${stats.count ?? values.length} · min=${fmt(stats.min)} M€ · médiane=${fmt(medianX)} M€ · max=${fmt(stats.max)} M€`;
+
+  function fmt(v){ return (typeof v === "number") ? Math.round(v).toLocaleString("fr-FR") : "—"; }
+})();
+</script>
+
+</body>
+</html>
