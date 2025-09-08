@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>BudgetLab – Violin hybride</title>
+  <title>BudgetLab – Violin hybride (test)</title>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <style>
     body{font-family:Inter,system-ui,Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:16px}
@@ -32,13 +32,14 @@
 
 <script>
 (async function(){
-  // 👉 1) Ton Apps Script
+  // 👉 Ton Apps Script
   const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
 
-  // 👉 2) Ta valeur (exemple)
-  const myValueME = -42084; // à remplacer par la valeur issue du simulateur
+  // 👉 Ta valeur actuelle (Δ en M€) : pour test, chiffre fixe. En prod, lis depuis localStorage ou ton front.
+  const saved = localStorage.getItem("budgetlab:last");
+  const myValueME = saved ? Number(JSON.parse(saved)["E_prot_soc_delta_M€"] ?? -42084) : -42084;
 
-  // 👉 3) Récupère la distribution
+  // Récupère la distribution
   let data = { ok:false };
   try {
     const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent("E_prot_soc_delta_M€");
@@ -58,34 +59,32 @@
   }
 
   const values = data.values;
-  const stats  = data.stats || {min:0,max:0,median:0,count:values.length};
+  const stats  = data.stats || {min:0,max:0,mean:0,median:0,count:values.length};
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
 
-  // ✅ Violin + halo de points
+  // Violin + halo de points
   const violin = {
     type: "violin",
     orientation: "h",
-    x: values,
+    x: values.length? values : [0],
     y: values.map(_ => ""),
     name: "Base",
-    points: "all",      // affiche les points
-    jitter: 0.6,        // dispersion horizontale
+    points: "all",
+    jitter: 0.6,
     scalemode: "count",
     pointpos: 0,
     marker: { size: 5, opacity: 0.35, color: "rgba(245, 203, 92, 0.7)" },
-    fillcolor: "rgba(245, 203, 92, 0.25)", // halo translucide
+    fillcolor: "rgba(245, 203, 92, 0.25)",
     line: { color: "rgba(0,0,0,0)" },
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
-  // ✅ Barres visibles
+  // Barres visibles + annotations
   const shapes = [
     { type: "line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line: { color: "#eab308", width: 6 } },
     { type: "line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line: { color: "#38bdf8", width: 6 } },
     { type: "line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line: { color: "rgba(148,163,184,0.45)", width: 2, dash: "dot" } }
   ];
-
-  // ✅ Annotations explicites
   const annotations = [
     { x: myValueME, y: 0.75, text: "Vous : " + fmt(myValueME) + " M€", showarrow: true, arrowhead: 6, ax: 0, ay: -35,
       font: { color: "#38bdf8", size: 12 }, bgcolor: "rgba(56,189,248,0.08)", bordercolor:"#38bdf8" },
@@ -93,28 +92,29 @@
       font: { color: "#eab308", size: 12 }, bgcolor: "rgba(234,179,8,0.08)", bordercolor:"#eab308" }
   ];
 
-  const margin = Math.max(10, (stats.max - stats.min) * 0.04);
+  const min = (typeof stats.min === "number") ? stats.min : Math.min(0,myValueME);
+  const max = (typeof stats.max === "number") ? stats.max : Math.max(0,myValueME);
+  const margin = Math.max(10, (max - min) * 0.04);
+
   const layout = {
     paper_bgcolor: "#111827",
     plot_bgcolor: "#111827",
     font: { color: "#e2e8f0" },
-    margin: { l: 10, r: 10, t: 10, b: 42 },
+    margin: { l: 10, r: 10, t: 28, b: 42 },
+    title:{ text:"Protection sociale", x:0, xanchor:"left", y:0.98, font:{size:14} },
     xaxis: {
       title: "Variation (en M€) — négatif = économies",
       gridcolor: "#334155",
       zerolinecolor: "#334155",
-      range: [ (stats.min ?? -100) - margin, (stats.max ?? 100) + margin ],
+      range: [ (min ?? -100) - margin, (max ?? 100) + margin ],
       tickformat: ",.0f"
     },
     yaxis: { showticklabels: false },
-    shapes,
-    annotations,
-    hovermode: "x unified",
-    showlegend: false
+    shapes, annotations, hovermode:"x unified", showlegend:false
   };
 
   const isMobile = window.matchMedia("(max-width: 520px)").matches;
-  const config = { responsive: true, displayModeBar: false, staticPlot: isMobile };
+  const config = { responsive:true, displayModeBar:false, staticPlot:isMobile };
 
   Plotly.newPlot("violin-prot-soc", [violin], layout, config);
 
