@@ -35,16 +35,25 @@
   .sliderWrap{display:grid;grid-template-columns:42px 1fr 42px;gap:8px;align-items:center}
   .nudge{width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
   .nudge:active{transform:scale(.98)}
+  .nudge[disabled]{opacity:.4;cursor:not-allowed}
   input[type=range]{width:100%;margin:8px 0;height:36px;touch-action:pan-y}
   input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
   input[type=range]::-moz-range-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border:none;border-radius:50%;background:var(--brand)}
+  input[type=range][disabled]{opacity:.5}
+
   .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
 
-  .floatBubble{position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring); border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem}
+  /* HUD flottant avec code couleur (bord à gauche) */
+  .floatBubble{
+    position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
+    border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
+    border-left:6px solid var(--bad);
+  }
+  .floatBubble.ok{ border-left-color: var(--ok); }
   .floatBubble strong{color:#fff}
 
   .btn{display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem}
@@ -89,7 +98,19 @@
   <!-- Résultats -->
   <div id="results" class="card results">
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparaison normalisée (violons)</h2>
-    <div class="legend" id="normNote">Chaque poste affiche la distribution des réponses (halo + “violon”) ; barres : <span style="color:#38bdf8;font-weight:700">Vous</span> et <span style="color:#eab308;font-weight:700">Médiane</span>. <span id="ansCount"></span></div>
+
+    <!-- Résumé haut : Δ Dépenses & Δ Recettes + comparaison moyenne -->
+    <div class="card" style="background:#0b1935;border-color:#1e2d55;">
+      <div style="display:grid;grid-template-columns:1fr;gap:8px">
+        <div><strong>Votre réduction de dépenses :</strong> <span id="sumCutsYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Moyenne :</span> <span id="sumCutsAvg">0</span> M€</div>
+        <div><strong>Votre variation de recettes :</strong> <span id="sumIncYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Moyenne :</span> <span id="sumIncAvg">0</span> M€</div>
+      </div>
+    </div>
+
+    <div class="legend" id="normNote">
+      Chaque poste affiche la distribution des réponses (halo + “violon”) ; barres : <span style="color:#38bdf8;font-weight:700">Vous</span> et
+      <span style="color:#eab308;font-weight:700">Médiane</span>. <span id="ansCount"></span>
+    </div>
 
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€) — négatif = économies</div>
@@ -107,7 +128,7 @@
 </div>
 
 <!-- Bulle flottante permanente -->
-<div class="floatBubble">
+<div id="hud" class="floatBubble">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
 </div>
@@ -121,24 +142,40 @@ const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg
 const CFG = {
   target:{min:40000, max:45000},
   expenses: [
-    {k:"prot_soc",label:"Protection sociale",base:701400,info:"(Retraites, allocations, chômage, minima sociaux.)",locked:false},
-    {k:"sante",label:"Santé",base:250500,info:"",locked:false},
-    {k:"education",label:"Éducation",base:167000,info:"",locked:false},
-    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,info:"",locked:false},
-    {k:"interets_dette",label:"Charges d’intérêts de la dette (non modifiable)",base:58700,info:"(Service de la dette — verrouillé.)",locked:true},
-    {k:"aff_econ",label:"Affaires économiques",base:167000,info:"",locked:false},
-    {k:"defense",label:"Défense",base:75200,info:"",locked:false},
-    {k:"ordre_secu",label:"Ordre & sécurité publics",base:50100,info:"",locked:false},
-    {k:"logement",label:"Logement & équipements collectifs",base:30100,info:"",locked:false},
-    {k:"environnement",label:"Protection de l’environnement",base:30100,info:"",locked:false},
-    {k:"culture",label:"Culture, loisirs et cultes",base:20000,info:"",locked:false},
+    {k:"prot_soc",label:"Protection sociale",base:701400,locked:false,
+      info:"Retraites, assurance chômage, minima sociaux, prestations familiales."},
+    {k:"sante",label:"Santé",base:250500,locked:false,
+      info:"Hôpitaux, soins, médicaments, prévention, santé publique."},
+    {k:"education",label:"Éducation",base:167000,locked:false,
+      info:"Écoles, collèges, lycées, universités, vie étudiante."},
+    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,locked:false,
+      info:"Fonctionnement de l’État, administrations centrales, coordination, R&D générale."},
+    {k:"interets_dette",label:"Charges d’intérêts de la dette (non modifiable)",base:58700,locked:true,
+      info:"Service de la dette — dépend des taux et encours (verrouillé)."},
+    {k:"aff_econ",label:"Affaires économiques",base:167000,locked:false,
+      info:"Transports, agriculture, énergie, industrie, soutien à l’emploi/investissement."},
+    {k:"defense",label:"Défense",base:75200,locked:false,
+      info:"Armée, équipements, opérations, dissuasion, maintenance."},
+    {k:"ordre_secu",label:"Ordre & sécurité publics",base:50100,locked:false,
+      info:"Police, gendarmerie, justice pénale, prisons, sécurité civile."},
+    {k:"logement",label:"Logement & équipements collectifs",base:30100,locked:false,
+      info:"Aides au logement, urbanisme, infrastructures locales."},
+    {k:"environnement",label:"Protection de l’environnement",base:30100,locked:false,
+      info:"Déchets, eau, air, biodiversité, climat."},
+    {k:"culture",label:"Culture, loisirs et cultes",base:20000,locked:false,
+      info:"Culture, sport, patrimoine, bibliothèques, cultes."},
   ],
   revenues: [
-    {k:"imp_prod",label:"Impôts sur la production et importations",base:570000},
-    {k:"cotis",label:"Cotisations sociales",base:480000},
-    {k:"ir",label:"Impôt sur le revenu",base:120000},
-    {k:"is",label:"Impôt sur les sociétés",base:80000},
-    {k:"autres_rec",label:"Autres recettes",base:252000},
+    {k:"imp_prod",label:"Impôts sur la production et importations",base:570000,
+      info:"TVA, taxes sur les produits/consommations (carburants…), droits de douane."},
+    {k:"cotis",label:"Cotisations sociales",base:480000,
+      info:"Cotisations employeurs/salariés (retraites, santé, chômage)."},
+    {k:"ir",label:"Impôt sur le revenu",base:120000,
+      info:"IRPP, prélèvement à la source, acomptes."},
+    {k:"is",label:"Impôt sur les sociétés",base:80000,
+      info:"Impôt sur les bénéfices des entreprises."},
+    {k:"autres_rec",label:"Autres recettes",base:252000,
+      info:"Dividendes/recettes patrimoniales, amendes, redevances, divers."},
   ],
   range:{min:-15,max:15}
 };
@@ -146,7 +183,9 @@ const CFG = {
 /* --------- STATE ---------- */
 const state = {
   expPct: CFG.expenses.map(()=>0),
-  revPct: CFG.revenues.map(()=>0)
+  revPct: CFG.revenues.map(()=>0),
+  avgExpPct: [], avgRevPct: [], // pour comparaison moyenne
+  count: 0
 };
 
 /* --------- UTILS ---------- */
@@ -167,7 +206,31 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM};
+  // Décompositions pour le résumé
+  const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
+    const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
+    return sum + (d<0 ? -d : 0);
+  },0);
+  const incRev = CFG.revenues.reduce((sum,b,i)=>{
+    const d = Math.round(b.base*(1+state.revPct[i]/100)) - b.base;
+    return sum + (d>0 ? d : 0);
+  },0);
+
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev};
+}
+function computeAvgCutsInc(){
+  // Applique les % moyens (state.avgExpPct, state.avgRevPct)
+  const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
+    const pct = (state.avgExpPct[i]||0);
+    const d = Math.round(b.base*(1+(b.locked?0:pct)/100)) - b.base;
+    return sum + (d<0 ? -d : 0);
+  },0);
+  const incRev = CFG.revenues.reduce((sum,b,i)=>{
+    const pct = (state.avgRevPct[i]||0);
+    const d = Math.round(b.base*(1+pct/100)) - b.base;
+    return sum + (d>0 ? d : 0);
+  },0);
+  return {cutsExp, incRev};
 }
 function updateHUD(){
   const r = compute();
@@ -185,6 +248,10 @@ function updateHUD(){
 
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("validateBtn").disabled = !inRange;
+
+  // Code couleur HUD
+  const hud = document.getElementById("hud");
+  hud.classList.toggle("ok", inRange);
 }
 
 /* --------- UI RENDER (sliders) ---------- */
@@ -193,14 +260,15 @@ function renderBlock(container, list, kind){
     const row = document.createElement("div");
     row.className="row";
     const id=`${kind}_${idx}`;
+    const disabledAttr = b.locked ? "disabled" : "";
     row.innerHTML = `
       <div class="label">${b.label}</div>
       ${b.info?`<div class="hint">${b.info}</div>`:""}
       <div class="hint">Base : ${Math.round(b.base/1000)} Md€</div>
       <div class="sliderWrap">
-        <button class="nudge" data-id="${id}" data-d="-1">−</button>
+        <button class="nudge" data-id="${id}" data-d="-1" ${disabledAttr}>−</button>
         <input type="range" id="${id}" min="${CFG.range.min}" max="${CFG.range.max}" step="1" ${b.locked?"value='0' disabled":"value='0'"} />
-        <button class="nudge" data-id="${id}" data-d="+1">+</button>
+        <button class="nudge" data-id="${id}" data-d="+1" ${disabledAttr}>+</button>
       </div>
       <div class="valLine">
         <div><span id="${id}_pct">0</span>%</div>
@@ -234,27 +302,29 @@ function renderBlock(container, list, kind){
 
     slider.addEventListener("input", update); update();
 
-    // Auto-repeat +/− (évite double-tap zoom)
-    let timer=null, stepper=null;
-    const startRepeat = (dir)=>{
-      const d = Number(dir);
-      const tick = ()=>{
-        const next = Math.max(CFG.range.min, Math.min(CFG.range.max, Number(slider.value)+d));
-        if(Number(slider.value) !== next){ slider.value = String(next); update(); }
+    // Boutons +/- : auto-repeat, mais désactivés si locked
+    if (!b.locked){
+      let timer=null, stepper=null;
+      const startRepeat = (dir)=>{
+        const d = Number(dir);
+        const tick = ()=>{
+          const next = Math.max(CFG.range.min, Math.min(CFG.range.max, Number(slider.value)+d));
+          if(Number(slider.value) !== next){ slider.value = String(next); update(); }
+        };
+        tick();
+        let interval = 280;
+        stepper = setInterval(()=>{ tick(); }, interval);
+        timer = setTimeout(()=>{ clearInterval(stepper); interval=120; stepper=setInterval(()=>{tick();}, interval); }, 600);
       };
-      tick();
-      let interval = 280;
-      stepper = setInterval(()=>{ tick(); }, interval);
-      timer = setTimeout(()=>{ clearInterval(stepper); interval=120; stepper=setInterval(()=>{tick();}, interval); }, 600);
-    };
-    const stopRepeat = ()=>{ if(timer){clearTimeout(timer);timer=null} if(stepper){clearInterval(stepper);stepper=null} };
-    row.querySelectorAll(".nudge").forEach(btn=>{
-      const dir = btn.dataset.d === "+1" ? +1 : -1;
-      btn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
-      btn.addEventListener("pointerup",   ()=> stopRepeat());
-      btn.addEventListener("pointercancel",()=> stopRepeat());
-      btn.addEventListener("pointerleave", ()=> stopRepeat());
-    });
+      const stopRepeat = ()=>{ if(timer){clearTimeout(timer);timer=null} if(stepper){clearInterval(stepper);stepper=null} };
+      row.querySelectorAll(".nudge").forEach(btn=>{
+        const dir = btn.dataset.d === "+1" ? +1 : -1;
+        btn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
+        btn.addEventListener("pointerup",   ()=> stopRepeat());
+        btn.addEventListener("pointercancel",()=> stopRepeat());
+        btn.addEventListener("pointerleave", ()=> stopRepeat());
+      });
+    }
   });
 }
 
@@ -283,7 +353,7 @@ const FIELD_MAP_EXP = [
   {id:"sante", label:"Santé", field:"E_sante_delta_M€", locked:false},
   {id:"education", label:"Éducation", field:"E_education_delta_M€", locked:false},
   {id:"serv_gen", label:"Services publics généraux (hors intérêts dette)", field:"E_serv_gen_delta_M€", locked:false},
-  {id:"interets_dette", label:"Intérêts de la dette (verrouillé)", field:"E_interets_dette_delta_M€", locked:true},
+  // {id:"interets_dette", label:"Intérêts de la dette (verrouillé)", field:"E_interets_dette_delta_M€", locked:true}, // retiré des résultats
   {id:"aff_econ", label:"Affaires économiques", field:"E_aff_econ_delta_M€", locked:false},
   {id:"defense", label:"Défense", field:"E_defense_delta_M€", locked:false},
   {id:"ordre_secu", label:"Ordre & sécurité publics", field:"E_ordre_secu_delta_M€", locked:false},
@@ -322,20 +392,21 @@ function divFor(container, mapItem){
 }
 
 function myDeltaForField(field){
-  // Recalcule à la volée depuis les pourcentages actuels (pas besoin de localStorage)
+  // Recalcule à la volée depuis les pourcentages actuels
   const isExp = field.startsWith("E_");
   if (isExp){
     const idx = FIELD_MAP_EXP.findIndex(m=>m.field===field);
     if (idx<0) return 0;
-    const base = CFG.expenses[idx].base;
-    const pct  = CFG.expenses[idx].locked ? 0 : (state.expPct[idx]||0);
+    // attention : FIELD_MAP_EXP est un sous-ensemble => map vers CFG.expenses
+    const expIndex = CFG.expenses.findIndex(x => ("E_"+x.k+"_delta_M€") === field);
+    const base = CFG.expenses[expIndex].base;
+    const pct  = CFG.expenses[expIndex].locked ? 0 : (state.expPct[expIndex]||0);
     const nv   = Math.round(base*(1+pct/100));
     return nv - base;
   }else{
-    const idx = FIELD_MAP_REV.findIndex(m=>m.field===field);
-    if (idx<0) return 0;
-    const base = CFG.revenues[idx].base;
-    const pct  = (state.revPct[idx]||0);
+    const revIndex = CFG.revenues.findIndex(x => ("R_"+x.k+"_delta_M€") === field);
+    const base = CFG.revenues[revIndex].base;
+    const pct  = (state.revPct[revIndex]||0);
     const nv   = Math.round(base*(1+pct/100));
     return nv - base;
   }
@@ -389,25 +460,32 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-async function renderAllViolins(){
-  // Prépare les conteneurs
+/* --------- RÉSULTATS (parallélisation) ---------- */
+async function renderAllViolinsParallel(){
   const expWrap = document.getElementById("violins-expenses");
   const revWrap = document.getElementById("violins-revenues");
   expWrap.innerHTML=""; revWrap.innerHTML="";
 
-  // Dépenses
-  for (const m of FIELD_MAP_EXP){
+  // Crée les divs et prépare les promesses fetch
+  const expJobs = FIELD_MAP_EXP.map(m=>{
     const divId = divFor(expWrap, m);
     const myVal = myDeltaForField(m.field);
-    const j = await fetchDistribution(m.field);
-    drawViolinHybrid(divId, j.values||[], j.stats||{}, myVal, m.label + (m.locked?" (verrouillé)":""));
-  }
-  // Recettes
-  for (const m of FIELD_MAP_REV){
+    const p = fetchDistribution(m.field).then(j=>({m,divId,myVal,j}));
+    return p;
+  });
+  const revJobs = FIELD_MAP_REV.map(m=>{
     const divId = divFor(revWrap, m);
     const myVal = myDeltaForField(m.field);
-    const j = await fetchDistribution(m.field);
-    drawViolinHybrid(divId, j.values||[], j.stats||{}, myVal, m.label);
+    const p = fetchDistribution(m.field).then(j=>({m,divId,myVal,j}));
+    return p;
+  });
+
+  // Lance tout en parallèle
+  const results = await Promise.all([...expJobs, ...revJobs]);
+
+  // Trace
+  for (const r of results){
+    drawViolinHybrid(r.divId, r.j.values||[], r.j.stats||{}, r.myVal, r.m.label);
   }
 }
 
@@ -416,17 +494,32 @@ async function onValidate(){
   const payload = buildCompactPayload();
   sendToSheet(payload);
 
-  // Affiche résultats + trace les violons
+  // Affiche résultats
   document.getElementById("results").style.display="block";
 
-  // Essaie de récupérer le nombre de réponses via endpoint stats (si dispo)
+  // Récupère stats moyennes + count (si dispo), en parallèle avec les distributions
   try{
-    const r = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
-    const j = await r.json();
-    if(j && j.ok){ document.getElementById("ansCount").textContent = `— Réponses : ${j.count}`; }
+    const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
+    const stats = await statsRes.json();
+    if(stats && stats.ok){
+      state.avgExpPct = stats.avgExpPct || [];
+      state.avgRevPct = stats.avgRevPct || [];
+      state.count = stats.count || 0;
+      document.getElementById("ansCount").textContent = `— Réponses : ${state.count}`;
+    }
   }catch(e){}
 
-  await renderAllViolins();
+  // Met à jour le résumé (vous vs moyenne)
+  const you = compute();
+  const avg  = computeAvgCutsInc();
+  document.getElementById("sumCutsYou").textContent = fmtM(you.cutsExp);
+  document.getElementById("sumIncYou").textContent  = fmtM(you.incRev);
+  document.getElementById("sumCutsAvg").textContent = fmtM(avg.cutsExp || 0);
+  document.getElementById("sumIncAvg").textContent  = fmtM(avg.incRev || 0);
+
+  // Dessine les violons (parallèle)
+  await renderAllViolinsParallel();
+
   document.getElementById("validateHint").textContent="Réponse envoyée ✔ — résultats affichés ci-dessous.";
   document.getElementById("results").scrollIntoView({behavior:"smooth", block:"start"});
 }
