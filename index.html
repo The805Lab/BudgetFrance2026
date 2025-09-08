@@ -2,111 +2,61 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<!-- Empêche le double-tap zoom sur iOS pour des boutons +/− plus fluides -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>BudgetLab — Trouver 40 Md€ pour le budget 2026</title>
+
+<!-- Plotly pour les “violons” -->
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
 <style>
   :root{
-    /* Palette bleue unifiée (pas de vert de fond) */
-    --bg:#0a1022; 
-    --panel:#0f1a33; 
-    --panel2:#0b1530;
-    --ring:#21315a;
-    --text:#e8f0ff; 
-    --muted:#a7b5cf;
-    --ok:#16a34a; 
-    --bad:#ef4444;
-
-    /* Sections distinctes en bleus */
-    --expBg:#0e254f;   /* Dépenses */
-    --revBg:#0b1f45;   /* Recettes */
-
-    --chip:#0c1636;
-    --brand:#2563eb;
+    --bg:#0a1022; --panel:#0f1a33; --panel2:#0b1530; --ring:#21315a;
+    --text:#e8f0ff; --muted:#a7b5cf;
+    --ok:#16a34a; --bad:#ef4444;
+    --expBg:#0e254f; --revBg:#0b1f45;
+    --chip:#0c1636; --brand:#2563eb;
   }
   *{box-sizing:border-box}
-  body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    touch-action: pan-y; /* laisse défiler verticalement, évite les conflits */
-  }
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
-
-  /* En-tête minimal, lisible */
   h1{margin:0 0 6px;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
-
-  /* Barre de progression compacte sous le titre */
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
 
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
-
-  /* Sections très contrastées (bleus) */
   .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overflow:hidden; overscroll-behavior:contain}
-  .section.exp{background:var(--expBg)}
-  .section.rev{background:var(--revBg)}
+  .section.exp{background:var(--expBg)} .section.rev{background:var(--revBg)}
   .head{padding:12px 14px;background:rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;font-weight:700}
   .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:#0b152f;color:#dce7ff;font-size:.8rem}
   .row{padding:12px 14px;border-top:1px dashed #274067}
+  .label{font-weight:700} .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
 
-  .label{font-weight:700}
-  .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
-
-  /* Sliders : amplitude -15/+15, bouton +/− avec auto-repeat, meilleure prise en main */
   .sliderWrap{display:grid;grid-template-columns:42px 1fr 42px;gap:8px;align-items:center}
-  .nudge{
-    width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);
-    background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;
-    touch-action: manipulation; /* évite double-tap zoom */
-  }
+  .nudge{width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
   .nudge:active{transform:scale(.98)}
-  input[type=range]{width:100%;margin:8px 0;height:36px; /* hauteur plus grande */
-    touch-action: pan-y;  /* autorise le drag et empêche conflits */
-  }
+  input[type=range]{width:100%;margin:8px 0;height:36px;touch-action:pan-y}
   input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
   input[type=range]::-moz-range-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border:none;border-radius:50%;background:var(--brand)}
   .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
   .delta{font-variant-numeric:tabular-nums}
-  .delta.gain{color:var(--ok)}
-  .delta.loss{color:var(--bad)}
+  .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
 
-  /* Bulle fixe qui suit l’écran : économie & écart (mobile & desktop) */
-  .floatBubble{
-    position:fixed; right:14px; bottom:14px; z-index:50;
-    background:#0b172f;border:1px solid var(--ring); border-radius:12px; padding:10px 12px;
-    box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem
-  }
+  .floatBubble{position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring); border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem}
   .floatBubble strong{color:#fff}
 
-  /* Bouton Valider plus visible */
-  .btn{
-    display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;
-    border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem
-  }
+  .btn{display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem}
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
-  .btn.wide{width:100%}
-  @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
+  .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
 
-  /* Résultats : figure + détail par postes */
   .results{display:none}
-  .figure{
-    background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:12px;margin-bottom:12px
-  }
-  .figureTitle{font-weight:700;margin-bottom:8px}
-  .bars{display:grid;gap:10px}
-  .barH{height:14px;background:#1f2c4e;border:1px solid #2a3c69;border-radius:999px;overflow:hidden}
-  .barH>span{display:block;height:100%}
-  .barExp{background:#0ea5e9} /* bleu clair pour dépenses */
-  .barRev{background:#60a5fa} /* bleu différent pour recettes */
-
-  .cmpCard{padding:10px;border:1px dashed #2a3c64;border-radius:10px;margin:8px 0;background:rgba(255,255,255,.03)}
-  .cmpTitle{font-weight:700;margin-bottom:6px}
-  .cmpLine{display:flex;justify-content:space-between;color:var(--muted);font-size:.95rem}
-  .cmpLine span:last-child{font-variant-numeric:tabular-nums}
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
+
+  /* Grille des violons */
+  .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
   .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
@@ -114,7 +64,6 @@
 </head>
 <body>
 <div class="wrap">
-  <!-- Titre ajusté : objectif 2026, mention base 2024 discrète -->
   <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
   <div class="subtitle">Référence : <em>base 2024</em></div>
   <div class="bar"><span id="bar"></span></div>
@@ -139,32 +88,16 @@
 
   <!-- Résultats -->
   <div id="results" class="card results">
-    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparaison normalisée</h2>
-    <div class="legend" id="normNote">Comparaison : <strong>Vous</strong> vs <strong>Moyenne</strong> (normalisée à votre économie). <span id="ansCount"></span></div>
+    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparaison normalisée (violons)</h2>
+    <div class="legend" id="normNote">Chaque poste affiche la distribution des réponses (halo + “violon”) ; barres : <span style="color:#38bdf8;font-weight:700">Vous</span> et <span style="color:#eab308;font-weight:700">Médiane</span>. <span id="ansCount"></span></div>
 
-    <!-- Figure synthèse -->
-    <div class="figure">
-      <div class="figureTitle">Synthèse de votre ajustement</div>
-      <div class="bars">
-        <div>
-          <div class="cmpLine" style="margin-bottom:4px"><span>Économies sur dépenses</span><span id="figExpVal">0 M€ (0%)</span></div>
-          <div class="barH"><span id="figExpBar" class="barExp" style="width:0%"></span></div>
-        </div>
-        <div>
-          <div class="cmpLine" style="margin-bottom:4px"><span>Recettes supplémentaires</span><span id="figRevVal">0 M€ (0%)</span></div>
-          <div class="barH"><span id="figRevBar" class="barRev" style="width:0%"></span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Détail par postes -->
     <div class="section exp" style="margin-top:10px">
-      <div class="head">Dépenses — Δ par poste (M€ / %)</div>
-      <div id="cmpExp"></div>
+      <div class="head">Dépenses — variation (M€) — négatif = économies</div>
+      <div id="violins-expenses" class="violinsGrid"></div>
     </div>
     <div class="section rev" style="margin-top:10px">
-      <div class="head">Recettes — Δ par poste (M€ / %)</div>
-      <div id="cmpRev"></div>
+      <div class="head">Recettes — variation (M€)</div>
+      <div id="violins-revenues" class="violinsGrid"></div>
     </div>
   </div>
 
@@ -173,7 +106,7 @@
   </div>
 </div>
 
-<!-- Bulle flottante permanente (économie & écart) -->
+<!-- Bulle flottante permanente -->
 <div class="floatBubble">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -187,7 +120,6 @@ const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg
 
 const CFG = {
   target:{min:40000, max:45000},
-  // bases 2024 (M€)
   expenses: [
     {k:"prot_soc",label:"Protection sociale",base:701400,info:"(Retraites, allocations, chômage, minima sociaux.)",locked:false},
     {k:"sante",label:"Santé",base:250500,info:"",locked:false},
@@ -214,18 +146,13 @@ const CFG = {
 /* --------- STATE ---------- */
 const state = {
   expPct: CFG.expenses.map(()=>0),
-  revPct: CFG.revenues.map(()=>0),
-  stats: null // {count, avgExpPct[], avgRevPct[]}
+  revPct: CFG.revenues.map(()=>0)
 };
 
 /* --------- UTILS ---------- */
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
-function toast(msg){
-  const el=document.getElementById("toast");
-  el.textContent=msg; el.style.display="block";
-  setTimeout(()=>{el.style.display="none"}, 2400);
-}
+function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -238,29 +165,17 @@ function compute(){
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
   const newDef = newExpM - newRevM;
-  const savingM = baseDef - newDef; // économies (+) si déficit baisse
+  const savingM = baseDef - newDef;
 
-  // figure: économies dépense (seulement si delta<0) + hausses de recettes (delta>0)
-  const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
-    const nv = newExp[i]; const d = nv - b.base;
-    return sum + (d<0 ? -d : 0);
-  },0);
-  const incRev = CFG.revenues.reduce((sum,b,i)=>{
-    const nv = newRev[i]; const d = nv - b.base;
-    return sum + (d>0 ? d : 0);
-  },0);
-
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev};
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM};
 }
-
-function updateKPIs_andHUD(){
+function updateHUD(){
   const r = compute();
   const saving = r.savingM;
   const pct = clamp((saving/CFG.target.max)*100,0,100);
   const inRange = (saving>=CFG.target.min && saving<=CFG.target.max);
 
   document.getElementById("hudSaving").textContent = `${fmtM(saving)} M€`;
-
   let gapText;
   if (!inRange){
     if (saving < CFG.target.min) gapText = `≥${fmtM(CFG.target.min - saving)} M€ à trouver`;
@@ -270,24 +185,14 @@ function updateKPIs_andHUD(){
 
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("validateBtn").disabled = !inRange;
-
-  // figure live (utile même avant validation)
-  const total = Math.max(1, r.cutsExp + r.incRev);
-  const expPct = r.cutsExp / total * 100;
-  const revPct = r.incRev / total * 100;
-  document.getElementById("figExpBar").style.width = expPct.toFixed(1) + "%";
-  document.getElementById("figRevBar").style.width = revPct.toFixed(1) + "%";
-  document.getElementById("figExpVal").textContent = `${fmtM(r.cutsExp)} M€ (${expPct.toFixed(0)}%)`;
-  document.getElementById("figRevVal").textContent = `${fmtM(r.incRev)} M€ (${revPct.toFixed(0)}%)`;
 }
 
-/* --------- UI RENDER ---------- */
+/* --------- UI RENDER (sliders) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
     row.className="row";
     const id=`${kind}_${idx}`;
-
     row.innerHTML = `
       <div class="label">${b.label}</div>
       ${b.info?`<div class="hint">${b.info}</div>`:""}
@@ -324,40 +229,27 @@ function renderBlock(container, list, kind){
       const gain = isExpense ? (delta<0) : (delta>0);
       delEl.classList.toggle("gain", gain);
       delEl.classList.toggle("loss", !gain && delta!==0);
-      updateKPIs_andHUD();
+      updateHUD();
     };
 
-    slider.addEventListener("input", update);
-    update();
+    slider.addEventListener("input", update); update();
 
-    // Boutons +/- : auto-repeat au maintien (évite double-tap zoom)
+    // Auto-repeat +/− (évite double-tap zoom)
     let timer=null, stepper=null;
     const startRepeat = (dir)=>{
       const d = Number(dir);
       const tick = ()=>{
         const next = Math.max(CFG.range.min, Math.min(CFG.range.max, Number(slider.value)+d));
-        if(Number(slider.value) !== next){
-          slider.value = String(next);
-          update();
-        }
+        if(Number(slider.value) !== next){ slider.value = String(next); update(); }
       };
       tick();
-      // accélération douce
       let interval = 280;
       stepper = setInterval(()=>{ tick(); }, interval);
-      timer = setTimeout(()=>{
-        clearInterval(stepper);
-        interval = 120;
-        stepper = setInterval(()=>{ tick(); }, interval);
-      }, 600);
+      timer = setTimeout(()=>{ clearInterval(stepper); interval=120; stepper=setInterval(()=>{tick();}, interval); }, 600);
     };
-    const stopRepeat = ()=>{
-      if(timer){ clearTimeout(timer); timer=null; }
-      if(stepper){ clearInterval(stepper); stepper=null; }
-    };
+    const stopRepeat = ()=>{ if(timer){clearTimeout(timer);timer=null} if(stepper){clearInterval(stepper);stepper=null} };
     row.querySelectorAll(".nudge").forEach(btn=>{
       const dir = btn.dataset.d === "+1" ? +1 : -1;
-      // pointer events = fiable mobile/desktop, évite double-tap
       btn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
       btn.addEventListener("pointerup",   ()=> stopRepeat());
       btn.addEventListener("pointercancel",()=> stopRepeat());
@@ -366,7 +258,7 @@ function renderBlock(container, list, kind){
   });
 }
 
-/* --------- BACK (POST/GET) ---------- */
+/* --------- BACK (POST minimal) ---------- */
 function buildCompactPayload(){
   const r=compute();
   return {
@@ -381,97 +273,161 @@ function buildCompactPayload(){
 }
 function sendToSheet(payload){
   try{
-    fetch(ENDPOINT_URL,{
-      method:"POST", mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body: JSON.stringify(payload)
-    });
+    fetch(ENDPOINT_URL,{ method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(payload) });
   }catch(e){}
 }
-async function fetchStats(){
+
+/* --------- VIOLINS (Plotly) ---------- */
+const FIELD_MAP_EXP = [
+  {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€", locked:false},
+  {id:"sante", label:"Santé", field:"E_sante_delta_M€", locked:false},
+  {id:"education", label:"Éducation", field:"E_education_delta_M€", locked:false},
+  {id:"serv_gen", label:"Services publics généraux (hors intérêts dette)", field:"E_serv_gen_delta_M€", locked:false},
+  {id:"interets_dette", label:"Intérêts de la dette (verrouillé)", field:"E_interets_dette_delta_M€", locked:true},
+  {id:"aff_econ", label:"Affaires économiques", field:"E_aff_econ_delta_M€", locked:false},
+  {id:"defense", label:"Défense", field:"E_defense_delta_M€", locked:false},
+  {id:"ordre_secu", label:"Ordre & sécurité publics", field:"E_ordre_secu_delta_M€", locked:false},
+  {id:"logement", label:"Logement & équipements collectifs", field:"E_logement_delta_M€", locked:false},
+  {id:"environnement", label:"Environnement", field:"E_environnement_delta_M€", locked:false},
+  {id:"culture", label:"Culture, loisirs et cultes", field:"E_culture_delta_M€", locked:false},
+];
+const FIELD_MAP_REV = [
+  {id:"imp_prod", label:"Impôts sur la production et importations", field:"R_imp_prod_delta_M€"},
+  {id:"cotis", label:"Cotisations sociales", field:"R_cotis_delta_M€"},
+  {id:"ir", label:"Impôt sur le revenu", field:"R_ir_delta_M€"},
+  {id:"is", label:"Impôt sur les sociétés", field:"R_is_delta_M€"},
+  {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta_M€"},
+];
+
+async function fetchDistribution(field){
   try{
-    const url = ENDPOINT_URL + "?stats=1";
+    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field);
     const r = await fetch(url, {method:"GET", cache:"no-cache"});
-    if(!r.ok) return null;
-    const data = await r.json();
-    if(!data || !data.ok) return null;
-    return data; // {count, avgExpPct[], avgRevPct[]}
-  }catch(e){ return null }
+    const j = await r.json();
+    if (j && j.ok && Array.isArray(j.values)) return j;
+  }catch(e){}
+  return { ok:false, values:[], stats:{count:0,min:0,max:0,median:0} };
 }
 
-/* --------- NORMALISATION & COMPARAISON ---------- */
-function savingsFromPct(avgExpPct, avgRevPct){
-  const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:avgExpPct[i])/100)) );
-  const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+avgRevPct[i]/100)) );
-  const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
-  const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
-  const baseDef  = BASE_EXP - BASE_REV;
-  const newDef   = newExp.reduce((s,x)=>s+x,0) - newRev.reduce((s,x)=>s+x,0);
-  return (baseDef - newDef);
+function divFor(container, mapItem){
+  const div = document.createElement("div");
+  div.id = "v-" + mapItem.id;
+  div.style.height = "280px";
+  div.style.background = "rgba(255,255,255,.02)";
+  div.style.border = "1px dashed #2a3c64";
+  div.style.borderRadius = "10px";
+  div.style.padding = "6px";
+  container.appendChild(div);
+  return div.id;
 }
 
-function renderComparison(avgExpPct, avgRevPct, respondentSavingsM){
-  const avgSavingsM = savingsFromPct(avgExpPct, avgRevPct) || 1;
-  const k = respondentSavingsM / avgSavingsM;
+function myDeltaForField(field){
+  // Recalcule à la volée depuis les pourcentages actuels (pas besoin de localStorage)
+  const isExp = field.startsWith("E_");
+  if (isExp){
+    const idx = FIELD_MAP_EXP.findIndex(m=>m.field===field);
+    if (idx<0) return 0;
+    const base = CFG.expenses[idx].base;
+    const pct  = CFG.expenses[idx].locked ? 0 : (state.expPct[idx]||0);
+    const nv   = Math.round(base*(1+pct/100));
+    return nv - base;
+  }else{
+    const idx = FIELD_MAP_REV.findIndex(m=>m.field===field);
+    if (idx<0) return 0;
+    const base = CFG.revenues[idx].base;
+    const pct  = (state.revPct[idx]||0);
+    const nv   = Math.round(base*(1+pct/100));
+    return nv - base;
+  }
+}
 
-  const expWrap = document.getElementById("cmpExp");
-  const revWrap = document.getElementById("cmpRev");
-  expWrap.innerHTML=""; revWrap.innerHTML="";
-
-  const makeCard = (parent, label, base, yourPct, meanPct, isExpense, locked=false)=>{
-    const yourNew = Math.round(base*(1+(locked?0:yourPct)/100));
-    const meanNew = Math.round(base*(1+(locked?0:(meanPct*k))/100)); // moyenne *normalisée*
-    const yourDelta = yourNew - base;
-    const meanDelta = meanNew - base;
-
-    const gainYou  = isExpense ? (yourDelta<0) : (yourDelta>0);
-    const gainMean = isExpense ? (meanDelta<0) : (meanDelta>0);
-
-    const div=document.createElement("div");
-    div.className="cmpCard";
-    div.innerHTML=`
-      <div class="cmpTitle">${label}${locked?` <span class="badge">verrouillé</span>`:""}</div>
-      <div class="cmpLine">
-        <span>Vous</span>
-        <span style="color:${gainYou?'#16a34a':(yourDelta!==0?'#ef4444':'#a9b8d2')}">
-          ${yourPct>=0?'+':''}${yourPct}% · ${yourDelta>=0?'+':''}${fmtM(yourDelta)} M€
-        </span>
-      </div>
-      <div class="cmpLine">
-        <span>Moyenne</span>
-        <span style="color:${gainMean?'#16a34a':(meanDelta!==0?'#ef4444':'#a9b8d2')}">
-          ${(meanPct*k)>=0?'+':''}${(meanPct*k).toFixed(1)}% · ${meanDelta>=0?'+':''}${fmtM(meanDelta)} M€
-        </span>
-      </div>`;
-    parent.appendChild(div);
+function drawViolinHybrid(divId, values, stats, myValueME, label){
+  // Violin + points (halo)
+  const violin = {
+    type: "violin", orientation: "h",
+    x: values.length? values : [0],
+    y: values.map(_ => ""),
+    name: label,
+    points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
+    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
+    fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
+    hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
-  CFG.expenses.forEach((b,i)=> makeCard(expWrap, b.label, b.base, state.expPct[i], (avgExpPct[i]||0), true, b.locked));
-  CFG.revenues.forEach((b,i)=> makeCard(revWrap, b.label, b.base, state.revPct[i], (avgRevPct[i]||0), false));
+  const medianX = (typeof stats.median === "number") ? stats.median : 0;
+  const shapes = [
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
+    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
+    { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
+  ];
+  const annotations = [
+    { x: myValueME, y: 0.75, text: "Vous : " + fmtM(myValueME) + " M€", showarrow:true, arrowhead:6, ax:0, ay:-35,
+      font:{color:"#38bdf8",size:12}, bgcolor:"rgba(56,189,248,0.08)", bordercolor:"#38bdf8" },
+    { x: medianX, y: -0.75, text: "Médiane : " + fmtM(medianX) + " M€", showarrow:true, arrowhead:6, ax:0, ay:35,
+      font:{color:"#eab308",size:12}, bgcolor:"rgba(234,179,8,0.08)", bordercolor:"#eab308" }
+  ];
+
+  const min = (typeof stats.min === "number") ? stats.min : Math.min(0,myValueME);
+  const max = (typeof stats.max === "number") ? stats.max : Math.max(0,myValueME);
+  const margin = Math.max(10, (max - min) * 0.04);
+
+  const layout = {
+    paper_bgcolor:"#111827", plot_bgcolor:"#111827", font:{color:"#e2e8f0"},
+    margin:{l:10,r:10,t:28,b:42},
+    title:{ text: label, x:0, xanchor:"left", y:0.98, font:{size:14} },
+    xaxis:{
+      title:"Variation (en M€) — négatif = économies",
+      gridcolor:"#334155", zerolinecolor:"#334155",
+      range:[ (min ?? -100)-margin, (max ?? 100)+margin ],
+      tickformat:",.0f"
+    },
+    yaxis:{ showticklabels:false },
+    shapes, annotations, hovermode:"x unified", showlegend:false
+  };
+  const isMobile = window.matchMedia("(max-width: 520px)").matches;
+  const config = { responsive:true, displayModeBar:false, staticPlot:isMobile };
+  Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- CLIC VALIDER ---------- */
+async function renderAllViolins(){
+  // Prépare les conteneurs
+  const expWrap = document.getElementById("violins-expenses");
+  const revWrap = document.getElementById("violins-revenues");
+  expWrap.innerHTML=""; revWrap.innerHTML="";
+
+  // Dépenses
+  for (const m of FIELD_MAP_EXP){
+    const divId = divFor(expWrap, m);
+    const myVal = myDeltaForField(m.field);
+    const j = await fetchDistribution(m.field);
+    drawViolinHybrid(divId, j.values||[], j.stats||{}, myVal, m.label + (m.locked?" (verrouillé)":""));
+  }
+  // Recettes
+  for (const m of FIELD_MAP_REV){
+    const divId = divFor(revWrap, m);
+    const myVal = myDeltaForField(m.field);
+    const j = await fetchDistribution(m.field);
+    drawViolinHybrid(divId, j.values||[], j.stats||{}, myVal, m.label);
+  }
+}
+
+/* --------- VALIDATE ---------- */
 async function onValidate(){
   const payload = buildCompactPayload();
   sendToSheet(payload);
 
-  // Résultats + stats
+  // Affiche résultats + trace les violons
   document.getElementById("results").style.display="block";
-  const stats = await fetchStats(); // {ok,count,avgExpPct,avgRevPct}
-  const mySavings = compute().savingM;
 
-  if(stats){
-    document.getElementById("ansCount").textContent = `— Réponses dans la base : ${stats.count}`;
-    renderComparison(stats.avgExpPct||[], stats.avgRevPct||[], mySavings);
-    document.getElementById("normNote").style.display = "block";
-    document.getElementById("validateHint").textContent="Réponse envoyée ✔ — résultats affichés ci-dessous.";
-  }else{
-    document.getElementById("ansCount").textContent = "";
-    document.getElementById("normNote").textContent =
-      "Comparaison indisponible (statistiques non accessibles). Votre réponse a été enregistrée.";
-  }
+  // Essaie de récupérer le nombre de réponses via endpoint stats (si dispo)
+  try{
+    const r = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
+    const j = await r.json();
+    if(j && j.ok){ document.getElementById("ansCount").textContent = `— Réponses : ${j.count}`; }
+  }catch(e){}
 
-  // Scroll vers résultats
+  await renderAllViolins();
+  document.getElementById("validateHint").textContent="Réponse envoyée ✔ — résultats affichés ci-dessous.";
   document.getElementById("results").scrollIntoView({behavior:"smooth", block:"start"});
 }
 
@@ -479,8 +435,7 @@ async function onValidate(){
 function init(){
   renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
   renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
-  updateKPIs_andHUD();
-
+  updateHUD();
   document.getElementById("validateBtn").addEventListener("click", onValidate);
 }
 document.addEventListener("DOMContentLoaded", init);
