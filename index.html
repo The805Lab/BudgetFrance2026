@@ -4,21 +4,15 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>BudgetLab — Trouver 40 Md€ pour le budget 2026</title>
-
-<!-- Plotly pour les distributions -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-
 <style>
   :root{
     --bg:#0a1022; --panel:#0f1a33; --panel2:#0b1530; --ring:#21315a;
     --text:#e8f0ff; --muted:#a7b5cf;
     --ok:#16a34a; --bad:#ef4444;
     --expBg:#0e254f; --revBg:#0b1f45;
-    --chip:#0c1636; --brand:#2563eb;
-    --accent:#3b82f6;
-    --you:#38bdf8; /* bleu clair "Vous" */
-    --ref:#eab308; /* jaune "Référence/Médiane" */
-    --axis:#94a3b8;
+    --chip:#0c1636; --brand:#2563eb; --accent:#3b82f6;
+    --you:#38bdf8; --ref:#eab308; --axis:#94a3b8;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
@@ -27,7 +21,6 @@
   .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
-
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
   .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0; overscroll-behavior:contain; overflow:visible;}
   .section.exp{background:var(--expBg)} .section.rev{background:var(--revBg)}
@@ -35,66 +28,44 @@
   .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:#0b152f;color:#dce7ff;font-size:.8rem}
   .row{padding:12px 14px;border-top:1px dashed #274067}
   .label{font-weight:700} .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
-
   .sliderWrap{display:grid;grid-template-columns:42px 1fr 42px;gap:8px;align-items:center}
   .nudge{width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
-  .nudge:active{transform:scale(.98)}
-  .nudge[disabled]{opacity:.4;cursor:not-allowed}
+  .nudge:active{transform:scale(.98)} .nudge[disabled]{opacity:.4;cursor:not-allowed}
   input[type=range]{width:100%;margin:8px 0;height:36px;touch-action:pan-y}
   input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
   input[type=range]::-moz-range-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border:none;border-radius:50%;background:var(--brand)}
   input[type=range][disabled]{opacity:.5}
-
   .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
-
-  /* HUD flottant code couleur (bord à gauche) */
-  .floatBubble{
-    position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
-    border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
-    border-left:6px solid var(--bad);
-  }
-  .floatBubble.ok{ border-left-color: var(--ok); }
-  .floatBubble strong{color:#fff}
-
+  .floatBubble{position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
+    border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;border-left:6px solid var(--bad);}
+  .floatBubble.ok{ border-left-color: var(--ok); } .floatBubble strong{color:#fff}
   .btn{display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem}
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
   .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
-
-  .results{display:none}
-  .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
-
-  /* Grille des violons */
-  .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
-  @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
-
+  .results{display:none} .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
+  .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px} @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
   .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
-
-  /* Overlay chargement */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:80}
   .overlay.show{display:flex}
   .loader{background:#0b1633;border:1px solid var(--ring);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px rgba(0,0,0,.4);min-width:280px;text-align:center}
   .spinner{width:18px;height:18px;border:3px solid #334155;border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
   @keyframes spin{to{transform:rotate(360deg)}}
-
-  /* Barres comparatives — centrées sur 0 */
   .barbox{background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:12px}
   .barline{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633}
   .barlegend{display:flex;justify-content:space-between;font-size:.9rem;color:#cbd5e1;margin-top:6px}
   .mark{position:absolute;top:-6px;width:3px;height:26px;border-radius:2px}
-  .mark.you{background:var(--you)}
-  .mark.ref{background:var(--ref)}
+  .mark.you{background:var(--you)} .mark.ref{background:var(--ref)}
   .mark.zero{background:rgba(148,163,184,.45); width:2px; top:-5px; height:24px}
   .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
 <body>
 
-<!-- Overlay -->
 <div class="overlay" id="overlay">
   <div class="loader">
     <div><span class="spinner"></span><strong>Vos résultats sont en cours de traitement…</strong></div>
@@ -105,31 +76,27 @@
 <div class="wrap">
   <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
 
-  <!-- Intro pédagogique (allégée) -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
-      En 2024, la France a dépensé bien plus qu’elle n’a reçu : c’est le <strong>déficit</strong>.
-      L’Europe demande de revenir vers <strong>3 % du PIB</strong> de déficit. <br/>
-      Ici, on vous propose un défi simple : imaginez des <strong>économies</strong> et/ou des <strong>recettes</strong>
-      pour viser autour de <strong>40 Md€</strong>. Réglez les curseurs, validez, puis comparez votre scénario aux autres.
+      En 2024, la France a dépensé plus qu’elle n’a reçu : c’est le <strong>déficit</strong>.
+      L’Europe vise un retour vers <strong>3 % du PIB</strong>. <br/>
+      À vous de proposer des <strong>économies</strong> et/ou des <strong>recettes</strong> pour approcher
+      <strong>40 Md€</strong>. Réglez les curseurs, validez, et comparez votre scénario aux autres.
     </div>
   </div>
 
   <div class="bar"><span id="bar"></span></div>
 
-  <!-- Dépenses -->
   <div class="section exp">
     <div class="head">Dépenses <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="expContainer"></div>
   </div>
 
-  <!-- Recettes -->
   <div class="section rev">
     <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="revContainer"></div>
   </div>
 
-  <!-- Actions -->
   <div class="card">
     <div class="actionsRow">
       <button id="validateBtn" class="btn wide" disabled>Valider mon budget</button>
@@ -138,12 +105,10 @@
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
-  <!-- Résultats -->
   <div id="results" class="card results">
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparaison normalisée</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Résumé haut : barres centrées sur 0 -->
     <div class="barbox">
       <div class="hint" style="margin-bottom:6px"><strong>Variation des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span> (0 = inchangé)</div>
       <div class="barline" id="barExpLine">
@@ -164,7 +129,6 @@
       <div class="barlegend"><span id="barRevYouVal">Vous : —</span><span id="barRevRefVal">Médiane : —</span></div>
     </div>
 
-    <!-- Texte résumé -->
     <div class="card" style="background:#0b1935;border-color:#1e2d55;margin-top:12px">
       <div style="display:grid;grid-template-columns:1fr;gap:8px">
         <div><strong>Votre réduction de dépenses :</strong> <span id="sumCutsYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Référence :</span> <span id="sumCutsAvg">0</span> M€</div>
@@ -191,7 +155,6 @@
   </div>
 </div>
 
-<!-- Bulle flottante permanente -->
 <div id="hud" class="floatBubble">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -200,8 +163,7 @@
 <div id="toast" class="toast"></div>
 
 <script>
-/* --------- CONFIG ---------- */
-const ENDPOINT_URL = "REPLACE_WITH_YOUR_EXEC_URL"; // <= remplace par l’URL /exec de ton Apps Script
+const ENDPOINT_URL = "REPLACE_WITH_YOUR_EXEC_URL";
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -228,28 +190,22 @@ const CFG = {
   range:{min:-15,max:15}
 };
 
-/* --------- STATE ---------- */
 const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
-  avgExpPct: [], avgRevPct: [], // pour référence agrégée
-  count: 0,
-  submitted:false
+  avgExpPct: [], avgRevPct: [], count: 0, submitted:false
 };
 
-/* --------- UTILS ---------- */
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 const $ = (sel)=> document.querySelector(sel);
 
-/* --------- OPTION A+ FRONT ---------- */
 function ensureUserKey(){
   const k = localStorage.getItem("user_key_v1");
   if (k) return k;
   const key = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+"_"+Math.random().toString(16).slice(2);
-  localStorage.setItem("user_key_v1", key);
-  return key;
+  localStorage.setItem("user_key_v1", key); return key;
 }
 function stableStringify(obj){
   const sort = v => Array.isArray(v) ? v.map(sort) : (v && typeof v==="object" ? Object.keys(v).sort().reduce((a,k)=> (a[k]=sort(v[k]),a),{}) : v);
@@ -260,7 +216,6 @@ async function sha256Hex(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-/* --------- CALCULS ---------- */
 function compute(){
   const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) );
   const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+state.revPct[i]/100)) );
@@ -273,11 +228,9 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  // Δ totaux signés (centrés sur 0)
-  const deltaExpTotal = newExpM - BASE_EXP; // <0 = économies
-  const deltaRevTotal = newRevM - BASE_REV; // >0 = recettes en plus
+  const deltaExpTotal = newExpM - BASE_EXP;
+  const deltaRevTotal = newRevM - BASE_REV;
 
-  // Décompositions (positif strict) pour le petit résumé texte
   const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
     const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
     return sum + (d<0 ? -d : 0);
@@ -287,10 +240,9 @@ function compute(){
     return sum + (d>0 ? d : 0);
   },0);
 
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev, deltaExpTotal, deltaRevTotal};
+  return {BASE_EXP, BASE_REV, baseDef, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev, deltaExpTotal, deltaRevTotal};
 }
 function computeRefFromAverages(){
-  // Recalcule une "référence agrégée" à partir des % moyens
   const pctE = state.avgExpPct || [];
   const pctR = state.avgRevPct || [];
   const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:(pctE[i]||0))/100)) );
@@ -300,12 +252,8 @@ function computeRefFromAverages(){
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
   return {
-    cutsExp: CFG.expenses.reduce((sum,b,i)=>{
-      const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0);
-    },0),
-    incRev: CFG.revenues.reduce((sum,b,i)=>{
-      const d = newRev[i]-b.base; return sum + (d>0 ? d : 0);
-    },0),
+    cutsExp: CFG.expenses.reduce((sum,b,i)=>{ const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0); },0),
+    incRev:  CFG.revenues.reduce((sum,b,i)=>{ const d = newRev[i]-b.base; return sum + (d>0 ? d : 0); },0),
     deltaExpTotal: newExpM - BASE_EXP,
     deltaRevTotal: newRevM - BASE_REV
   };
@@ -315,23 +263,15 @@ function updateHUD(){
   const saving = r.savingM;
   const pct = clamp((saving/CFG.target.max)*100,0,100);
   const inRange = (saving>=CFG.target.min && saving<=CFG.target.max);
-
   $("#hudSaving").textContent = `${fmtM(saving)} M€`;
-  let gapText;
-  if (!inRange){
-    if (saving < CFG.target.min) gapText = `≥${fmtM(CFG.target.min - saving)} M€ à trouver`;
-    else gapText = `≤${fmtM(saving - CFG.target.max)} M€ à retirer`;
-  } else gapText = "OK (dans la cible)";
-  $("#hudGap").textContent = gapText;
-
+  $("#hudGap").textContent = !inRange
+    ? (saving<CFG.target.min ? `≥${fmtM(CFG.target.min - saving)} M€ à trouver` : `≤${fmtM(saving - CFG.target.max)} M€ à retirer`)
+    : "OK (dans la cible)";
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("validateBtn").disabled = !inRange || state.submitted;
-
-  const hud = document.getElementById("hud");
-  hud.classList.toggle("ok", inRange);
+  document.getElementById("hud").classList.toggle("ok", inRange);
 }
 
-/* --------- UI RENDER (sliders) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
@@ -370,13 +310,11 @@ function renderBlock(container, list, kind){
       pctEl.textContent = pct;
       newEl.textContent = fmtM(newVal);
       delEl.textContent = `${delta>=0?'+':''}${fmtM(delta)} M€`;
-      const isExpense = (kind==="exp");
-      const gain = isExpense ? (delta<0) : (delta>0);
+      const gain = (kind==="exp") ? (delta<0) : (delta>0);
       delEl.classList.toggle("gain", gain);
       delEl.classList.toggle("loss", !gain && delta!==0);
       updateHUD();
     };
-
     slider.addEventListener("input", update); update();
 
     if (!b.locked){
@@ -404,7 +342,6 @@ function renderBlock(container, list, kind){
   });
 }
 
-/* --------- BACK (payload + envoi) ---------- */
 function buildCompactPayload(){
   const r=compute();
   return {
@@ -418,7 +355,6 @@ function buildCompactPayload(){
   };
 }
 
-/* --------- VIOLINS (Plotly) ---------- */
 const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
@@ -440,11 +376,18 @@ const FIELD_MAP_REV = [
 ];
 
 async function fetchDistribution(field){
+  // 1) essaie avec _M€
   try{
-    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field);
-    const r = await fetch(url, {method:"GET", cache:"no-cache"});
-    const j = await r.json();
-    if (j && j.ok && Array.isArray(j.values)) return j;
+    const r1 = await fetch(ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field), {method:"GET", cache:"no-cache"});
+    const j1 = await r1.json();
+    if (j1 && j1.ok && Array.isArray(j1.values)) return j1;
+  }catch(e){}
+  // 2) fallback sans _M€ (compat anciens headers)
+  try{
+    const fallback = field.replace("_M€", "");
+    const r2 = await fetch(ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(fallback), {method:"GET", cache:"no-cache"});
+    const j2 = await r2.json();
+    if (j2 && j2.ok && Array.isArray(j2.values)) return j2;
   }catch(e){}
   return { ok:false, values:[], stats:{count:0,min:0,max:0,median:0} };
 }
@@ -486,15 +429,15 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     y: values.map(_ => ""),
     name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
-    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" }, /* jaune points */
+    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
     fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
   const shapes = [
-    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } }, /* médiane jaune */
-    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } }, /* vous bleu */
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
+    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
     { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
   ];
   const annotations = [
@@ -522,7 +465,6 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS (parallélisation) ---------- */
 async function renderAllViolinsParallel(){
   const expWrap = document.getElementById("violins-expenses");
   const revWrap = document.getElementById("violins-revenues");
@@ -545,7 +487,6 @@ async function renderAllViolinsParallel(){
   }
 }
 
-/* --------- BARRES CENTRÉES SUR 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
@@ -555,7 +496,6 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   const dmin = Math.min(...vals) - pad;
   const dmax = Math.max(...vals) + pad;
 
-  // positions %
   const expZero = pctInDomain(0, dmin, dmax);
   const expY = pctInDomain(expYou, dmin, dmax);
   const expR = pctInDomain(expRef, dmin, dmax);
@@ -575,7 +515,6 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   $("#barRevRefVal").textContent = "Médiane : " + (revRef>=0?"+":"") + fmtM(revRef) + " M€";
 }
 
-/* --------- VALIDATE (overlay + gel/déverrouillage) ---------- */
 function freezeInputs(freeze){
   document.querySelectorAll("input[type=range], .nudge").forEach(el=>{
     if (el.classList.contains("nudge")) {
@@ -598,38 +537,31 @@ async function onValidate(){
   overlay.classList.add("show");
   $("#validateHint").textContent = "Réponse envoyée — affichage des résultats…";
 
-  // Build payload & client-side hash
   const payload = buildCompactPayload();
   const user_key = ensureUserKey();
   const normalized = { e: payload.e.map(Math.round), r: payload.r.map(Math.round) };
   const scenario_hash = await sha256Hex(stableStringify(normalized));
 
-  // garde-fou client (3 scénarios distincts)
   const HS_KEY = "scenario_hashes_v1";
   const hashes = JSON.parse(localStorage.getItem(HS_KEY) || "[]");
   if (!hashes.includes(scenario_hash)){
     if (hashes.length >= 3){
       toast("Limite atteinte : vous avez déjà enregistré 3 scénarios.");
-      overlay.classList.remove("show");
-      return;
+      overlay.classList.remove("show"); return;
     }
     hashes.push(scenario_hash);
     localStorage.setItem(HS_KEY, JSON.stringify(hashes));
   }
 
-  // POST
   try{
     fetch(ENDPOINT_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
+      method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ ...payload, user_key, scenario_hash })
     }).catch(()=>{});
   }catch(_){}
 
-  // Affiche résultats
   $("#results").style.display="block";
 
-  // Récupère référence (moyennes) + count
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -637,7 +569,6 @@ async function onValidate(){
       state.avgExpPct = stats.avgExpPct || [];
       state.avgRevPct = stats.avgRevPct || [];
       state.count = stats.count || 0;
-      $("#ansCount").textContent = "";
       $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
     } else {
       $("#ansCountLine").textContent = `Réponses enregistrées : —`;
@@ -646,7 +577,6 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Résumé texte
   const you = compute();
   const ref  = computeRefFromAverages();
   $("#sumCutsYou").textContent = fmtM(you.cutsExp);
@@ -654,10 +584,8 @@ async function onValidate(){
   $("#sumCutsAvg").textContent = fmtM(ref.cutsExp || 0);
   $("#sumIncAvg").textContent  = fmtM(ref.incRev || 0);
 
-  // Barres centrées sur 0 (Δ totaux signés)
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
-  // Violons
   await renderAllViolinsParallel();
 
   $("#validateHint").textContent="Réponse enregistrée ✔ — résultats ci-dessous.";
@@ -672,7 +600,6 @@ function onEdit(){
   freezeInputs(false);
 }
 
-/* --------- INIT ---------- */
 function init(){
   renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
   renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
