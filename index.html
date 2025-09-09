@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>BudgetLab — Trouver 40 Md€ pour le budget 2026</title>
 
+<!-- Plotly pour les distributions -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
 <style>
@@ -15,7 +16,9 @@
     --expBg:#0e254f; --revBg:#0b1f45;
     --chip:#0c1636; --brand:#2563eb;
     --accent:#3b82f6;
-    --you:#38bdf8; --ref:#eab308; --axis:#94a3b8;
+    --you:#38bdf8; /* bleu clair "Vous" */
+    --ref:#eab308; /* jaune "Médiane" */
+    --axis:#94a3b8;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
@@ -42,14 +45,18 @@
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
   input[type=range]::-moz-range-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border:none;border-radius:50%;background:var(--brand)}
-  input[type=range][data-locked="1"]{opacity:.5}
+  input[type=range][disabled]{opacity:.5}
 
   .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
 
-  .floatBubble{position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
-    border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;border-left:6px solid var(--bad);}
+  /* HUD flottant code couleur (bord à gauche) */
+  .floatBubble{
+    position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
+    border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
+    border-left:6px solid var(--bad);
+  }
   .floatBubble.ok{ border-left-color: var(--ok); }
   .floatBubble strong{color:#fff}
 
@@ -60,18 +67,21 @@
   .results{display:none}
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
 
+  /* Grille des violons */
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
   .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
 
+  /* Overlay chargement */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:80}
   .overlay.show{display:flex}
   .loader{background:#0b1633;border:1px solid var(--ring);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px rgba(0,0,0,.4);min-width:280px;text-align:center}
   .spinner{width:18px;height:18px;border:3px solid #334155;border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  /* Barres comparatives — centrées sur 0 */
   .barbox{background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:12px}
   .barline{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633}
   .barlegend{display:flex;justify-content:space-between;font-size:.9rem;color:#cbd5e1;margin-top:6px}
@@ -95,15 +105,13 @@
 <div class="wrap">
   <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
 
-  <!-- Intro pédagogique -->
+  <!-- Intro pédagogique (allégée) -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
-      <strong>Pourquoi ce simulateur ?</strong><br/>
-      En 2024, la France a dépensé <em>bien plus</em> qu’elle n’a reçu : le déficit public s’est établi autour de <strong>170 Md€</strong> (≈ <strong>5,8 % du PIB</strong>). 
-      L’Union européenne demande un <strong>retour sous 3 %</strong> d’ici <strong>2029</strong>.<br/>
-      Ici, on vous propose un <strong>exercice simple</strong> : imaginez des <strong>économies</strong> et/ou des <strong>recettes</strong> pour rapprocher le budget de l’équilibre. 
-      La borne de <strong>≈ 40 Md€</strong> est un <strong>jalon politique</strong> souvent avancé (certaines annonces parlent d’<strong>≈ 44 Md€</strong> pour 2026). 
-      Réglez les curseurs, <strong>validez</strong>, puis comparez votre scénario aux autres.
+      En 2024, la France affichait un déficit d’environ <strong>170&nbsp;Md€</strong> (≈&nbsp;5,8&nbsp;% du PIB).
+      L’Union européenne vise un retour vers <strong>3&nbsp;% du PIB</strong> d’ici les prochaines années.
+      Ici, vous jouez au ministre du budget : ajustez des <strong>dépenses</strong> et/ou des <strong>recettes</strong>
+      pour atteindre un jalon simple et parlant, autour de <strong>40&nbsp;Md€</strong> d’effort. Validez, puis comparez votre scénario aux autres.
     </div>
   </div>
 
@@ -135,7 +143,7 @@
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparaison normalisée</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Barres centrées sur 0 -->
+    <!-- Résumé haut : barres centrées sur 0 -->
     <div class="barbox">
       <div class="hint" style="margin-bottom:6px"><strong>Variation des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span> (0 = inchangé)</div>
       <div class="barline" id="barExpLine">
@@ -179,11 +187,11 @@
   </div>
 
   <div class="footer">
-    Sources : Insee, Ministère de l’Économie, Conseil de l’UE. Chiffres 2024 arrondis — certains postes sont difficiles à ajuster à court terme (ex. intérêts de la dette).
+    Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certains postes sont difficiles à ajuster à court terme (ex. intérêts de la dette).
   </div>
 </div>
 
-<!-- HUD -->
+<!-- Bulle flottante permanente -->
 <div id="hud" class="floatBubble">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -193,7 +201,7 @@
 
 <script>
 /* --------- CONFIG ---------- */
-const ENDPOINT_URL = "REPLACE_WITH_YOUR_EXEC_URL"; // <= mets ici l’URL /exec de l’Apps Script
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -224,7 +232,7 @@ const CFG = {
 const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
-  avgExpPct: [], avgRevPct: [],
+  avgExpPct: [], avgRevPct: [], // pour référence agrégée
   count: 0,
   submitted:false
 };
@@ -235,6 +243,7 @@ const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 const $ = (sel)=> document.querySelector(sel);
 
+/* --------- OPTION A (clé + hash) ---------- */
 function ensureUserKey(){
   const k = localStorage.getItem("user_key_v1");
   if (k) return k;
@@ -264,9 +273,11 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
+  // Δ totaux signés (centrés sur 0)
   const deltaExpTotal = newExpM - BASE_EXP; // <0 = économies
   const deltaRevTotal = newRevM - BASE_REV; // >0 = recettes en plus
 
+  // Décompositions (positif strict) pour le petit résumé texte
   const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
     const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
     return sum + (d<0 ? -d : 0);
@@ -288,8 +299,12 @@ function computeRefFromAverages(){
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
   return {
-    cutsExp: CFG.expenses.reduce((sum,b,i)=>{ const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0); },0),
-    incRev: CFG.revenues.reduce((sum,b,i)=>{ const d = newRev[i]-b.base; return sum + (d>0 ? d : 0); },0),
+    cutsExp: CFG.expenses.reduce((sum,b,i)=>{
+      const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0);
+    },0),
+    incRev: CFG.revenues.reduce((sum,b,i)=>{
+      const d = newRev[i]-b.base; return sum + (d>0 ? d : 0);
+    },0),
     deltaExpTotal: newExpM - BASE_EXP,
     deltaRevTotal: newRevM - BASE_REV
   };
@@ -299,30 +314,37 @@ function updateHUD(){
   const saving = r.savingM;
   const pct = clamp((saving/CFG.target.max)*100,0,100);
   const inRange = (saving>=CFG.target.min && saving<=CFG.target.max);
+
   $("#hudSaving").textContent = `${fmtM(saving)} M€`;
-  $("#hudGap").textContent = !inRange
-    ? (saving < CFG.target.min ? `≥${fmtM(CFG.target.min - saving)} M€ à trouver` : `≤${fmtM(saving - CFG.target.max)} M€ à retirer`)
-    : "OK (dans la cible)";
+  let gapText;
+  if (!inRange){
+    if (saving < CFG.target.min) gapText = `≥${fmtM(CFG.target.min - saving)} M€ à trouver`;
+    else gapText = `≤${fmtM(saving - CFG.target.max)} M€ à retirer`;
+  } else gapText = "OK (dans la cible)";
+  $("#hudGap").textContent = gapText;
+
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("validateBtn").disabled = !inRange || state.submitted;
-  document.getElementById("hud").classList.toggle("ok", inRange);
+
+  const hud = document.getElementById("hud");
+  hud.classList.toggle("ok", inRange);
 }
 
-/* --------- UI RENDER ---------- */
+/* --------- UI RENDER (sliders) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
     row.className="row";
     const id=`${kind}_${idx}`;
-    const lockedAttr = b.locked ? "data-locked='1' disabled" : "";
+    const disabledAttr = b.locked ? "disabled" : "";
     row.innerHTML = `
       <div class="label">${b.label}</div>
       ${b.info?`<div class="hint">${b.info}</div>`:""}
       <div class="hint">Base : ${Math.round(b.base/1000)} Md€</div>
       <div class="sliderWrap">
-        <button class="nudge" data-id="${id}" data-d="-1" ${b.locked?"disabled":""}>−</button>
-        <input type="range" id="${id}" min="${CFG.range.min}" max="${CFG.range.max}" step="1" value="0" ${lockedAttr}/>
-        <button class="nudge" data-id="${id}" data-d="+1" ${b.locked?"disabled":""}>+</button>
+        <button class="nudge" data-id="${id}" data-d="-1" ${disabledAttr}>−</button>
+        <input type="range" id="${id}" min="${CFG.range.min}" max="${CFG.range.max}" step="1" ${b.locked?"value='0' disabled":"value='0'"} />
+        <button class="nudge" data-id="${id}" data-d="+1" ${disabledAttr}>+</button>
       </div>
       <div class="valLine">
         <div><span id="${id}_pct">0</span>%</div>
@@ -342,8 +364,7 @@ function renderBlock(container, list, kind){
     const update=()=>{
       const pct=Number(slider.value)||0;
       if(kind==="exp") state.expPct[idx]=pct; else state.revPct[idx]=pct;
-      const effPct = (kind==="exp" && b.locked) ? 0 : pct;
-      const newVal = Math.round(b.base*(1+effPct/100));
+      const newVal = Math.round(b.base*(1+(b.locked?0:pct)/100));
       const delta  = newVal - b.base;
       pctEl.textContent = pct;
       newEl.textContent = fmtM(newVal);
@@ -382,7 +403,7 @@ function renderBlock(container, list, kind){
   });
 }
 
-/* --------- BACK ---------- */
+/* --------- BACK (payload) ---------- */
 function buildCompactPayload(){
   const r=compute();
   return {
@@ -396,7 +417,7 @@ function buildCompactPayload(){
   };
 }
 
-/* --------- VIOLINS ---------- */
+/* --------- VIOLINS (Plotly) ---------- */
 const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
@@ -464,15 +485,15 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     y: values.map(_ => ""),
     name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
-    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
+    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" }, /* jaune points */
     fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
   const shapes = [
-    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
-    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } }, /* médiane jaune */
+    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } }, /* vous bleu */
     { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
   ];
   const annotations = [
@@ -500,7 +521,7 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS ---------- */
+/* --------- RÉSULTATS (parallélisation) ---------- */
 async function renderAllViolinsParallel(){
   const expWrap = document.getElementById("violins-expenses");
   const revWrap = document.getElementById("violins-revenues");
@@ -523,7 +544,7 @@ async function renderAllViolinsParallel(){
   }
 }
 
-/* --------- BARRES ---------- */
+/* --------- BARRES CENTRÉES SUR 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
@@ -552,14 +573,14 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   $("#barRevRefVal").textContent = "Médiane : " + (revRef>=0?"+":"") + fmtM(revRef) + " M€";
 }
 
-/* --------- VALIDATE ---------- */
+/* --------- VALIDATE (overlay + gel/déverrouillage) ---------- */
 function freezeInputs(freeze){
   document.querySelectorAll("input[type=range], .nudge").forEach(el=>{
     if (el.classList.contains("nudge")) {
       if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled");
     } else {
-      if (el.getAttribute("data-locked")==="1") return; // ne touche pas aux sliders verrouillés
-      if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled");
+      const locked = el.hasAttribute("disabled") && el.getAttribute("disabled") !== null && el.getAttribute("disabled") !== "";
+      if (!locked) { if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled"); }
     }
   });
 }
@@ -575,23 +596,26 @@ async function onValidate(){
   overlay.classList.add("show");
   $("#validateHint").textContent = "Réponse envoyée — affichage des résultats…";
 
+  // Build payload & client-side hash (anti-doublon)
   const payload = buildCompactPayload();
   const user_key = ensureUserKey();
   const normalized = { e: payload.e.map(Math.round), r: payload.r.map(Math.round) };
   const scenario_hash = await sha256Hex(stableStringify(normalized));
 
-  // ➜ Option A : AUCUNE limite locale, on poste toujours
+  // POST "simple" (pas de pré-vol CORS)
   try{
     fetch(ENDPOINT_URL, {
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
       body: JSON.stringify({ ...payload, user_key, scenario_hash })
     }).catch(()=>{});
   }catch(_){}
 
+  // Affiche résultats
   $("#results").style.display="block";
 
-  // Stats+référence
+  // Récupère référence (moyennes) + count
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -615,7 +639,7 @@ async function onValidate(){
   $("#sumCutsAvg").textContent = fmtM(ref.cutsExp || 0);
   $("#sumIncAvg").textContent  = fmtM(ref.incRev || 0);
 
-  // Barres zéro-centrées
+  // Barres centrées sur 0 (Δ totaux signés)
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
   // Violons
