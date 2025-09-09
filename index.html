@@ -89,6 +89,7 @@
   .mark.you{background:var(--you)}
   .mark.ref{background:var(--ref)}
   .mark.zero{background:rgba(148,163,184,.45); width:2px; top:-5px; height:24px}
+  .barNote{font-size:.82rem;color:#9fb0cc;margin-top:6px}
   .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
@@ -103,15 +104,16 @@
 </div>
 
 <div class="wrap">
-  <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
+  <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
+  <div class="subtitle"><em>Référence : 2024</em></div>
 
   <!-- Intro pédagogique (allégée) -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
-      En 2024, la France affichait un déficit d’environ <strong>170&nbsp;Md€</strong> (≈&nbsp;5,8&nbsp;% du PIB).
-      L’Union européenne vise un retour vers <strong>3&nbsp;% du PIB</strong> d’ici les prochaines années.
-      Ici, vous jouez au ministre du budget : ajustez des <strong>dépenses</strong> et/ou des <strong>recettes</strong>
-      pour atteindre un jalon simple et parlant, autour de <strong>40&nbsp;Md€</strong> d’effort. Validez, puis comparez votre scénario aux autres.
+      En 2024, la France affichait un déficit d’environ <strong>170 Md€</strong> (≈ 5,8&nbsp;% du PIB). 
+      L’objectif européen est de revenir vers <strong>3&nbsp;% du PIB</strong>.
+      <br/>Ici, <strong>à vous de viser ~40&nbsp;Md€ d’effort</strong> — une <strong>cible politique discutée</strong> pour réduire le déficit —
+      en <strong>ajustant des dépenses et/ou des recettes</strong>, puis comparez votre scénario à ceux des autres répondants.
     </div>
   </div>
 
@@ -140,39 +142,31 @@
 
   <!-- Résultats -->
   <div id="results" class="card results">
-    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparaison normalisée</h2>
+    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Résumé haut : barres centrées sur 0 -->
+    <!-- Résumé haut : barres centrées sur 0 (UNE SEULE VUE) -->
     <div class="barbox">
-      <div class="hint" style="margin-bottom:6px"><strong>Variation des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span> (0 = inchangé)</div>
+      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation des dépenses</strong></div>
       <div class="barline" id="barExpLine">
         <div class="mark zero" id="barExpZero" style="left:50%"></div>
         <div class="mark ref"  id="barExpRef"  style="left:50%"></div>
         <div class="mark you"  id="barExpYou"  style="left:50%"></div>
       </div>
-      <div class="barlegend"><span id="barExpYouVal">Vous : —</span><span id="barExpRefVal">Médiane : —</span></div>
+      <div class="barNote">0 = inchangé</div>
     </div>
 
     <div class="barbox" style="margin-top:10px">
-      <div class="hint" style="margin-bottom:6px"><strong>Variation des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span> (0 = inchangé)</div>
+      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Variation des recettes</strong></div>
       <div class="barline" id="barRevLine">
         <div class="mark zero" id="barRevZero" style="left:50%"></div>
         <div class="mark ref"  id="barRevRef"  style="left:50%"></div>
         <div class="mark you"  id="barRevYou"  style="left:50%"></div>
       </div>
-      <div class="barlegend"><span id="barRevYouVal">Vous : —</span><span id="barRevRefVal">Médiane : —</span></div>
+      <div class="barNote">0 = inchangé</div>
     </div>
 
-    <!-- Texte résumé -->
-    <div class="card" style="background:#0b1935;border-color:#1e2d55;margin-top:12px">
-      <div style="display:grid;grid-template-columns:1fr;gap:8px">
-        <div><strong>Votre réduction de dépenses :</strong> <span id="sumCutsYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Référence :</span> <span id="sumCutsAvg">0</span> M€</div>
-        <div><strong>Votre variation de recettes :</strong> <span id="sumIncYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Référence :</span> <span id="sumIncAvg">0</span> M€</div>
-      </div>
-    </div>
-
-    <div class="legend" id="normNote">
+    <div class="legend" id="normNote" style="margin-top:12px">
       Chaque graphique montre la distribution des réponses (variation en M€ vs 2024), votre valeur (bleu) et la médiane (jaune).
     </div>
 
@@ -221,9 +215,9 @@ const CFG = {
   revenues: [
     {k:"imp_prod",label:"Impôts sur la production et importations",base:570000,info:"TVA, taxes sur produits/consommations, droits de douane."},
     {k:"cotis",label:"Cotisations sociales",base:480000,info:"Cotisations employeurs/salariés (retraites, santé, chômage)."},
-    {k:"ir",label:"Impôt sur le revenu",base:120000,info:"IRPP, prélèvement à la source, acomptes."},
+    {k:"ir",label:"Impôt sur le revenu (IR)",base:120000,info:"Salaires, pensions, revenus locatifs et financiers, etc."},
     {k:"is",label:"Impôt sur les sociétés",base:80000,info:"Impôt sur les bénéfices des entreprises."},
-    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes/recettes patrimoniales, amendes, redevances, divers."},
+    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes d’entreprises publiques, revenus du patrimoine public, redevances, amendes, ventes et prestations publiques, transferts divers…"},
   ],
   range:{min:-15,max:15}
 };
@@ -232,9 +226,9 @@ const CFG = {
 const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
-  avgExpPct: [], avgRevPct: [], // pour référence agrégée
   count: 0,
-  submitted:false
+  submitted:false,
+  medians:{exp:{}, rev:{}}, // médianes par poste (pour la somme de référence)
 };
 
 /* --------- UTILS ---------- */
@@ -242,23 +236,6 @@ const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 const $ = (sel)=> document.querySelector(sel);
-
-/* --------- OPTION A (clé + hash) ---------- */
-function ensureUserKey(){
-  const k = localStorage.getItem("user_key_v1");
-  if (k) return k;
-  const key = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+"_"+Math.random().toString(16).slice(2);
-  localStorage.setItem("user_key_v1", key);
-  return key;
-}
-function stableStringify(obj){
-  const sort = v => Array.isArray(v) ? v.map(sort) : (v && typeof v==="object" ? Object.keys(v).sort().reduce((a,k)=> (a[k]=sort(v[k]),a),{}) : v);
-  return JSON.stringify(sort(obj));
-}
-async function sha256Hex(str){
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
-}
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -277,38 +254,10 @@ function compute(){
   const deltaExpTotal = newExpM - BASE_EXP; // <0 = économies
   const deltaRevTotal = newRevM - BASE_REV; // >0 = recettes en plus
 
-  // Décompositions (positif strict) pour le petit résumé texte
-  const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
-    const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
-    return sum + (d<0 ? -d : 0);
-  },0);
-  const incRev = CFG.revenues.reduce((sum,b,i)=>{
-    const d = Math.round(b.base*(1+state.revPct[i]/100)) - b.base;
-    return sum + (d>0 ? d : 0);
-  },0);
+  return {BASE_EXP, BASE_REV, baseDef, newExpM, newRevM, newDeficitM:newDef, savingM, deltaExpTotal, deltaRevTotal};
+}
 
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev, deltaExpTotal, deltaRevTotal};
-}
-function computeRefFromAverages(){
-  const pctE = state.avgExpPct || [];
-  const pctR = state.avgRevPct || [];
-  const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:(pctE[i]||0))/100)) );
-  const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+(pctR[i]||0)/100)) );
-  const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
-  const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
-  const newExpM = newExp.reduce((s,x)=>s+x,0);
-  const newRevM = newRev.reduce((s,x)=>s+x,0);
-  return {
-    cutsExp: CFG.expenses.reduce((sum,b,i)=>{
-      const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0);
-    },0),
-    incRev: CFG.revenues.reduce((sum,b,i)=>{
-      const d = newRev[i]-b.base; return sum + (d>0 ? d : 0);
-    },0),
-    deltaExpTotal: newExpM - BASE_EXP,
-    deltaRevTotal: newRevM - BASE_REV
-  };
-}
+/* --------- HUD ---------- */
 function updateHUD(){
   const r = compute();
   const saving = r.savingM;
@@ -403,7 +352,7 @@ function renderBlock(container, list, kind){
   });
 }
 
-/* --------- BACK (payload) ---------- */
+/* --------- BACK (payload + envoi) ---------- */
 function buildCompactPayload(){
   const r=compute();
   return {
@@ -419,27 +368,28 @@ function buildCompactPayload(){
 
 /* --------- VIOLINS (Plotly) ---------- */
 const FIELD_MAP_EXP = [
-  {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
-  {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
-  {id:"education", label:"Éducation", field:"E_education_delta_M€"},
-  {id:"serv_gen", label:"Services publics généraux (hors intérêts dette)", field:"E_serv_gen_delta_M€"},
-  {id:"aff_econ", label:"Affaires économiques", field:"E_aff_econ_delta_M€"},
-  {id:"defense", label:"Défense", field:"E_defense_delta_M€"},
-  {id:"ordre_secu", label:"Ordre & sécurité publics", field:"E_ordre_secu_delta_M€"},
-  {id:"logement", label:"Logement & équipements collectifs", field:"E_logement_delta_M€"},
-  {id:"environnement", label:"Environnement", field:"E_environnement_delta_M€"},
-  {id:"culture", label:"Culture, loisirs et cultes", field:"E_culture_delta_M€"},
+  {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta"},
+  {id:"sante", label:"Santé", field:"E_sante_delta"},
+  {id:"education", label:"Éducation", field:"E_education_delta"},
+  {id:"serv_gen", label:"Services publics généraux (hors intérêts dette)", field:"E_serv_gen_delta"},
+  {id:"aff_econ", label:"Affaires économiques", field:"E_aff_econ_delta"},
+  {id:"defense", label:"Défense", field:"E_defense_delta"},
+  {id:"ordre_secu", label:"Ordre & sécurité publics", field:"E_ordre_secu_delta"},
+  {id:"logement", label:"Logement & équipements collectifs", field:"E_logement_delta"},
+  {id:"environnement", label:"Environnement", field:"E_environnement_delta"},
+  {id:"culture", label:"Culture, loisirs et cultes", field:"E_culture_delta"},
 ];
 const FIELD_MAP_REV = [
-  {id:"imp_prod", label:"Impôts sur la production et importations", field:"R_imp_prod_delta_M€"},
-  {id:"cotis", label:"Cotisations sociales", field:"R_cotis_delta_M€"},
-  {id:"ir", label:"Impôt sur le revenu", field:"R_ir_delta_M€"},
-  {id:"is", label:"Impôt sur les sociétés", field:"R_is_delta_M€"},
-  {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta_M€"},
+  {id:"imp_prod", label:"Impôts sur la production et importations", field:"R_imp_prod_delta"},
+  {id:"cotis", label:"Cotisations sociales", field:"R_cotis_delta"},
+  {id:"ir", label:"Impôt sur le revenu (IR)", field:"R_ir_delta"},
+  {id:"is", label:"Impôt sur les sociétés", field:"R_is_delta"},
+  {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta"},
 ];
 
 async function fetchDistribution(field){
   try{
+    // On demande d’abord le nom sans "M€" ; l’Apps Script gère aussi le fallback (voir doGet).
     const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field);
     const r = await fetch(url, {method:"GET", cache:"no-cache"});
     const j = await r.json();
@@ -463,14 +413,14 @@ function divFor(container, mapItem){
 function myDeltaForField(field){
   const isExp = field.startsWith("E_");
   if (isExp){
-    const idx = CFG.expenses.findIndex(x => ("E_"+x.k+"_delta_M€") === field);
+    const idx = CFG.expenses.findIndex(x => ("E_"+x.k+"_delta") === field);
     if (idx<0) return 0;
     const base = CFG.expenses[idx].base;
     const pct  = CFG.expenses[idx].locked ? 0 : (state.expPct[idx]||0);
     const nv   = Math.round(base*(1+pct/100));
     return nv - base;
   }else{
-    const idx = CFG.revenues.findIndex(x => ("R_"+x.k+"_delta_M€") === field);
+    const idx = CFG.revenues.findIndex(x => ("R_"+x.k+"_delta") === field);
     const base = CFG.revenues[idx].base;
     const pct  = (state.revPct[idx]||0);
     const nv   = Math.round(base*(1+pct/100));
@@ -491,15 +441,17 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   };
 
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
+
+  // ordre : zéro (derrière) -> médiane (jaune) -> vous (bleu)
   const shapes = [
-    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } }, /* médiane jaune */
-    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } }, /* vous bleu */
-    { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
+    { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } },
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
+    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
   ];
   const annotations = [
-    { x: myValueME, y: 0.75, text: "Vous : " + fmtM(myValueME) + " M€", showarrow:true, arrowhead:6, ax:0, ay:-35,
+    { x: myValueME, y: 0.95, yref:"paper", text: "Vous : " + fmtM(myValueME) + " M€", showarrow:true, arrowhead:6, ax:0, ay:-35,
       font:{color:"#38bdf8",size:12}, bgcolor:"rgba(56,189,248,0.08)", bordercolor:"#38bdf8" },
-    { x: medianX, y: -0.75, text: "Médiane : " + fmtM(medianX) + " M€", showarrow:true, arrowhead:6, ax:0, ay:35,
+    { x: medianX, y: 0.05, yref:"paper", text: "Médiane : " + fmtM(medianX) + " M€", showarrow:true, arrowhead:6, ax:0, ay:35,
       font:{color:"#eab308",size:12}, bgcolor:"rgba(234,179,8,0.08)", bordercolor:"#eab308" }
   ];
 
@@ -522,10 +474,40 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
 }
 
 /* --------- RÉSULTATS (parallélisation) ---------- */
-async function renderAllViolinsParallel(){
+function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
+function renderBarsZero(expYou, expRef, revYou, revRef){
+  const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
+  if (!vals.length) return;
+  const span = Math.max(...vals) - Math.min(...vals);
+  const pad = Math.max(5, span * 0.15);
+  const dmin = Math.min(...vals) - pad;
+  const dmax = Math.max(...vals) + pad;
+
+  // positions %
+  const expZero = pctInDomain(0, dmin, dmax);
+  const expY = pctInDomain(expYou, dmin, dmax);
+  const expR = pctInDomain(expRef, dmin, dmax);
+  $("#barExpZero").style.left = expZero + "%";
+  $("#barExpYou").style.left  = expY + "%";
+  $("#barExpRef").style.left  = expR + "%";
+
+  const revZero = pctInDomain(0, dmin, dmax);
+  const revY = pctInDomain(revYou, dmin, dmax);
+  const revR = pctInDomain(revRef, dmin, dmax);
+  $("#barRevZero").style.left = revZero + "%";
+  $("#barRevYou").style.left  = revY + "%";
+  $("#barRevRef").style.left  = revR + "%";
+
+  // titres avec valeurs
+  $("#barExpTitle").innerHTML = `<strong>Variation des dépenses</strong> — Vous (${expYou>=0?'+':''}${fmtM(expYou)} M€) · Médiane (${expRef>=0?'+':''}${fmtM(expRef)} M€)`;
+  $("#barRevTitle").innerHTML = `<strong>Variation des recettes</strong> — Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€) · Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)`;
+}
+
+async function renderAllViolinsParallelAndBars(){
   const expWrap = document.getElementById("violins-expenses");
   const revWrap = document.getElementById("violins-revenues");
   expWrap.innerHTML=""; revWrap.innerHTML="";
+  state.medians.exp = {}; state.medians.rev = {};
 
   const expJobs = FIELD_MAP_EXP.map(m=>{
     const divId = divFor(expWrap, m);
@@ -539,38 +521,22 @@ async function renderAllViolinsParallel(){
   });
 
   const results = await Promise.all([...expJobs, ...revJobs]);
+
+  // Trace violons + stocke médianes
   for (const r of results){
     drawViolinHybrid(r.divId, r.j.values||[], r.j.stats||{}, r.myVal, r.m.label);
+    const med = (r.j && r.j.stats && typeof r.j.stats.median === "number") ? r.j.stats.median : 0;
+    if (r.m.field.startsWith("E_")) state.medians.exp[r.m.field] = med;
+    else state.medians.rev[r.m.field] = med;
   }
-}
 
-/* --------- BARRES CENTRÉES SUR 0 ---------- */
-function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
-function renderBarsZero(expYou, expRef, revYou, revRef){
-  const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
-  if (!vals.length) return;
-  const span = Math.max(...vals) - Math.min(...vals);
-  const pad = Math.max(5, span * 0.15);
-  const dmin = Math.min(...vals) - pad;
-  const dmax = Math.max(...vals) + pad;
+  // Somme des médianes par poste pour la référence
+  const expRef = Object.values(state.medians.exp).reduce((s,x)=>s+(Number(x)||0),0);
+  const revRef = Object.values(state.medians.rev).reduce((s,x)=>s+(Number(x)||0),0);
 
-  const expZero = pctInDomain(0, dmin, dmax);
-  const expY = pctInDomain(expYou, dmin, dmax);
-  const expR = pctInDomain(expRef, dmin, dmax);
-  $("#barExpZero").style.left = expZero + "%";
-  $("#barExpYou").style.left  = expY + "%";
-  $("#barExpRef").style.left  = expR + "%";
-  $("#barExpYouVal").textContent = "Vous : " + (expYou>=0?"+":"") + fmtM(expYou) + " M€";
-  $("#barExpRefVal").textContent = "Médiane : " + (expRef>=0?"+":"") + fmtM(expRef) + " M€";
-
-  const revZero = pctInDomain(0, dmin, dmax);
-  const revY = pctInDomain(revYou, dmin, dmax);
-  const revR = pctInDomain(revRef, dmin, dmax);
-  $("#barRevZero").style.left = revZero + "%";
-  $("#barRevYou").style.left  = revY + "%";
-  $("#barRevRef").style.left  = revR + "%";
-  $("#barRevYouVal").textContent = "Vous : " + (revYou>=0?"+":"") + fmtM(revYou) + " M€";
-  $("#barRevRefVal").textContent = "Médiane : " + (revRef>=0?"+":"") + fmtM(revRef) + " M€";
+  // Vos deltas totaux
+  const you = compute();
+  renderBarsZero(you.deltaExpTotal, expRef, you.deltaRevTotal, revRef);
 }
 
 /* --------- VALIDATE (overlay + gel/déverrouillage) ---------- */
@@ -579,8 +545,8 @@ function freezeInputs(freeze){
     if (el.classList.contains("nudge")) {
       if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled");
     } else {
-      const locked = el.hasAttribute("disabled") && el.getAttribute("disabled") !== null && el.getAttribute("disabled") !== "";
-      if (!locked) { if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled"); }
+      const initiallyLocked = el.getAttribute("data-initial-locked")==="1" || el.hasAttribute("disabled");
+      if (!initiallyLocked) { if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled"); }
     }
   });
 }
@@ -596,32 +562,24 @@ async function onValidate(){
   overlay.classList.add("show");
   $("#validateHint").textContent = "Réponse envoyée — affichage des résultats…";
 
-  // Build payload & client-side hash (anti-doublon)
+  // POST (fire-and-forget)
   const payload = buildCompactPayload();
-  const user_key = ensureUserKey();
-  const normalized = { e: payload.e.map(Math.round), r: payload.r.map(Math.round) };
-  const scenario_hash = await sha256Hex(stableStringify(normalized));
-
-  // POST "simple" (pas de pré-vol CORS)
   try{
     fetch(ENDPOINT_URL, {
       method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body: JSON.stringify({ ...payload, user_key, scenario_hash })
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
     }).catch(()=>{});
   }catch(_){}
 
   // Affiche résultats
   $("#results").style.display="block";
 
-  // Récupère référence (moyennes) + count
+  // Compteur de réponses
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
     if(stats && stats.ok){
-      state.avgExpPct = stats.avgExpPct || [];
-      state.avgRevPct = stats.avgRevPct || [];
       state.count = stats.count || 0;
       $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
     } else {
@@ -631,19 +589,8 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Résumé texte
-  const you = compute();
-  const ref  = computeRefFromAverages();
-  $("#sumCutsYou").textContent = fmtM(you.cutsExp);
-  $("#sumIncYou").textContent  = fmtM(you.incRev);
-  $("#sumCutsAvg").textContent = fmtM(ref.cutsExp || 0);
-  $("#sumIncAvg").textContent  = fmtM(ref.incRev || 0);
-
-  // Barres centrées sur 0 (Δ totaux signés)
-  renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
-
-  // Violons
-  await renderAllViolinsParallel();
+  // Violons + calcul médianes + barres
+  await renderAllViolinsParallelAndBars();
 
   $("#validateHint").textContent="Réponse enregistrée ✔ — résultats ci-dessous.";
   overlay.classList.remove("show");
@@ -661,6 +608,10 @@ function onEdit(){
 function init(){
   renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
   renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
+  // marque les sliders verrouillés au départ
+  document.querySelectorAll("input[type=range]").forEach(el=>{
+    if (el.hasAttribute("disabled")) el.setAttribute("data-initial-locked","1");
+  });
   updateHUD();
   $("#validateBtn").addEventListener("click", onValidate);
   $("#editBtn").addEventListener("click", onEdit);
