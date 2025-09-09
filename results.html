@@ -1,129 +1,378 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>BudgetLab – Violin hybride (test)</title>
-  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Simulateur budget — Prototype public</title>
   <style>
-    body{font-family:Inter,system-ui,Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:16px}
-    .card{background:#111827;border:1px solid #1f2937;border-radius:14px;padding:16px;margin:12px 0}
-    h1{font-size:20px;margin:0 0 8px}
-    .caption{color:#a1a1aa;font-size:12px;margin-top:8px}
-    #violin-prot-soc {width:100%; height:280px;}
-    .legendRow{display:flex;gap:12px;align-items:center;margin-top:8px;font-size:13px;color:#cbd5e1}
-    .pill{width:14px;height:8px;border-radius:4px;background:#f3d9a7}
-    .pillMean{width:16px;height:4px;background:#eab308}
-    .pillMine{width:16px;height:4px;background:#38bdf8}
+    :root{
+      --bg:#0b1220; --panel:#0f172a; --card:#111827; --text:#e5e7eb;
+      --muted:#9ca3af; --border:#1f2937; --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626;
+      --accent:#3b82f6;
+    }
+    html,body{height:100%}
+    body{margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+         background:linear-gradient(180deg,var(--bg),#060a13); color:var(--text)}
+    .container{max-width:1100px; margin:0 auto; padding:24px}
+    h1{margin:0 0 8px 0; font-weight:800; letter-spacing:.2px}
+    .sub{color:var(--muted); margin-bottom:16px}
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:16px}
+    .card{background:linear-gradient(180deg,var(--panel),#0b1323); border:1px solid var(--border);
+          border-radius:16px; padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .row{display:flex; align-items:center; gap:12px; margin:8px 0}
+    .row label{flex:1; color:#cbd5e1}
+    .row input{width:140px; padding:8px 10px; border-radius:10px; border:1px solid #334155;
+               background:#0b1323; color:var(--text)}
+    .row input:disabled{opacity:.6; cursor:not-allowed}
+    .actions{display:flex; gap:10px; flex-wrap:wrap}
+    button{appearance:none; border:1px solid var(--border); background:#0e1526; color:var(--text);
+           padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer}
+    button[disabled]{opacity:.6; cursor:not-allowed}
+    .primary{background:linear-gradient(180deg,#1d4ed8,#1e40af); border-color:#1e3a8a}
+    .muted{color:var(--muted)}
+    .tankard{position:sticky; top:10px; display:flex; gap:12px; align-items:center;
+             padding:12px 14px; border-radius:14px; border:1px solid var(--border);
+             background:linear-gradient(180deg,#0e1526,#0a0f1a); margin-bottom:12px}
+    .pill{padding:4px 10px; border-radius:999px; font-weight:700; border:1px solid var(--border)}
+    .pill.ok{background:color-mix(in srgb, var(--ok) 16%, transparent); color:#dcfce7; border-color: color-mix(in srgb, var(--ok) 35%, #1f2937)}
+    .pill.warn{background:color-mix(in srgb, var(--warn) 16%, transparent); color:#fef3c7; border-color: color-mix(in srgb, var(--warn) 35%, #1f2937)}
+    .pill.bad{background:color-mix(in srgb, var(--bad) 16%, transparent); color:#fee2e2; border-color: color-mix(in srgb, var(--bad) 35%, #1f2937)}
+    .kpi{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; flex:1}
+    .kpi .item{background:linear-gradient(180deg,var(--card),#0b1220); border:1px solid var(--border);
+               border-radius:12px; padding:12px; min-width:0}
+    .kpi .lab{color:#9ca3af; font-size:.8rem}
+    .kpi .val{font-size:1.1rem; font-weight:800; overflow-wrap:anywhere}
+
+    /* Overlay loading */
+    .overlay{position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+             background:rgba(0,0,0,.45); backdrop-filter: blur(2px); z-index:50}
+    .overlay.show{display:flex}
+    .loader{background:#0b1323; border:1px solid var(--border); padding:16px 18px; border-radius:14px;
+            box-shadow:0 10px 24px rgba(0,0,0,.5); min-width:280px; text-align:center}
+    .spinner{width:18px; height:18px; border:3px solid #334155; border-top-color:var(--accent);
+             border-radius:50%; animation:spin 1s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Results */
+    .results{display:grid; grid-template-columns: 1fr; gap:16px}
+    .barbox{background:linear-gradient(180deg,var(--card),#0b1220); border:1px solid var(--border);
+            border-radius:12px; padding:12px}
+    .bar{position:relative; width:100%; height:14px; background:#0b1323; border:1px solid #233047; border-radius:999px; overflow:visible}
+    .bar .user{position:absolute; left:0; top:0; height:100%; background:#3b82f6; border-radius:999px}
+    .bar .median{position:absolute; top:-6px; width:2px; height:26px; background:#a7f3d0; /* vert pâle */ }
+    .bar-legend{display:flex; justify-content:space-between; font-size:.9rem; color:#cbd5e1; margin-top:6px}
+    .note{font-size:.9rem; color:#9ca3af}
+    .legend{font-size:.85rem; color:#9ca3af; margin-top:6px}
+    .notruncate{overflow:visible}
+
+    /* Footer helper text */
+    .helper{font-size:.9rem; color:#9ca3af}
+    .hidden{display:none}
   </style>
 </head>
 <body>
-
-  <div class="card">
-    <h1>Protection sociale – dispersion des réponses (variation en M€)</h1>
-    <div id="violin-prot-soc"></div>
-    <div class="legendRow">
-      <span class="pill"></span> Distribution (base)
-      <span class="pillMean"></span> Médiane (base)
-      <span class="pillMine"></span> Votre valeur
+  <div class="overlay" id="overlay">
+    <div class="loader">
+      <div><span class="spinner"></span><strong>Vos résultats sont en cours de traitement…</strong></div>
+      <div class="muted" style="margin-top:6px">Ça ne devrait prendre que quelques secondes.</div>
     </div>
-    <div id="ps-stats" class="caption"></div>
   </div>
 
-<script>
-(async function(){
-  // 👉 Ton Apps Script
-  const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
+  <div class="container">
+    <div class="tankard" id="tankard">
+      <span class="muted">État budget :</span>
+      <span class="pill" id="statusPill">Calcul…</span>
+      <div class="kpi">
+        <div class="item"><div class="lab">Budget cible</div><div class="val" id="kpiTarget">—</div></div>
+        <div class="item"><div class="lab">Total actuel</div><div class="val" id="kpiTotal">—</div></div>
+        <div class="item"><div class="lab">Écart</div><div class="val" id="kpiGap">—</div></div>
+      </div>
+    </div>
 
-  // 👉 Ta valeur actuelle (Δ en M€) : pour test, chiffre fixe. En prod, lis depuis localStorage ou ton front.
-  const saved = localStorage.getItem("budgetlab:last");
-  const myValueME = saved ? Number(JSON.parse(saved)["E_prot_soc_delta_M€"] ?? -42084) : -42084;
+    <h1>Simulateur budget</h1>
+    <div class="sub">Ajustez vos catégories, puis soumettez votre scénario. <span class="helper">Un même utilisateur peut enregistrer jusqu’à 3 scénarios.</span></div>
 
-  // Récupère la distribution
-  let data = { ok:false };
-  try {
-    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent("E_prot_soc_delta_M€");
-    const res = await fetch(url, { method:"GET" });
-    data = await res.json();
-  } catch(e) {
-    console.warn("Fetch error, données de secours utilisées.", e);
-  }
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin:0 0 6px 0">Paramètres généraux</h3>
+        <div class="row"><label>Budget cible mensuel (€)</label><input type="number" id="target" value="2200"/></div>
+        <div class="note">La cible représente le plafond mensuel à ne pas dépasser.</div>
+      </div>
 
-  if (!data.ok || !Array.isArray(data.values) || data.values.length === 0) {
-    data = {
-      ok: true,
-      field: "E_prot_soc_delta_M€",
-      values: [-70000,-52000,-49000,-43000,-41000,-38000,-30000,-15000,-5000,2000,8000,12000],
-      stats: { count:12, min:-70000, max:12000, mean:-27500, median:-35500 }
-    };
-  }
+      <div class="card">
+        <h3 style="margin:0 0 6px 0">Charges non modifiables</h3>
+        <div class="row"><label>Intérêts de la dette (non modifiable)</label><input type="number" id="debt" value="120" disabled/></div>
+        <div class="note">Verrouillé : issu de données externes.</div>
+      </div>
 
-  const values = data.values;
-  const stats  = data.stats || {min:0,max:0,mean:0,median:0,count:values.length};
-  const medianX = (typeof stats.median === "number") ? stats.median : 0;
+      <div class="card" style="grid-column:1/-1">
+        <h3 style="margin:0 0 6px 0">Dépenses mensuelles par catégorie</h3>
+        <div class="row"><label>Santé <span class="muted">(médecin, pharmacie, mutuelle)</span></label><input type="number" class="cat" value="90" data-name="santé"/></div>
+        <div class="row"><label>Logement <span class="muted">(loyer/crédit, charges, assurance)</span></label><input type="number" class="cat" value="950" data-name="logement"/></div>
+        <div class="row"><label>Alimentation <span class="muted">(courses, marché, cantine)</span></label><input type="number" class="cat" value="350" data-name="alimentation"/></div>
+        <div class="row"><label>Transport <span class="muted">(carburant, transports, entretien)</span></label><input type="number" class="cat" value="120" data-name="transport"/></div>
+        <div class="row"><label>Loisirs & Culture <span class="muted">(sorties, abonnements, livres)</span></label><input type="number" class="cat" value="110" data-name="loisirs"/></div>
+        <div class="row"><label>Communication <span class="muted">(téléphone, internet, cloud)</span></label><input type="number" class="cat" value="60" data-name="communication"/></div>
+        <div class="row"><label>Divers <span class="muted">(imprévus, cadeaux, dons)</span></label><input type="number" class="cat" value="80" data-name="divers"/></div>
 
-  // Violin + halo de points
-  const violin = {
-    type: "violin",
-    orientation: "h",
-    x: values.length? values : [0],
-    y: values.map(_ => ""),
-    name: "Base",
-    points: "all",
-    jitter: 0.6,
-    scalemode: "count",
-    pointpos: 0,
-    marker: { size: 5, opacity: 0.35, color: "rgba(245, 203, 92, 0.7)" },
-    fillcolor: "rgba(245, 203, 92, 0.25)",
-    line: { color: "rgba(0,0,0,0)" },
-    hovertemplate: "%{x:.0f} M€<extra></extra>"
-  };
+        <div class="actions" style="margin-top:12px">
+          <button id="validateBtn" class="primary">Valider</button>
+          <button id="editBtn" class="hidden">Modifier mon scénario</button>
+        </div>
+        <div id="msg" class="note" style="margin-top:8px"></div>
+      </div>
 
-  // Barres visibles + annotations
-  const shapes = [
-    { type: "line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line: { color: "#eab308", width: 6 } },
-    { type: "line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line: { color: "#38bdf8", width: 6 } },
-    { type: "line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line: { color: "rgba(148,163,184,0.45)", width: 2, dash: "dot" } }
-  ];
-  const annotations = [
-    { x: myValueME, y: 0.75, text: "Vous : " + fmt(myValueME) + " M€", showarrow: true, arrowhead: 6, ax: 0, ay: -35,
-      font: { color: "#38bdf8", size: 12 }, bgcolor: "rgba(56,189,248,0.08)", bordercolor:"#38bdf8" },
-    { x: medianX, y: -0.75, text: "Médiane : " + fmt(medianX) + " M€", showarrow: true, arrowhead: 6, ax: 0, ay: 35,
-      font: { color: "#eab308", size: 12 }, bgcolor: "rgba(234,179,8,0.08)", bordercolor:"#eab308" }
-  ];
+      <div class="card notruncate" style="grid-column:1/-1">
+        <h3 style="margin:0 0 6px 0">Restitution</h3>
+        <div class="legend">Chaque graphique montre la distribution des réponses (variation en millions d’euros vs 2024), votre valeur et la médiane.</div>
+        <div class="results" id="results">
+          <!-- Mes résultats -->
+          <div class="barbox" id="box-expenses">
+            <div class="note" style="margin-bottom:6px"><strong>Réduction de dépenses</strong> — comparaison avec la médiane</div>
+            <div class="bar">
+              <div class="user" id="bar-expenses" style="width:0%"></div>
+              <div class="median" id="med-expenses" style="left:0%"></div>
+            </div>
+            <div class="bar-legend"><span id="val-expenses">Vous : —</span><span id="medv-expenses">Médiane : —</span></div>
+          </div>
 
-  const min = (typeof stats.min === "number") ? stats.min : Math.min(0,myValueME);
-  const max = (typeof stats.max === "number") ? stats.max : Math.max(0,myValueME);
-  const margin = Math.max(10, (max - min) * 0.04);
+          <div class="barbox" id="box-revenues">
+            <div class="note" style="margin-bottom:6px"><strong>Variation de recettes</strong> — comparaison avec la médiane</div>
+            <div class="bar">
+              <div class="user" id="bar-revenues" style="width:0%"></div>
+              <div class="median" id="med-revenues" style="left:0%"></div>
+            </div>
+            <div class="bar-legend"><span id="val-revenues">Vous : —</span><span id="medv-revenues">Médiane : —</span></div>
+          </div>
 
-  const layout = {
-    paper_bgcolor: "#111827",
-    plot_bgcolor: "#111827",
-    font: { color: "#e2e8f0" },
-    margin: { l: 10, r: 10, t: 28, b: 42 },
-    title:{ text:"Protection sociale", x:0, xanchor:"left", y:0.98, font:{size:14} },
-    xaxis: {
-      title: "Variation (en M€) — négatif = économies",
-      gridcolor: "#334155",
-      zerolinecolor: "#334155",
-      range: [ (min ?? -100) - margin, (max ?? 100) + margin ],
-      tickformat: ",.0f"
-    },
-    yaxis: { showticklabels: false },
-    shapes, annotations, hovermode:"x unified", showlegend:false
-  };
+          <div class="note">Indicateur commun : <strong>Variation en millions d’euros</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  const isMobile = window.matchMedia("(max-width: 520px)").matches;
-  const config = { responsive:true, displayModeBar:false, staticPlot:isMobile };
+  <script>
+    const ENDPOINT = "YOUR_SCRIPT_DEPLOYMENT_URL"; // <= À REMPLACER
+    const APP_VERSION = "v1.0.0";
 
-  Plotly.newPlot("violin-prot-soc", [violin], layout, config);
+    const fmtInt = (n)=> new Intl.NumberFormat('fr-FR', {maximumFractionDigits:0}).format(n);
+    const $ = (sel)=> document.querySelector(sel);
 
-  document.getElementById("ps-stats").textContent =
-    `Réponses : n=${stats.count ?? values.length} • min=${fmt(stats.min)} M€ • médiane=${fmt(medianX)} M€ • max=${fmt(stats.max)} M€`;
+    function readNumbers(){
+      const target = Number($('#target').value || 0);
+      const debt = Number($('#debt').value || 0);
+      const cats = Array.from(document.querySelectorAll('.cat')).map(i => ({
+        name: i.dataset.name,
+        value: Number(i.value || 0),
+      }));
+      const totalCats = cats.reduce((a,b)=>a + (b.value||0), 0);
+      const total = debt + totalCats;
+      return {target,debt,categories:cats,total};
+    }
 
-  function fmt(v){ return (typeof v === "number") ? Math.round(v).toLocaleString("fr-FR") : "—"; }
-})();
-</script>
+    function updateTankard(){
+      const {target,total} = readNumbers();
+      $('#kpiTarget').textContent = fmtInt(target) + " €";
+      $('#kpiTotal').textContent = fmtInt(total) + " €";
+      const gap = target - total;
+      $('#kpiGap').textContent = (gap>=0?'+':'') + fmtInt(gap) + " €";
+      const ratio = total / Math.max(1,target);
+      const pill = $('#statusPill');
+      pill.classList.remove('ok','warn','bad');
+      if(ratio <= 0.95){ pill.textContent = "OK — dans la cible"; pill.classList.add('ok'); }
+      else if(ratio <= 1.05){ pill.textContent = "Attention — proche de la limite"; pill.classList.add('warn'); }
+      else { pill.textContent = "Dépassement"; pill.classList.add('bad'); }
+    }
 
+    function freezeInputs(freeze){
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach(i => {
+        if(i.id === 'debt') return; // déjà verrouillé
+        i.disabled = !!freeze;
+      });
+    }
+
+    function showOverlay(flag){
+      const ov = $('#overlay');
+      if(flag) ov.classList.add('show'); else ov.classList.remove('show');
+    }
+
+    function ensureUserKey(){
+      const k = localStorage.getItem('user_key_v1');
+      if(k) return k;
+      const key = crypto.randomUUID();
+      localStorage.setItem('user_key_v1', key);
+      return key;
+    }
+
+    async function sha256Hex(str){
+      const enc = new TextEncoder().encode(str);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+
+    function stableStringify(obj){
+      const sort = v => {
+        if(Array.isArray(v)) return v.map(sort);
+        if(v && typeof v === 'object'){
+          return Object.keys(v).sort().reduce((acc,k)=>{ acc[k]=sort(v[k]); return acc; },{});
+        }
+        return v;
+      };
+      return JSON.stringify(sort(obj));
+    }
+
+    function setMsg(txt, type="info"){
+      const el = $('#msg');
+      el.textContent = txt || "";
+      el.style.color = type==="error" ? "#fecaca" : type==="warn" ? "#fde68a" : "#9ca3af";
+    }
+
+    function setButtonsSubmitted(){
+      const vbtn = $('#validateBtn'), ebtn = $('#editBtn');
+      vbtn.textContent = "Réponse enregistrée";
+      vbtn.disabled = true;
+      ebtn.classList.remove('hidden');
+    }
+
+    function setButtonsEditable(){
+      const vbtn = $('#validateBtn'), ebtn = $('#editBtn');
+      vbtn.textContent = "Valider";
+      vbtn.disabled = false;
+      ebtn.classList.add('hidden');
+    }
+
+    function pctClamp(x, min, max){
+      // Transform a value x in [min,max] to percentage width [0,100]
+      if (max === min) return 0;
+      return Math.max(0, Math.min(100, ((x - min) / (max - min)) * 100));
+    }
+
+    function renderBars(metrics){
+      // metrics: { expense_reduction_user, expense_reduction_median, revenue_variation_user, revenue_variation_median }
+      // Determine domain min/max from all available values
+      const vals = [metrics.expense_reduction_user, metrics.expense_reduction_median, metrics.revenue_variation_user, metrics.revenue_variation_median]
+                    .filter(v=> typeof v === 'number' && isFinite(v));
+      if (vals.length === 0) return;
+
+      const pad = 0.15 * (Math.max(...vals) - Math.min(...vals) || 1);
+      const domainMin = Math.min(...vals) - pad;
+      const domainMax = Math.max(...vals) + pad;
+
+      // Expenses
+      if (typeof metrics.expense_reduction_user === 'number') {
+        $('#bar-expenses').style.width = pctClamp(metrics.expense_reduction_user, domainMin, domainMax) + "%";
+        $('#val-expenses').textContent = "Vous : " + fmtInt(metrics.expense_reduction_user) + " M€";
+      }
+      if (typeof metrics.expense_reduction_median === 'number') {
+        $('#med-expenses').style.left = pctClamp(metrics.expense_reduction_median, domainMin, domainMax) + "%";
+        $('#medv-expenses').textContent = "Médiane : " + fmtInt(metrics.expense_reduction_median) + " M€";
+      }
+
+      // Revenues
+      if (typeof metrics.revenue_variation_user === 'number') {
+        $('#bar-revenues').style.width = pctClamp(metrics.revenue_variation_user, domainMin, domainMax) + "%";
+        $('#val-revenues').textContent = "Vous : " + fmtInt(metrics.revenue_variation_user) + " M€";
+      }
+      if (typeof metrics.revenue_variation_median === 'number') {
+        $('#med-revenues').style.left = pctClamp(metrics.revenue_variation_median, domainMin, domainMax) + "%";
+        $('#medv-revenues').textContent = "Médiane : " + fmtInt(metrics.revenue_variation_median) + " M€";
+      }
+    }
+
+    function cacheGet(hash){
+      try { return JSON.parse(localStorage.getItem("cache_"+hash) || "null"); } catch { return null; }
+    }
+    function cacheSet(hash, data){
+      try { localStorage.setItem("cache_"+hash, JSON.stringify(data)); } catch {}
+    }
+
+    async function submitScenario(){
+      const vbtn = $('#validateBtn');
+      const ebtn = $('#editBtn');
+      vbtn.disabled = true;
+      freezeInputs(true);
+      showOverlay(true);
+      setMsg("");
+
+      try{
+        const user_key = ensureUserKey();
+        const raw = readNumbers();
+
+        // Normalisation pour le hash côté client (le serveur refera son propre hash)
+        const normalized = {
+          target: Math.round(raw.target),
+          debt: Math.round(raw.debt),
+          categories: raw.categories.map(c => ({name: String(c.name), value: Math.round(c.value)}))
+                                     .sort((a,b)=> a.name.localeCompare(b.name))
+        };
+        const sjson = stableStringify(normalized);
+        const scenario_hash = await sha256Hex(sjson);
+
+        // Cache local: si déjà calculé, restitution instantanée
+        const cached = cacheGet(scenario_hash);
+        if (cached && cached.status === "ok") {
+          renderBars(cached.data?.metrics || {});
+        }
+
+        // POST au backend
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            user_key,
+            scenario_hash,          // indicatif (le serveur recalcule)
+            payload: normalized,    // payload canonique
+            user_agent: navigator.userAgent,
+            app_version: APP_VERSION
+          })
+        });
+        const json = await res.json().catch(()=>({status:"error", message:"Réponse invalide du serveur."}));
+
+        if (json.status === "ok") {
+          cacheSet(scenario_hash, json);
+          renderBars(json.data?.metrics || {});
+          setMsg("Votre réponse a été enregistrée. Merci !", "info");
+          setButtonsSubmitted();
+        } else if (json.status === "duplicate") {
+          // Déjà soumis : on affiche quand même les métriques renvoyées
+          renderBars(json.data?.metrics || {});
+          setMsg("Vous avez déjà soumis ce scénario. Les résultats affichés correspondent à ce scénario.", "warn");
+          setButtonsSubmitted();
+        } else if (json.status === "quota") {
+          setMsg("Limite atteinte : vous avez déjà enregistré 3 scénarios.", "error");
+          // Permettre modification uniquement si l’utilisateur souhaite rééditer puis revalider un scénario différent
+          setButtonsEditable();
+          freezeInputs(false);
+        } else {
+          setMsg(json.message || "Une erreur est survenue. Merci de réessayer.", "error");
+          setButtonsEditable();
+          freezeInputs(false);
+        }
+      } catch(err){
+        console.error(err);
+        setMsg("Erreur réseau. Merci de réessayer.", "error");
+        setButtonsEditable();
+        freezeInputs(false);
+      } finally {
+        showOverlay(false);
+      }
+    }
+
+    // Événements
+    document.addEventListener('input', (e)=> {
+      const t = e.target;
+      if (t.matches('#target, .cat')) updateTankard();
+    });
+    document.addEventListener('DOMContentLoaded', ()=>{
+      updateTankard();
+      $('#validateBtn').addEventListener('click', submitScenario);
+      $('#editBtn').addEventListener('click', ()=>{
+        setButtonsEditable();
+        freezeInputs(false);
+        setMsg("Vous pouvez modifier votre scénario, puis cliquer à nouveau sur « Valider ».","");
+      });
+    });
+  </script>
 </body>
 </html>
