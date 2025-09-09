@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>BudgetLab — Trouver 40 Md€ pour le budget 2026</title>
 
-<!-- Plotly pour les distributions -->
+<!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
 <style>
@@ -16,8 +16,8 @@
     --expBg:#0e254f; --revBg:#0b1f45;
     --chip:#0c1636; --brand:#2563eb;
     --accent:#3b82f6;
-    --you:#38bdf8;  /* bleu clair "Vous" */
-    --ref:#eab308;  /* jaune "Médiane"  */
+    --you:#38bdf8; /* bleu "Vous" */
+    --ref:#eab308; /* jaune médiane */
     --axis:#94a3b8;
   }
   *{box-sizing:border-box}
@@ -39,7 +39,7 @@
   .sliderWrap{display:grid;grid-template-columns:42px 1fr 42px;gap:8px;align-items:center}
   .nudge{width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
   .nudge:active{transform:scale(.98)}
-  .nudge[disabled]{opacity:.4;cursor:not-allowed}
+  .nudge[disabled]{opacity:.4;cursor:not-allowed; pointer-events:none;} /* important */
   input[type=range]{width:100%;margin:8px 0;height:36px;touch-action:pan-y}
   input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
@@ -51,7 +51,6 @@
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
 
-  /* HUD flottant code couleur (bord à gauche) */
   .floatBubble{
     position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
     border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
@@ -65,23 +64,21 @@
   .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
 
   .results{display:none}
-  .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
+  .legend{color:var(--muted);font-size:.9rem;margin:6px 0 4px}
+  .legend2{color:#cbd5e1;font-size:.86rem;margin:0 0 10px}
 
-  /* Grille des violons */
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
-  .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
+  .footer{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.85rem;gap:12px;flex-wrap:wrap;margin-top:16px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
 
-  /* Overlay chargement */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:80}
   .overlay.show{display:flex}
   .loader{background:#0b1633;border:1px solid var(--ring);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px rgba(0,0,0,.4);min-width:280px;text-align:center}
   .spinner{width:18px;height:18px;border:3px solid #334155;border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* Barres comparatives — centrées sur 0 */
   .barbox{background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:12px}
   .barline{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633}
   .barlegend{display:flex;justify-content:space-between;font-size:.9rem;color:#cbd5e1;margin-top:6px}
@@ -89,6 +86,10 @@
   .mark.you{background:var(--you)}
   .mark.ref{background:var(--ref)}
   .mark.zero{background:rgba(148,163,184,.45); width:2px; top:-5px; height:24px}
+
+  .youC{color:var(--you);font-weight:700}
+  .refC{color:var(--ref);font-weight:700}
+
   .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
@@ -104,16 +105,14 @@
 
 <div class="wrap">
   <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
-  <div class="subtitle">Référence : <em>base 2024</em></div>
 
-  <!-- Intro pédagogique (allégée) -->
+  <!-- Intro pédagogique -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
       En 2024, la France a dépensé plus qu’elle n’a reçu : c’est le <strong>déficit</strong>.
-      L’Europe demande un retour vers <strong>3&nbsp;% du PIB</strong> de déficit.
-      Ici, on vous propose un défi simple&nbsp;: ajustez certaines <strong>dépenses</strong> et/ou
-      <strong>recettes</strong> pour viser environ <strong>40&nbsp;Md€</strong> d’amélioration, une cible politique
-      souvent citée pour réduire le déficit. Réglez les curseurs, validez, puis comparez votre scénario aux autres.
+      L’Europe vise un retour vers <strong>3&nbsp;% du PIB</strong> de déficit.
+      Ici, ajustez <strong>dépenses</strong> et <strong>recettes</strong> pour viser ~<strong>40&nbsp;Md€</strong> d’effort
+      — une cible politique discutée pour réduire le déficit.
     </div>
   </div>
 
@@ -145,30 +144,27 @@
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Barres centrées sur 0, avec médiane DES TOTAUX -->
+    <!-- Barres centrées sur 0 -->
     <div class="barbox">
-      <div class="hint" style="margin-bottom:6px"><strong>Variation des dépenses (M€)</strong> — Vous (<span id="barExpYouVal">—</span>) · Médiane (<span id="barExpRefVal">—</span>)</div>
+      <div class="hint" id="barExpTitle" style="margin-bottom:6px"></div>
       <div class="barline" id="barExpLine">
         <div class="mark zero" id="barExpZero" style="left:50%"></div>
         <div class="mark ref"  id="barExpRef"  style="left:50%"></div>
         <div class="mark you"  id="barExpYou"  style="left:50%"></div>
       </div>
-      <div class="barlegend"><span>0 = inchangé</span><span></span></div>
     </div>
 
     <div class="barbox" style="margin-top:10px">
-      <div class="hint" style="margin-bottom:6px"><strong>Variation des recettes (M€)</strong> — Vous (<span id="barRevYouVal">—</span>) · Médiane (<span id="barRevRefVal">—</span>)</div>
+      <div class="hint" id="barRevTitle" style="margin-bottom:6px"></div>
       <div class="barline" id="barRevLine">
         <div class="mark zero" id="barRevZero" style="left:50%"></div>
         <div class="mark ref"  id="barRevRef"  style="left:50%"></div>
         <div class="mark you"  id="barRevYou"  style="left:50%"></div>
       </div>
-      <div class="barlegend"><span>0 = inchangé</span><span></span></div>
     </div>
 
-    <div class="legend" id="normNote" style="margin-top:10px">
-      Chaque graphique montre la distribution des réponses (variation en M€ vs 2024), votre valeur (bleu) et la médiane (jaune).
-    </div>
+    <div class="legend">Chaque graphique montre la distribution des réponses (variation en M€ vs 2024), votre valeur (bleu) et la médiane (jaune).</div>
+    <div class="legend2">La <strong>médiane</strong> coupe les réponses en deux : la moitié des répondants est en dessous, l’autre moitié au-dessus. Elle est moins sensible aux valeurs extrêmes que la moyenne.</div>
 
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
@@ -181,11 +177,13 @@
   </div>
 
   <div class="footer">
-    Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certains postes sont difficiles à ajuster à court terme (ex. intérêts de la dette).
+    <div class="footer-left">
+      Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis.
+    </div>
   </div>
 </div>
 
-<!-- Bulle flottante permanente -->
+<!-- HUD -->
 <div id="hud" class="floatBubble">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -215,9 +213,9 @@ const CFG = {
   revenues: [
     {k:"imp_prod",label:"Impôts sur la production et importations",base:570000,info:"TVA, taxes sur produits/consommations, droits de douane."},
     {k:"cotis",label:"Cotisations sociales",base:480000,info:"Cotisations employeurs/salariés (retraites, santé, chômage)."},
-    {k:"ir",label:"Impôt sur le revenu (IR)",base:120000,info:"Impôt sur le revenu des personnes physiques (prélèvement à la source, acomptes)."},
+    {k:"ir",label:"Impôt sur le revenu (IRPP)",base:120000,info:"Impôt sur le revenu des personnes physiques (prélèvement à la source, acomptes)."},
     {k:"is",label:"Impôt sur les sociétés (IS)",base:80000,info:"Impôt sur les bénéfices des entreprises."},
-    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes et revenus du patrimoine public, amendes, redevances, recettes diverses."},
+    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes et revenus du patrimoine public, amendes, redevances, taxes diverses."},
   ],
   range:{min:-15,max:15}
 };
@@ -227,7 +225,6 @@ const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
   avgExpPct: [], avgRevPct: [],
-  medExpDelta: 0, medRevDelta: 0,
   count: 0,
   submitted:false
 };
@@ -251,8 +248,8 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  const deltaExpTotal = newExpM - BASE_EXP; // <0 = économies
-  const deltaRevTotal = newRevM - BASE_REV; // >0 = recettes en plus
+  const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
+  const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
 
   const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
     const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
@@ -264,6 +261,26 @@ function compute(){
   },0);
 
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev, deltaExpTotal, deltaRevTotal};
+}
+function computeRefFromAverages(){
+  const pctE = state.avgExpPct || [];
+  const pctR = state.avgRevPct || [];
+  const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:(pctE[i]||0))/100)) );
+  const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+(pctR[i]||0)/100)) );
+  const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
+  const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
+  const newExpM = newExp.reduce((s,x)=>s+x,0);
+  const newRevM = newRev.reduce((s,x)=>s+x,0);
+  return {
+    cutsExp: CFG.expenses.reduce((sum,b,i)=>{
+      const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0);
+    },0),
+    incRev: CFG.revenues.reduce((sum,b,i)=>{
+      const d = newRev[i]-b.base; return sum + (d>0 ? d : 0);
+    },0),
+    deltaExpTotal: newExpM - BASE_EXP,
+    deltaRevTotal: newRevM - BASE_REV
+  };
 }
 function updateHUD(){
   const r = compute();
@@ -282,8 +299,7 @@ function updateHUD(){
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("validateBtn").disabled = !inRange || state.submitted;
 
-  const hud = document.getElementById("hud");
-  hud.classList.toggle("ok", inRange);
+  document.getElementById("hud").classList.toggle("ok", inRange);
 }
 
 /* --------- UI RENDER (sliders) ---------- */
@@ -337,6 +353,8 @@ function renderBlock(container, list, kind){
     if (!b.locked){
       let timer=null, stepper=null;
       const startRepeat = (dir)=>{
+        const btnDisabled = row.querySelector(`button.nudge[data-d="${dir>0?'+1':'-1'}"]`).hasAttribute("disabled");
+        if (btnDisabled) return; // garde anti-gel
         const d = Number(dir);
         const tick = ()=>{
           const next = Math.max(CFG.range.min, Math.min(CFG.range.max, Number(slider.value)+d));
@@ -350,7 +368,7 @@ function renderBlock(container, list, kind){
       const stopRepeat = ()=>{ if(timer){clearTimeout(timer);timer=null} if(stepper){clearInterval(stepper);stepper=null} };
       row.querySelectorAll(".nudge").forEach(btn=>{
         const dir = btn.dataset.d === "+1" ? +1 : -1;
-        btn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
+        btn.addEventListener("pointerdown", (e)=>{ if(btn.disabled) return; e.preventDefault(); btn.setPointerCapture?.(e.pointerId); startRepeat(dir); });
         btn.addEventListener("pointerup",   ()=> stopRepeat());
         btn.addEventListener("pointercancel",()=> stopRepeat());
         btn.addEventListener("pointerleave", ()=> stopRepeat());
@@ -389,18 +407,24 @@ const FIELD_MAP_EXP = [
 const FIELD_MAP_REV = [
   {id:"imp_prod", label:"Impôts sur la production et importations", field:"R_imp_prod_delta_M€"},
   {id:"cotis", label:"Cotisations sociales", field:"R_cotis_delta_M€"},
-  {id:"ir", label:"Impôt sur le revenu (IR)", field:"R_ir_delta_M€"},
+  {id:"ir", label:"Impôt sur le revenu (IRPP)", field:"R_ir_delta_M€"},
   {id:"is", label:"Impôt sur les sociétés (IS)", field:"R_is_delta_M€"},
   {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta_M€"},
 ];
 
-async function fetchDistribution(field){
+async function fetchJsonWithRetry(url, retries=1){
   try{
-    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field);
     const r = await fetch(url, {method:"GET", cache:"no-cache"});
-    const j = await r.json();
-    if (j && j.ok && Array.isArray(j.values)) return j;
-  }catch(e){}
+    return await r.json();
+  }catch(e){
+    if (retries>0){ await new Promise(res=>setTimeout(res,300)); return fetchJsonWithRetry(url, retries-1); }
+    return null;
+  }
+}
+
+async function fetchDistribution(field){
+  const j = await fetchJsonWithRetry(ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field), 1);
+  if (j && j.ok && Array.isArray(j.values)) return j;
   return { ok:false, values:[], stats:{count:0,min:0,max:0,median:0} };
 }
 
@@ -441,12 +465,13 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     y: values.map(_ => ""),
     name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
-    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
+    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" }, /* points jaune */
     fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
+
   const shapes = [
     { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
     { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
@@ -459,16 +484,19 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
       font:{color:"#eab308",size:12}, bgcolor:"rgba(234,179,8,0.08)", bordercolor:"#eab308" }
   ];
 
-  const min = (typeof stats.min === "number") ? stats.min : Math.min(0,myValueME);
-  const max = (typeof stats.max === "number") ? stats.max : Math.max(0,myValueME);
-  const margin = Math.max(10, (max - min) * 0.04);
+  // Domaine = inclure distribution, zéro, médiane ET votre valeur
+  const minCand = [stats.min, 0, medianX, myValueME].filter(v => typeof v === "number" && isFinite(v));
+  const maxCand = [stats.max, 0, medianX, myValueME].filter(v => typeof v === "number" && isFinite(v));
+  const min = Math.min.apply(null, minCand.length?minCand:[0]);
+  const max = Math.max.apply(null, maxCand.length?maxCand:[0]);
+  const margin = Math.max(10, (max - min) * 0.06);
 
   const layout = {
     paper_bgcolor:"#111827", plot_bgcolor:"#111827", font:{color:"#e2e8f0"},
     margin:{l:10,r:10,t:28,b:42},
     title:{ text: label, x:0, xanchor:"left", y:0.98, font:{size:14} },
     xaxis:{ title:"Variation (en M€)", gridcolor:"#334155", zerolinecolor:"#334155",
-            range:[ (min ?? -100)-margin, (max ?? 100)+margin ], tickformat:",.0f" },
+            range:[ min - margin, max + margin ], tickformat:",.0f" },
     yaxis:{ showticklabels:false },
     shapes, annotations, hovermode:"x unified", showlegend:false
   };
@@ -477,7 +505,7 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS (parallélisation) ---------- */
+/* --------- RÉSULTATS ---------- */
 async function renderAllViolinsParallel(){
   const expWrap = document.getElementById("violins-expenses");
   const revWrap = document.getElementById("violins-revenues");
@@ -516,8 +544,7 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   $("#barExpZero").style.left = expZero + "%";
   $("#barExpYou").style.left  = expY + "%";
   $("#barExpRef").style.left  = expR + "%";
-  $("#barExpYouVal").textContent = (expYou>=0?"+":"") + fmtM(expYou) + " M€";
-  $("#barExpRefVal").textContent = (expRef>=0?"+":"") + fmtM(expRef) + " M€";
+  $("#barExpTitle").innerHTML = `<strong>Variation des dépenses (M€)</strong> — <span class="youC">Vous (${expYou>=0?'+':''}${fmtM(expYou)} M€)</span> · <span class="refC">Médiane (${expRef>=0?'+':''}${fmtM(expRef)} M€)</span>`;
 
   const revZero = pctInDomain(0, dmin, dmax);
   const revY = pctInDomain(revYou, dmin, dmax);
@@ -525,22 +552,28 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   $("#barRevZero").style.left = revZero + "%";
   $("#barRevYou").style.left  = revY + "%";
   $("#barRevRef").style.left  = revR + "%";
-  $("#barRevYouVal").textContent = (revYou>=0?"+":"") + fmtM(revYou) + " M€";
-  $("#barRevRefVal").textContent = (revRef>=0?"+":"") + fmtM(revRef) + " M€";
+  $("#barRevTitle").innerHTML = `<strong>Variation des recettes (M€)</strong> — <span class="youC">Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€)</span> · <span class="refC">Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
 }
 
-/* --------- VALIDATE (overlay + gel/déverrouillage) ---------- */
+/* --------- GEL / DÉGEL ---------- */
 function freezeInputs(freeze){
-  document.querySelectorAll("input[type=range], .nudge").forEach(el=>{
-    if (el.classList.contains("nudge")) {
-      if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled");
-    } else {
-      const locked = el.hasAttribute("disabled") && el.getAttribute("disabled") !== null && el.getAttribute("disabled") !== "";
-      if (!locked) { if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled"); }
+  // sliders
+  document.querySelectorAll("input[type=range]").forEach(sl=>{
+    const wasLocked = sl.hasAttribute("data-locked");
+    if (sl.hasAttribute("disabled") && !sl.hasAttribute("data-locked")) sl.setAttribute("data-locked",""); // mémorise verrou natif (ex: intérêts)
+    if (freeze){
+      if (!sl.hasAttribute("disabled")) sl.setAttribute("disabled","");
+    }else{
+      if (!sl.hasAttribute("data-locked")) sl.removeAttribute("disabled");
     }
+  });
+  // boutons +/-
+  document.querySelectorAll(".nudge").forEach(btn=>{
+    if (freeze) btn.setAttribute("disabled",""); else btn.removeAttribute("disabled");
   });
 }
 
+/* --------- VALIDATE ---------- */
 async function onValidate(){
   const validateBtn = $("#validateBtn");
   const editBtn = $("#editBtn");
@@ -552,47 +585,37 @@ async function onValidate(){
   overlay.classList.add("show");
   $("#validateHint").textContent = "Réponse envoyée — affichage des résultats…";
 
-  // Build payload
-  const payload = buildCompactPayload();
-  const user_key = (localStorage.getItem("user_key_v1")) || (()=>{
-    const k = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+"_"+Math.random().toString(16).slice(2);
-    localStorage.setItem("user_key_v1", k);
-    return k;
-  })();
-
-  // POST (plus de quota côté front)
+  // Envoi POST compatible Apps Script (no-cors + text/plain)
   try{
+    const payload = buildCompactPayload();
     fetch(ENDPOINT_URL, {
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ ...payload, user_key })
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(payload)
     }).catch(()=>{});
   }catch(_){}
 
-  // Affiche résultats
+  // Affiche zone résultats
   $("#results").style.display="block";
 
-  // Récupère stats (inclut médianes des totaux)
-  try{
-    const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
-    const stats = await statsRes.json();
-    if(stats && stats.ok){
-      state.avgExpPct = stats.avgExpPct || [];
-      state.avgRevPct = stats.avgRevPct || [];
-      state.medExpDelta = Number(stats.medExpDelta || 0);
-      state.medRevDelta = Number(stats.medRevDelta || 0);
-      state.count = stats.count || 0;
-      $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
-    } else {
-      $("#ansCountLine").textContent = `Réponses enregistrées : —`;
-    }
-  }catch(_){
+  // Stats (moyennes) + count (avec mini-retry)
+  const stats = await fetchJsonWithRetry(ENDPOINT_URL + "?stats=1", 1);
+  if(stats && stats.ok){
+    state.avgExpPct = stats.avgExpPct || [];
+    state.avgRevPct = stats.avgRevPct || [];
+    state.count = stats.count || 0;
+    $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
+  } else {
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Barres centrées sur 0 (Δ totaux signés)
+  // Résumé ref vs vous
   const you = compute();
-  renderBarsZero(you.deltaExpTotal, state.medExpDelta, you.deltaRevTotal, state.medRevDelta);
+  const ref  = computeRefFromAverages();
+
+  // Barres centrées sur 0
+  renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
   // Violons
   await renderAllViolinsParallel();
