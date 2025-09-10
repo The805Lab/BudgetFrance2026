@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>BudgetLab — Trouver 40 Md€ pour le budget 2026</title>
+<title>BudgetLab — Pour le budget 2026 de la France, trouvez 40 Md€</title>
 
 <!-- Plotly pour les distributions -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
@@ -15,10 +15,8 @@
     --ok:#16a34a; --bad:#ef4444;
     --expBg:#0e254f; --revBg:#0b1f45;
     --chip:#0c1636; --brand:#2563eb;
-    --accent:#3b82f6;
-    --you:#38bdf8; /* bleu clair "Vous" */
-    --ref:#eab308; /* jaune "Médiane" */
-    --axis:#94a3b8;
+    --you:#38bdf8; --ref:#eab308; --axis:#94a3b8;
+    --good:#16a34a; --bad2:#ef4444;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
@@ -29,29 +27,29 @@
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
 
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
-  .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0; overscroll-behavior:contain; overflow:visible;}
+  .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overscroll-behavior:contain;overflow:visible}
   .section.exp{background:var(--expBg)} .section.rev{background:var(--revBg)}
   .head{padding:12px 14px;background:rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;font-weight:700;flex-wrap:wrap}
   .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:#0b152f;color:#dce7ff;font-size:.8rem}
   .row{padding:12px 14px;border-top:1px dashed #274067}
   .label{font-weight:700} .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
 
-  .sliderWrap{display:grid;grid-template-columns:42px 1fr 42px;gap:8px;align-items:center}
-  .nudge{width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
+  .sliderWrap{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center}
+  .nudge{width:48px;height:48px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
   .nudge:active{transform:scale(.98)}
   .nudge[disabled]{opacity:.4;cursor:not-allowed}
   input[type=range]{width:100%;margin:8px 0;height:36px;touch-action:pan-y}
   input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:28px;height:28px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
   input[type=range]::-moz-range-track{height:10px;background:#2a3c69;border-radius:999px}
-  input[type=range]::-moz-range-thumb{width:24px;height:24px;border:none;border-radius:50%;background:var(--brand)}
-  input[type=range][disabled]{opacity:.5}
+  input[type=range]::-moz-range-thumb{width:28px;height:28px;border:none;border-radius:50%;background:var(--brand)}
+  input[type=range][disabled]{opacity:.6}
 
   .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
 
-  /* HUD flottant code couleur (bord à gauche) */
+  /* HUD flottant */
   .floatBubble{
     position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
     border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
@@ -71,31 +69,44 @@
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
-  .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
-
-  /* Signature the805lab (inline SVG) */
-  .brand805{display:flex;justify-content:flex-end;align-items:center;margin-top:10px}
-  .brand805 svg{height:20px;display:block}
-  .brand805 text{font-family:Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif}
-
+  .footer{color:var(--muted);font-size:.85rem;margin-top:16px;position:relative;padding-bottom:56px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
 
   /* Overlay chargement */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:80}
   .overlay.show{display:flex}
   .loader{background:#0b1633;border:1px solid var(--ring);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px rgba(0,0,0,.4);min-width:280px;text-align:center}
-  .spinner{width:18px;height:18px;border:3px solid #334155;border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
+  .spinner{width:18px;height:18px;border:3px solid #334155;border-top-color:var(--brand);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* Barres comparatives — centrées sur 0 */
-  .barbox{background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:12px}
-  .barline{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633}
-  .barlegend{display:flex;justify-content:space-between;font-size:.9rem;color:#cbd5e1;margin-top:6px}
-  .mark{position:absolute;top:-6px;width:3px;height:26px;border-radius:2px}
-  .mark.you{background:var(--you)}
-  .mark.ref{background:var(--ref)}
-  .mark.zero{background:rgba(148,163,184,.45); width:2px; top:-5px; height:24px}
-  .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  /* Synthèse (barres centrées sur 0) */
+  .synCard{background:#0b1935;border:1px solid #1e2d55;border-radius:14px;padding:14px}
+  .synHeader{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .synBadge{border:1px solid #274067;border-radius:999px;padding:2px 8px;color:#d9e3ff;background:#0c1a3a;font-size:.8rem}
+  .synH{margin:0 0 4px;font-size:1.05rem}
+  .sumLine{font-size:1rem;margin:2px 0 8px}
+
+  .listWrap{display:grid;grid-template-columns:1fr;gap:10px}
+  @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
+  .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
+  .listTitle{font-weight:700;margin-bottom:6px}
+  .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
+  .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
+  .itemLabel{color:#dbe7ff}
+  .itemVal{font-variant-numeric:tabular-nums}
+  .barLine{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
+  .barSeg{position:absolute;top:0;height:100%}
+  .segGood{background:rgba(22,163,74,.9)}
+  .segBad{background:rgba(239,68,68,.9)}
+  .seeMore{display:inline-flex;gap:6px;align-items:center;border:1px solid #2b3d6d;background:#0c1736;color:#e6f0ff;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer}
+
+  /* Footer signature (Option B, inline SVG) */
+  .brand805{position:absolute;right:16px;bottom:8px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--ring);padding:6px 10px;border-radius:999px}
+  .brand805 svg{display:block;height:22px}
+
+  /* Gel après validation (sécurité) */
+  body[data-frozen="1"] input[type=range],
+  body[data-frozen="1"] .nudge{pointer-events:none}
 </style>
 </head>
 <body>
@@ -108,86 +119,100 @@
   </div>
 </div>
 
-<div class="wrap">
-  <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
+<div class="wrap" aria-live="polite">
+  <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
   <div class="subtitle">Référence : <em>base 2024</em></div>
 
-  <!-- Intro pédagogique (allégée) -->
+  <!-- Intro pédagogique -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
-      En 2024, la France a dépensé plus qu’elle n’a reçu : c’est le <strong>déficit</strong>.
-      L’Europe demande de revenir vers <strong>3 % du PIB</strong> de déficit.
-      Ici, on vous propose un défi simple : imaginez des <strong>économies</strong> et/ou des <strong>recettes</strong>
-      pour viser autour de <strong>40 Md€</strong>. Réglez les curseurs, validez, puis comparez votre scénario aux autres.
+      En 2024, la France a dépensé plus qu’elle n’a reçu : c’est le <strong>déficit</strong>. L’Europe vise un retour vers <strong>3 % du PIB</strong> de déficit. <br/>
+      Ici, ajustez <strong>dépenses</strong> et <strong>recettes</strong> pour viser une économie d’environ <strong>40 Md€</strong> (cible politique discutée) puis comparez votre scénario aux autres.
     </div>
   </div>
 
-  <div class="bar"><span id="bar"></span></div>
+  <div class="bar" aria-hidden="true"><span id="bar"></span></div>
 
   <!-- Dépenses -->
-  <div class="section exp">
+  <div class="section exp" aria-label="Réglages des dépenses">
     <div class="head">Dépenses <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="expContainer"></div>
   </div>
 
   <!-- Recettes -->
-  <div class="section rev">
+  <div class="section rev" aria-label="Réglages des recettes">
     <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="revContainer"></div>
   </div>
 
   <!-- Actions -->
   <div class="card">
-    <div class="actionsRow">
-      <button id="validateBtn" class="btn wide" disabled>Valider mon budget</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button id="validateBtn" class="btn wide" disabled aria-disabled="true">Valider mon budget</button>
       <button id="editBtn" class="btn" style="display:none;background:#334155">Modifier mon scénario</button>
+      <button id="shareBtn" class="btn" style="display:none;background:#0b1736;border:1px solid #2b3d6d">Partager</button>
     </div>
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
-  <!-- Résultats -->
+  <!-- Synthèse de mes résultats (NOUVEAU) -->
+  <div id="summary" class="card results" aria-label="Synthèse de mes résultats">
+    <div class="synHeader">
+      <h2 class="synH">Synthèse de mes résultats</h2>
+      <span class="synBadge" id="targetBadge">Hors cible</span>
+    </div>
+    <div class="sumLine" id="sumHeadline">—</div>
+
+    <div class="listWrap">
+      <!-- Dépenses -->
+      <div class="listBox">
+        <div class="listTitle">Dépenses — variations par poste (Δ en M€, <span style="color:var(--good)">vert</span> réduit le déficit, <span style="color:var(--bad2)">rouge</span> l’augmente)</div>
+        <div class="zeroLine" aria-hidden="true"></div>
+        <div id="sumExpList"></div>
+        <button id="sumExpMore" class="seeMore" style="display:none">Voir tout</button>
+      </div>
+      <!-- Recettes -->
+      <div class="listBox">
+        <div class="listTitle">Recettes — variations par poste (Δ en M€, <span style="color:var(--good)">vert</span> réduit le déficit, <span style="color:var(--bad2)">rouge</span> l’augmente)</div>
+        <div class="zeroLine" aria-hidden="true"></div>
+        <div id="sumRevList"></div>
+        <button id="sumRevMore" class="seeMore" style="display:none">Voir tout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparaison normalisée -->
   <div id="results" class="card results">
-    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparés aux autres répondants</h2>
+    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Résumé haut : barres centrées sur 0 -->
-    <div class="barbox">
-      <div class="hint" style="margin-bottom:6px">
-        <strong>Variation des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span>
+    <!-- Barres centrées sur 0 : Vous vs Médiane (totaux) -->
+    <div class="synCard">
+      <div class="hint" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span></div>
+      <div class="barLine" style="margin-bottom:6px">
+        <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
+        <div class="barSeg" id="barExpRef" style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barExpYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
-      <div class="barline" id="barExpLine">
-        <div class="mark zero" id="barExpZero" style="left:50%"></div>
-        <div class="mark ref"  id="barExpRef"  style="left:50%"></div>
-        <div class="mark you"  id="barExpYou"  style="left:50%"></div>
-      </div>
-      <div class="barlegend"><span id="barExpYouVal">Vous : —</span><span id="barExpRefVal">Médiane : —</span></div>
+      <div class="barlegend"><span id="barExpYouVal" style="color:var(--you)">Vous : —</span> <span id="barExpRefVal" style="color:var(--ref)">Médiane : —</span></div>
     </div>
 
-    <div class="barbox" style="margin-top:10px">
-      <div class="hint" style="margin-bottom:6px">
-        <strong>Variation des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span>
+    <div class="synCard" style="margin-top:10px">
+      <div class="hint" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span></div>
+      <div class="barLine" style="margin-bottom:6px">
+        <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
+        <div class="barSeg" id="barRevRef" style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barRevYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
-      <div class="barline" id="barRevLine">
-        <div class="mark zero" id="barRevZero" style="left:50%"></div>
-        <div class="mark ref"  id="barRevRef"  style="left:50%"></div>
-        <div class="mark you"  id="barRevYou"  style="left:50%"></div>
-      </div>
-      <div class="barlegend"><span id="barRevYouVal">Vous : —</span><span id="barRevRefVal">Médiane : —</span></div>
+      <div class="barlegend"><span id="barRevYouVal" style="color:var(--you)">Vous : —</span> <span id="barRevRefVal" style="color:var(--ref)">Médiane : —</span></div>
     </div>
 
-    <!-- Texte résumé -->
-    <div class="card" style="background:#0b1935;border-color:#1e2d55;margin-top:12px">
-      <div style="display:grid;grid-template-columns:1fr;gap:8px">
-        <div><strong>Votre réduction de dépenses :</strong> <span id="sumCutsYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Référence :</span> <span id="sumCutsAvg">0</span> M€</div>
-        <div><strong>Votre variation de recettes :</strong> <span id="sumIncYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Référence :</span> <span id="sumIncAvg">0</span> M€</div>
-      </div>
-    </div>
-
-    <div class="legend" id="normNote">
+    <div class="legend" id="normNote" style="margin-top:10px">
       Chaque graphique montre la distribution des réponses (variation en M€ vs 2024), votre valeur (bleu) et la médiane (jaune).
-      <div style="margin-top:4px;color:#a7b5cf;font-size:.85rem">La médiane est la valeur centrale : la moitié des réponses sont plus basses, l’autre moitié plus hautes.</div>
+      <div class="hint" style="margin-top:4px;color:#a7b5cf">La <strong>médiane</strong> sépare les réponses en deux moitiés : 50 % au-dessus, 50 % au-dessous.</div>
     </div>
 
+    <!-- Violons -->
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
       <div id="violins-expenses" class="violinsGrid"></div>
@@ -198,34 +223,37 @@
     </div>
   </div>
 
-  <!-- Sources + signature -->
   <div class="footer">
     Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certains postes sont difficiles à ajuster à court terme (ex. intérêts de la dette).
-  </div>
-  <div class="brand805" aria-label="the805lab">
-    <!-- Inline SVG wordmark (aucun fichier requis) -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 22" role="img" aria-label="the805lab">
-      <title>the805lab</title>
-      <text x="0" y="16"
-            font-family="Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
-            font-weight="700" font-size="14" fill="#E8F0FF" letter-spacing=".3px">
-        the805lab
-      </text>
-    </svg>
+
+    <!-- Signature The805Lab — SVG inline (Option B) -->
+    <div class="brand805" aria-label="The805Lab">
+      <!-- wordmark minimal : pill + texte -->
+      <svg viewBox="0 0 240 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="g805" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#2563eb"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.5" y="0.5" width="239" height="39" rx="20" fill="url(#g805)" opacity="0.18" stroke="#21315a"/>
+        <text x="120" y="26" text-anchor="middle" fill="#e8f0ff" font-size="18" font-weight="700" font-family="Inter,system-ui,Segoe UI,Roboto,Arial">The805Lab</text>
+      </svg>
+    </div>
   </div>
 </div>
 
-<!-- Bulle flottante permanente -->
-<div id="hud" class="floatBubble">
+<!-- Bulle flottante -->
+<div id="hud" class="floatBubble" aria-live="polite">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div id="toast" class="toast" role="status"></div>
 
 <script>
 /* --------- CONFIG ---------- */
-const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec"; // NE PAS MODIFIER
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -245,9 +273,9 @@ const CFG = {
   revenues: [
     {k:"imp_prod",label:"Impôts sur la production et importations",base:570000,info:"TVA, taxes sur produits/consommations, droits de douane."},
     {k:"cotis",label:"Cotisations sociales",base:480000,info:"Cotisations employeurs/salariés (retraites, santé, chômage)."},
-    {k:"ir",label:"Impôt sur le revenu (IRPP)",base:120000,info:"Impôt sur le revenu des personnes physiques."},
-    {k:"is",label:"Impôt sur les sociétés (IS)",base:80000,info:"Impôt sur les bénéfices des entreprises."},
-    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes/recettes patrimoniales, taxes diverses, amendes, redevances, ventes, revenus d’actifs, etc."},
+    {k:"ir",label:"Impôt sur le revenu (IRPP)",base:120000,info:"Impôt sur le revenu des personnes physiques (prélèvement à la source, acomptes)."},
+    {k:"is",label:"Impôt sur les sociétés",base:80000,info:"Impôt sur les bénéfices des entreprises."},
+    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes/recettes patrimoniales, amendes, redevances, loyers/cessions, revenus d’actifs, divers."},
   ],
   range:{min:-15,max:15}
 };
@@ -262,27 +290,10 @@ const state = {
 };
 
 /* --------- UTILS ---------- */
+const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
-function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
-const $ = (sel)=> document.querySelector(sel);
-
-/* --------- OPTION A+ FRONT (clé locale & hash) ---------- */
-function ensureUserKey(){
-  const k = localStorage.getItem("user_key_v1");
-  if (k) return k;
-  const key = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+"_"+Math.random().toString(16).slice(2);
-  localStorage.setItem("user_key_v1", key);
-  return key;
-}
-function stableStringify(obj){
-  const sort = v => Array.isArray(v) ? v.map(sort) : (v && typeof v==="object" ? Object.keys(v).sort().reduce((a,k)=> (a[k]=sort(v[k]),a),{}) : v);
-  return JSON.stringify(sort(obj));
-}
-async function sha256Hex(str){
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
-}
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -297,11 +308,6 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  // Δ totaux signés (centrés sur 0)
-  const deltaExpTotal = newExpM - BASE_EXP; // <0 = économies
-  const deltaRevTotal = newRevM - BASE_REV; // >0 = recettes en plus
-
-  // Décompositions (positif strict) pour le petit résumé texte
   const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
     const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
     return sum + (d<0 ? -d : 0);
@@ -310,6 +316,10 @@ function compute(){
     const d = Math.round(b.base*(1+state.revPct[i]/100)) - b.base;
     return sum + (d>0 ? d : 0);
   },0);
+
+  // Δ totaux signés (centrés 0)
+  const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
+  const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
 
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev, deltaExpTotal, deltaRevTotal};
 }
@@ -323,12 +333,8 @@ function computeRefFromAverages(){
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
   return {
-    cutsExp: CFG.expenses.reduce((sum,b,i)=>{
-      const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0);
-    },0),
-    incRev: CFG.revenues.reduce((sum,b,i)=>{
-      const d = newRev[i]-b.base; return sum + (d>0 ? d : 0);
-    },0),
+    cutsExp: CFG.expenses.reduce((sum,b,i)=>{ const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0); },0),
+    incRev: CFG.revenues.reduce((sum,b,i)=>{ const d = newRev[i]-b.base; return sum + (d>0 ? d : 0); },0),
     deltaExpTotal: newExpM - BASE_EXP,
     deltaRevTotal: newRevM - BASE_REV
   };
@@ -338,20 +344,12 @@ function updateHUD(){
   const saving = r.savingM;
   const pct = clamp((saving/CFG.target.max)*100,0,100);
   const inRange = (saving>=CFG.target.min && saving<=CFG.target.max);
-
   $("#hudSaving").textContent = `${fmtM(saving)} M€`;
-  let gapText;
-  if (!inRange){
-    if (saving < CFG.target.min) gapText = `≥${fmtM(CFG.target.min - saving)} M€ à trouver`;
-    else gapText = `≤${fmtM(saving - CFG.target.max)} M€ à retirer`;
-  } else gapText = "OK (dans la cible)";
-  $("#hudGap").textContent = gapText;
-
-  document.getElementById("bar").style.width = pct+"%";
-  document.getElementById("validateBtn").disabled = !inRange || state.submitted;
-
-  const hud = document.getElementById("hud");
-  hud.classList.toggle("ok", inRange);
+  $("#hudGap").textContent = inRange ? "OK (dans la cible)" :
+    (saving < CFG.target.min ? `≥${fmtM(CFG.target.min - saving)} M€ à trouver` : `≤${fmtM(saving - CFG.target.max)} M€ à retirer`);
+  $("#bar").style.width = pct+"%";
+  $("#validateBtn").disabled = !inRange || state.submitted;
+  $("#hud").classList.toggle("ok", inRange);
 }
 
 /* --------- UI RENDER (sliders) ---------- */
@@ -366,9 +364,9 @@ function renderBlock(container, list, kind){
       ${b.info?`<div class="hint">${b.info}</div>`:""}
       <div class="hint">Base : ${Math.round(b.base/1000)} Md€</div>
       <div class="sliderWrap">
-        <button class="nudge" data-id="${id}" data-d="-1" ${disabledAttr}>−</button>
-        <input type="range" id="${id}" min="${CFG.range.min}" max="${CFG.range.max}" step="1" ${b.locked?"value='0' disabled":"value='0'"} />
-        <button class="nudge" data-id="${id}" data-d="+1" ${disabledAttr}>+</button>
+        <button class="nudge" data-id="${id}" data-d="-1" ${disabledAttr} aria-label="Diminuer ${b.label}">−</button>
+        <input type="range" id="${id}" min="${CFG.range.min}" max="${CFG.range.max}" step="1" ${b.locked?"value='0' disabled":"value='0'"} aria-label="${b.label}"/>
+        <button class="nudge" data-id="${id}" data-d="+1" ${disabledAttr} aria-label="Augmenter ${b.label}">+</button>
       </div>
       <div class="valLine">
         <div><span id="${id}_pct">0</span>%</div>
@@ -386,6 +384,7 @@ function renderBlock(container, list, kind){
     const delEl=row.querySelector(`#${id}_delta`);
 
     const update=()=>{
+      if (document.body.getAttribute('data-frozen')==="1") return; // sécurité
       const pct=Number(slider.value)||0;
       if(kind==="exp") state.expPct[idx]=pct; else state.revPct[idx]=pct;
       const newVal = Math.round(b.base*(1+(b.locked?0:pct)/100));
@@ -405,6 +404,7 @@ function renderBlock(container, list, kind){
     if (!b.locked){
       let timer=null, stepper=null;
       const startRepeat = (dir)=>{
+        if (document.body.getAttribute('data-frozen')==="1") return;
         const d = Number(dir);
         const tick = ()=>{
           const next = Math.max(CFG.range.min, Math.min(CFG.range.max, Number(slider.value)+d));
@@ -418,7 +418,7 @@ function renderBlock(container, list, kind){
       const stopRepeat = ()=>{ if(timer){clearTimeout(timer);timer=null} if(stepper){clearInterval(stepper);stepper=null} };
       row.querySelectorAll(".nudge").forEach(btn=>{
         const dir = btn.dataset.d === "+1" ? +1 : -1;
-        btn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
+        btn.addEventListener("pointerdown", (e)=>{ if(btn.hasAttribute('disabled')) return; e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
         btn.addEventListener("pointerup",   ()=> stopRepeat());
         btn.addEventListener("pointercancel",()=> stopRepeat());
         btn.addEventListener("pointerleave", ()=> stopRepeat());
@@ -457,7 +457,7 @@ const FIELD_MAP_EXP = [
 const FIELD_MAP_REV = [
   {id:"imp_prod", label:"Impôts sur la production et importations", field:"R_imp_prod_delta_M€"},
   {id:"cotis", label:"Cotisations sociales", field:"R_cotis_delta_M€"},
-  {id:"ir", label:"Impôt sur le revenu", field:"R_ir_delta_M€"},
+  {id:"ir", label:"Impôt sur le revenu (IRPP)", field:"R_ir_delta_M€"},
   {id:"is", label:"Impôt sur les sociétés", field:"R_is_delta_M€"},
   {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta_M€"},
 ];
@@ -470,18 +470,6 @@ async function fetchDistribution(field){
     if (j && j.ok && Array.isArray(j.values)) return j;
   }catch(e){}
   return { ok:false, values:[], stats:{count:0,min:0,max:0,median:0} };
-}
-
-function divFor(container, mapItem){
-  const div = document.createElement("div");
-  div.id = "v-" + mapItem.id;
-  div.style.height = "280px";
-  div.style.background = "rgba(255,255,255,.02)";
-  div.style.border = "1px dashed #2a3c64";
-  div.style.borderRadius = "10px";
-  div.style.padding = "6px";
-  container.appendChild(div);
-  return div.id;
 }
 
 function myDeltaForField(field){
@@ -515,9 +503,15 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   };
 
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
+
+  // Domaine : inclure toujours "vous" + médiane + zéro
+  const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
+  const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
+  const margin = Math.max(10, (max - min) * 0.06);
+
   const shapes = [
-    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } }, /* médiane jaune */
-    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } }, /* vous bleu */
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
+    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
     { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
   ];
   const annotations = [
@@ -527,16 +521,12 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
       font:{color:"#eab308",size:12}, bgcolor:"rgba(234,179,8,0.08)", bordercolor:"#eab308" }
   ];
 
-  const min = (typeof stats.min === "number") ? stats.min : Math.min(0,myValueME);
-  const max = (typeof stats.max === "number") ? stats.max : Math.max(0,myValueME);
-  const margin = Math.max(10, (max - min) * 0.04);
-
   const layout = {
     paper_bgcolor:"#111827", plot_bgcolor:"#111827", font:{color:"#e2e8f0"},
-    margin:{l:10,r:10,t:28,b:42},
+    margin:{l:10,r:10,t:28,b:46},
     title:{ text: label, x:0, xanchor:"left", y:0.98, font:{size:14} },
     xaxis:{ title:"Variation (en M€)", gridcolor:"#334155", zerolinecolor:"#334155",
-            range:[ (min ?? -100)-margin, (max ?? 100)+margin ], tickformat:",.0f" },
+            range:[ min - margin, max + margin ], tickformat:",.0f" },
     yaxis:{ showticklabels:false },
     shapes, annotations, hovermode:"x unified", showlegend:false
   };
@@ -545,97 +535,245 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS (parallélisation) ---------- */
-async function renderAllViolinsParallel(){
-  const expWrap = document.getElementById("violins-expenses");
-  const revWrap = document.getElementById("violins-revenues");
+/* --------- RÉSULTATS (progressif + cache) ---------- */
+const violinCache = new Map();
+async function renderAllViolinsProgressive(){
+  const expWrap = $("#violins-expenses");
+  const revWrap = $("#violins-revenues");
   expWrap.innerHTML=""; revWrap.innerHTML="";
 
-  const expJobs = FIELD_MAP_EXP.map(m=>{
-    const divId = divFor(expWrap, m);
-    const myVal = myDeltaForField(m.field);
-    return fetchDistribution(m.field).then(j=>({m,divId,myVal,j}));
-  });
-  const revJobs = FIELD_MAP_REV.map(m=>{
-    const divId = divFor(revWrap, m);
-    const myVal = myDeltaForField(m.field);
-    return fetchDistribution(m.field).then(j=>({m,divId,myVal,j}));
+  const allMaps = [...FIELD_MAP_EXP, ...FIELD_MAP_REV];
+  allMaps.forEach(m=>{
+    const div = document.createElement("div");
+    div.id = "v-" + m.id;
+    div.style.height = "280px";
+    div.style.background = "rgba(255,255,255,.02)";
+    div.style.border = "1px dashed #2a3c64";
+    div.style.borderRadius = "10px";
+    div.style.padding = "6px";
+    (FIELD_MAP_EXP.includes(m) ? expWrap : revWrap).appendChild(div);
   });
 
-  const results = await Promise.all([...expJobs, ...revJobs]);
-  for (const r of results){
-    drawViolinHybrid(r.divId, r.j.values||[], r.j.stats||{}, r.myVal, r.m.label);
+  const fetchField = async (field)=>{
+    if (violinCache.has(field)) return violinCache.get(field);
+    const j = await fetchDistribution(field);
+    violinCache.set(field, j);
+    return j;
+  };
+
+  // Première vague: 4 premiers pour ressenti rapide
+  const jobs = allMaps.map(m=>({m,divId:"v-"+m.id}));
+  const firstWave = jobs.slice(0,4);
+  await Promise.all(firstWave.map(async (j)=>{
+    const data = await fetchField(j.m.field);
+    const myVal = myDeltaForField(j.m.field);
+    drawViolinHybrid(j.divId, data.values||[], data.stats||{}, myVal, j.m.label);
+  }));
+
+  // Reste par paquets
+  const rest = jobs.slice(4);
+  for (const j of rest){
+    const data = await fetchField(j.m.field);
+    const myVal = myDeltaForField(j.m.field);
+    drawViolinHybrid(j.divId, data.values||[], data.stats||{}, myVal, j.m.label);
+    await new Promise(r=>setTimeout(r, 30)); // respiration
   }
 }
 
-/* --------- BARRES CENTRÉES SUR 0 ---------- */
+/* --------- BARRES totales centrées sur 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
-  if (!vals.length) return;
   const span = Math.max(...vals) - Math.min(...vals);
   const pad = Math.max(5, span * 0.15);
   const dmin = Math.min(...vals) - pad;
   const dmax = Math.max(...vals) + pad;
 
-  // positions %
-  const expZero = pctInDomain(0, dmin, dmax);
-  const expY = pctInDomain(expYou, dmin, dmax);
-  const expR = pctInDomain(expRef, dmin, dmax);
-  $("#barExpZero").style.left = expZero + "%";
-  $("#barExpYou").style.left  = expY + "%";
-  $("#barExpRef").style.left  = expR + "%";
+  const setPos = (id,val)=>{ $(id).style.left = pctInDomain(val, dmin, dmax) + "%"; };
+  setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
+  setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
+
   $("#barExpYouVal").textContent = "Vous : " + (expYou>=0?"+":"") + fmtM(expYou) + " M€";
   $("#barExpRefVal").textContent = "Médiane : " + (expRef>=0?"+":"") + fmtM(expRef) + " M€";
-
-  const revZero = pctInDomain(0, dmin, dmax);
-  const revY = pctInDomain(revYou, dmin, dmax);
-  const revR = pctInDomain(revRef, dmin, dmax);
-  $("#barRevZero").style.left = revZero + "%";
-  $("#barRevYou").style.left  = revY + "%";
-  $("#barRevRef").style.left  = revR + "%";
   $("#barRevYouVal").textContent = "Vous : " + (revYou>=0?"+":"") + fmtM(revYou) + " M€";
   $("#barRevRefVal").textContent = "Médiane : " + (revRef>=0?"+":"") + fmtM(revRef) + " M€";
 }
 
-/* --------- VALIDATE (overlay + gel/déverrouillage) ---------- */
-function freezeInputs(freeze){
-  document.querySelectorAll("input[type=range], .nudge").forEach(el=>{
-    if (el.classList.contains("nudge")) {
-      if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled");
-    } else {
-      const initiallyLocked = el.getAttribute("data-initially-locked")==="1";
-      if (!initiallyLocked) { if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled"); }
-    }
-  });
+/* --------- SYNTHÈSE (barres centrées 0 par poste) ---------- */
+function buildListItems(kind, deltas, maxItems=6){
+  const filtered = deltas.filter(d=>d.delta!==0);
+  filtered.sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
+  const top = filtered.slice(0,maxItems);
+  const more = filtered.slice(maxItems);
+
+  const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
+  container.innerHTML = "";
+
+  const allVals = filtered.map(d=>d.delta).concat([0]);
+  const min = Math.min(...allVals);
+  const max = Math.max(...allVals);
+
+  function addItem(it){
+    const row = document.createElement("div");
+    row.className="item";
+    row.innerHTML = `<div class="itemLabel">${it.label}</div><div class="itemVal">${(it.delta>=0?"+":"")}${fmtM(it.delta)} M€</div>`;
+    const bar = document.createElement("div");
+    bar.className="barLine"; bar.setAttribute("aria-hidden","true");
+    const seg = document.createElement("div");
+    seg.className="barSeg " + ((kind==="exp" ? it.delta<0 : it.delta>0) ? "segGood":"segBad");
+    const zeroPct = pctInDomain(0, min, max);
+    const valPct  = pctInDomain(it.delta, min, max);
+    const left = Math.min(zeroPct, valPct);
+    const width = Math.abs(valPct - zeroPct);
+    seg.style.left = left + "%";
+    seg.style.width = Math.max(2, width) + "%";
+    bar.appendChild(seg);
+
+    const wrap = document.createElement("div");
+    wrap.appendChild(bar);
+    row.appendChild(wrap);
+    container.appendChild(row);
+  }
+
+  top.forEach(addItem);
+
+  const btn = kind==="exp" ? $("#sumExpMore") : $("#sumRevMore");
+  if (more.length){
+    btn.style.display="inline-flex";
+    btn.onclick = ()=>{ more.forEach(addItem); btn.style.display="none"; };
+  } else btn.style.display="none";
 }
 
+function buildSummary(){
+  const r = compute();
+  const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
+  $("#targetBadge").textContent = inRange ? "Dans la cible (40–45 Md€)" : "Hors cible";
+  $("#sumHeadline").innerHTML = `🎯 Bravo ! Vous réduisez le déficit de <strong>${fmtM(r.savingM)}</strong> M€`;
+
+  const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
+  const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
+
+  buildListItems("exp", expDeltas);
+  buildListItems("rev", revDeltas);
+}
+
+/* --------- PARTAGE (image synthèse + texte) ---------- */
+async function shareSummary(){
+  try{
+    const r = compute();
+    const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France`;
+    const subtitle = `en ajustant dépenses et recettes (Budget 2026, base 2024)`;
+    const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}))
+                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+    const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}))
+                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+
+    const W=1200, H=800, pad=40;
+    const svgParts=[];
+    svgParts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+      <rect width="100%" height="100%" fill="#0b1730"/>
+      <style>.t{fill:#E8F0FF;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}</style>
+      <text x="${pad}" y="${pad+16}" class="t" font-size="28" font-weight="700">${title}</text>
+      <text x="${pad}" y="${pad+46}" class="t" font-size="18" opacity=".8">${subtitle}</text>
+    `);
+
+    function addList(x,y,title,list,isExp){
+      svgParts.push(`<text x="${x}" y="${y}" class="t" font-size="20" font-weight="700">${title}</text>`);
+      const y0 = y+16;
+      const lineH=26, barH=12, top= y0+8;
+      const vals = list.map(d=>d.delta).concat([0]);
+      const min = Math.min(...vals), max=Math.max(...vals);
+      function xpct(v){ if(max===min) return 0.5; return (v-min)/(max-min); }
+      for(let i=0;i<list.length;i++){
+        const d = list[i];
+        const yy = top + i*lineH;
+        svgParts.push(`<text x="${x}" y="${yy}" class="t" font-size="16" opacity=".95">${d.label}</text>`);
+        const gx = x, gw = 480, gy = yy+6, gh=barH;
+        svgParts.push(`<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="#0b1633" stroke="#233047"/>`);
+        const z = xpct(0), v = xpct(d.delta);
+        const left = Math.min(z,v), right=Math.max(z,v);
+        const ww = Math.max(2,(right-left)*gw);
+        const xx = gx + left*gw;
+        const good = isExp ? (d.delta<0) : (d.delta>0);
+        const color = good ? "#16a34a" : "#ef4444";
+        svgParts.push(`<rect x="${xx}" y="${gy}" width="${ww}" height="${gh}" fill="${color}"/>`);
+        svgParts.push(`<text x="${gx+gw+10}" y="${gy+gh-2}" class="t" font-size="14" opacity=".9">${d.delta>=0?'+':''}${fmtM(d.delta)} M€</text>`);
+      }
+    }
+
+    addList(pad, 120, "Dépenses — variations par poste", expDeltas, true);
+    addList(W/2+pad/2, 120, "Recettes — variations par poste", revDeltas, false);
+    svgParts.push(`</svg>`);
+    const svg = svgParts.join("");
+
+    // Convertir en PNG via canvas
+    const img = new Image();
+    const svgBlob = new Blob([svg], {type:'image/svg+xml'});
+    const url = URL.createObjectURL(svgBlob);
+    const pngBlob = await new Promise((resolve,reject)=>{
+      img.onload = ()=>{
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0);
+        canvas.toBlob(b=>{ if(b) resolve(b); else reject(new Error("blob-null")); }, "image/png", 0.92);
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+
+    const file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"});
+    const shareText = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France en ajustant dépenses et recettes. Et vous, vous feriez comment ?`;
+
+    if (navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], text:shareText, title:"BudgetLab"});
+    } else if (navigator.share){
+      await navigator.share({text:shareText, title:"BudgetLab"});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(pngBlob);
+      a.download = "budgetlab-mes-resultats.png";
+      a.click();
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(pngBlob);
+      a.download = "budgetlab-mes-resultats.png";
+      a.click();
+      toast("Image téléchargée. Partagez-la sur vos réseaux !");
+    }
+  }catch(e){
+    console.error(e);
+    toast("Impossible de générer l’image de synthèse.");
+  }
+}
+
+/* --------- VALIDATE ---------- */
 async function onValidate(){
   const validateBtn = $("#validateBtn");
   const editBtn = $("#editBtn");
+  const shareBtn = $("#shareBtn");
   const overlay = $("#overlay");
   state.submitted = true;
+  document.body.setAttribute('data-frozen','1');
   validateBtn.disabled = true;
   editBtn.style.display = "inline-flex";
-  freezeInputs(true);
+  shareBtn.style.display = "inline-flex";
   overlay.classList.add("show");
   $("#validateHint").textContent = "Réponse envoyée — affichage des résultats…";
 
+  // POST
   const payload = buildCompactPayload();
-  const user_key = ensureUserKey();
-  const normalized = { e: payload.e.map(Math.round), r: payload.r.map(Math.round) };
-  const scenario_hash = await sha256Hex(stableStringify(normalized));
-
   try{
-    fetch(ENDPOINT_URL, {
+    await fetch(ENDPOINT_URL, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ ...payload, user_key, scenario_hash })
-    }).catch(()=>{});
-  }catch(_){}
+      body: JSON.stringify(payload)
+    });
+  }catch(_){/* continue */ }
 
-  // Affiche résultats
-  $("#results").style.display="block";
+  // Affiche synthèse puis comparaison
+  $("#summary").style.display="block";
+  buildSummary();
 
   // Récupère référence (moyennes) + count
   try{
@@ -653,48 +791,35 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Résumé texte
+  // Mise à jour numérique (totaux) + barres 0
   const you = compute();
   const ref  = computeRefFromAverages();
-  $("#sumCutsYou").textContent = fmtM(you.cutsExp);
-  $("#sumIncYou").textContent  = fmtM(you.incRev);
-  $("#sumCutsAvg").textContent = fmtM(ref.cutsExp || 0);
-  $("#sumIncAvg").textContent  = fmtM(ref.incRev || 0);
-
-  // Barres centrées sur 0 (Δ totaux signés)
+  $("#results").style.display="block";
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
-  // Violons
-  await renderAllViolinsParallel();
+  // Violons en progressif
+  await renderAllViolinsProgressive();
 
-  $("#validateHint").textContent="Réponse enregistrée ✔ — résultats ci-dessous.";
+  $("#validateHint").textContent="Réponse enregistrée ✔ — synthèse et comparaison ci-dessous.";
   overlay.classList.remove("show");
 }
 
 function onEdit(){
   state.submitted = false;
+  document.body.removeAttribute('data-frozen');
   $("#validateBtn").disabled = false;
   $("#editBtn").style.display = "none";
   $("#validateHint").textContent="Modifiez vos curseurs puis revalidez.";
-  freezeInputs(false);
 }
 
 /* --------- INIT ---------- */
 function init(){
-  // Rendu UI
-  const expC = document.getElementById("expContainer");
-  const revC = document.getElementById("revContainer");
-  renderBlock(expC, CFG.expenses, "exp");
-  renderBlock(revC, CFG.revenues, "rev");
-
-  // Marqueurs pour ne jamais déverrouiller les blocs initialement verrouillés
-  document.querySelectorAll("input[type=range]").forEach((el, i)=>{
-    if (el.hasAttribute("disabled")) el.setAttribute("data-initially-locked","1");
-  });
-
+  renderBlock($("#expContainer"), CFG.expenses, "exp");
+  renderBlock($("#revContainer"), CFG.revenues, "rev");
   updateHUD();
   $("#validateBtn").addEventListener("click", onValidate);
   $("#editBtn").addEventListener("click", onEdit);
+  $("#shareBtn").addEventListener("click", shareSummary);
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
