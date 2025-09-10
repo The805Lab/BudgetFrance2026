@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>BudgetLab — Trouver 40 Md€ pour le budget 2026</title>
 
-<!-- Plotly -->
+<!-- Plotly pour les distributions -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
 <style>
@@ -16,8 +16,8 @@
     --expBg:#0e254f; --revBg:#0b1f45;
     --chip:#0c1636; --brand:#2563eb;
     --accent:#3b82f6;
-    --you:#38bdf8; /* bleu "Vous" */
-    --ref:#eab308; /* jaune médiane */
+    --you:#38bdf8; /* bleu clair "Vous" */
+    --ref:#eab308; /* jaune "Médiane" */
     --axis:#94a3b8;
   }
   *{box-sizing:border-box}
@@ -39,7 +39,7 @@
   .sliderWrap{display:grid;grid-template-columns:42px 1fr 42px;gap:8px;align-items:center}
   .nudge{width:42px;height:42px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
   .nudge:active{transform:scale(.98)}
-  .nudge[disabled]{opacity:.4;cursor:not-allowed; pointer-events:none;} /* important */
+  .nudge[disabled]{opacity:.4;cursor:not-allowed}
   input[type=range]{width:100%;margin:8px 0;height:36px;touch-action:pan-y}
   input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:26px;height:26px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
@@ -51,6 +51,7 @@
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
 
+  /* HUD flottant code couleur (bord à gauche) */
   .floatBubble{
     position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
     border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
@@ -64,21 +65,29 @@
   .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
 
   .results{display:none}
-  .legend{color:var(--muted);font-size:.9rem;margin:6px 0 4px}
-  .legend2{color:#cbd5e1;font-size:.86rem;margin:0 0 10px}
+  .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
 
+  /* Grille des violons */
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
-  .footer{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.85rem;gap:12px;flex-wrap:wrap;margin-top:16px}
+  .footer{color:var(--muted);font-size:.85rem;margin-top:16px}
+
+  /* Signature the805lab (inline SVG) */
+  .brand805{display:flex;justify-content:flex-end;align-items:center;margin-top:10px}
+  .brand805 svg{height:20px;display:block}
+  .brand805 text{font-family:Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif}
+
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
 
+  /* Overlay chargement */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:80}
   .overlay.show{display:flex}
   .loader{background:#0b1633;border:1px solid var(--ring);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px rgba(0,0,0,.4);min-width:280px;text-align:center}
   .spinner{width:18px;height:18px;border:3px solid #334155;border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  /* Barres comparatives — centrées sur 0 */
   .barbox{background:var(--panel2);border:1px solid var(--ring);border-radius:12px;padding:12px}
   .barline{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633}
   .barlegend{display:flex;justify-content:space-between;font-size:.9rem;color:#cbd5e1;margin-top:6px}
@@ -86,10 +95,6 @@
   .mark.you{background:var(--you)}
   .mark.ref{background:var(--ref)}
   .mark.zero{background:rgba(148,163,184,.45); width:2px; top:-5px; height:24px}
-
-  .youC{color:var(--you);font-weight:700}
-  .refC{color:var(--ref);font-weight:700}
-
   .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
@@ -105,14 +110,15 @@
 
 <div class="wrap">
   <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 (France)</h1>
+  <div class="subtitle">Référence : <em>base 2024</em></div>
 
-  <!-- Intro pédagogique -->
+  <!-- Intro pédagogique (allégée) -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
       En 2024, la France a dépensé plus qu’elle n’a reçu : c’est le <strong>déficit</strong>.
-      L’Europe vise un retour vers <strong>3&nbsp;% du PIB</strong> de déficit.
-      Ici, ajustez <strong>dépenses</strong> et <strong>recettes</strong> pour viser ~<strong>40&nbsp;Md€</strong> d’effort
-      — une cible politique discutée pour réduire le déficit.
+      L’Europe demande de revenir vers <strong>3 % du PIB</strong> de déficit.
+      Ici, on vous propose un défi simple : imaginez des <strong>économies</strong> et/ou des <strong>recettes</strong>
+      pour viser autour de <strong>40 Md€</strong>. Réglez les curseurs, validez, puis comparez votre scénario aux autres.
     </div>
   </div>
 
@@ -141,30 +147,46 @@
 
   <!-- Résultats -->
   <div id="results" class="card results">
-    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
+    <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats — comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Barres centrées sur 0 -->
+    <!-- Résumé haut : barres centrées sur 0 -->
     <div class="barbox">
-      <div class="hint" id="barExpTitle" style="margin-bottom:6px"></div>
+      <div class="hint" style="margin-bottom:6px">
+        <strong>Variation des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span>
+      </div>
       <div class="barline" id="barExpLine">
         <div class="mark zero" id="barExpZero" style="left:50%"></div>
         <div class="mark ref"  id="barExpRef"  style="left:50%"></div>
         <div class="mark you"  id="barExpYou"  style="left:50%"></div>
       </div>
+      <div class="barlegend"><span id="barExpYouVal">Vous : —</span><span id="barExpRefVal">Médiane : —</span></div>
     </div>
 
     <div class="barbox" style="margin-top:10px">
-      <div class="hint" id="barRevTitle" style="margin-bottom:6px"></div>
+      <div class="hint" style="margin-bottom:6px">
+        <strong>Variation des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span>
+      </div>
       <div class="barline" id="barRevLine">
         <div class="mark zero" id="barRevZero" style="left:50%"></div>
         <div class="mark ref"  id="barRevRef"  style="left:50%"></div>
         <div class="mark you"  id="barRevYou"  style="left:50%"></div>
       </div>
+      <div class="barlegend"><span id="barRevYouVal">Vous : —</span><span id="barRevRefVal">Médiane : —</span></div>
     </div>
 
-    <div class="legend">Chaque graphique montre la distribution des réponses (variation en M€ vs 2024), votre valeur (bleu) et la médiane (jaune).</div>
-    <div class="legend2">La <strong>médiane</strong> coupe les réponses en deux : la moitié des répondants est en dessous, l’autre moitié au-dessus. Elle est moins sensible aux valeurs extrêmes que la moyenne.</div>
+    <!-- Texte résumé -->
+    <div class="card" style="background:#0b1935;border-color:#1e2d55;margin-top:12px">
+      <div style="display:grid;grid-template-columns:1fr;gap:8px">
+        <div><strong>Votre réduction de dépenses :</strong> <span id="sumCutsYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Référence :</span> <span id="sumCutsAvg">0</span> M€</div>
+        <div><strong>Votre variation de recettes :</strong> <span id="sumIncYou">0</span> M€ &nbsp;|&nbsp; <span style="color:#a7b5cf">Référence :</span> <span id="sumIncAvg">0</span> M€</div>
+      </div>
+    </div>
+
+    <div class="legend" id="normNote">
+      Chaque graphique montre la distribution des réponses (variation en M€ vs 2024), votre valeur (bleu) et la médiane (jaune).
+      <div style="margin-top:4px;color:#a7b5cf;font-size:.85rem">La médiane est la valeur centrale : la moitié des réponses sont plus basses, l’autre moitié plus hautes.</div>
+    </div>
 
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
@@ -176,14 +198,24 @@
     </div>
   </div>
 
+  <!-- Sources + signature -->
   <div class="footer">
-    <div class="footer-left">
-      Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis.
-    </div>
+    Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certains postes sont difficiles à ajuster à court terme (ex. intérêts de la dette).
+  </div>
+  <div class="brand805" aria-label="the805lab">
+    <!-- Inline SVG wordmark (aucun fichier requis) -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 22" role="img" aria-label="the805lab">
+      <title>the805lab</title>
+      <text x="0" y="16"
+            font-family="Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+            font-weight="700" font-size="14" fill="#E8F0FF" letter-spacing=".3px">
+        the805lab
+      </text>
+    </svg>
   </div>
 </div>
 
-<!-- HUD -->
+<!-- Bulle flottante permanente -->
 <div id="hud" class="floatBubble">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -213,9 +245,9 @@ const CFG = {
   revenues: [
     {k:"imp_prod",label:"Impôts sur la production et importations",base:570000,info:"TVA, taxes sur produits/consommations, droits de douane."},
     {k:"cotis",label:"Cotisations sociales",base:480000,info:"Cotisations employeurs/salariés (retraites, santé, chômage)."},
-    {k:"ir",label:"Impôt sur le revenu (IRPP)",base:120000,info:"Impôt sur le revenu des personnes physiques (prélèvement à la source, acomptes)."},
+    {k:"ir",label:"Impôt sur le revenu (IRPP)",base:120000,info:"Impôt sur le revenu des personnes physiques."},
     {k:"is",label:"Impôt sur les sociétés (IS)",base:80000,info:"Impôt sur les bénéfices des entreprises."},
-    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes et revenus du patrimoine public, amendes, redevances, taxes diverses."},
+    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes/recettes patrimoniales, taxes diverses, amendes, redevances, ventes, revenus d’actifs, etc."},
   ],
   range:{min:-15,max:15}
 };
@@ -224,7 +256,7 @@ const CFG = {
 const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
-  avgExpPct: [], avgRevPct: [],
+  avgExpPct: [], avgRevPct: [], // pour référence agrégée
   count: 0,
   submitted:false
 };
@@ -234,6 +266,23 @@ const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 const $ = (sel)=> document.querySelector(sel);
+
+/* --------- OPTION A+ FRONT (clé locale & hash) ---------- */
+function ensureUserKey(){
+  const k = localStorage.getItem("user_key_v1");
+  if (k) return k;
+  const key = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now())+"_"+Math.random().toString(16).slice(2);
+  localStorage.setItem("user_key_v1", key);
+  return key;
+}
+function stableStringify(obj){
+  const sort = v => Array.isArray(v) ? v.map(sort) : (v && typeof v==="object" ? Object.keys(v).sort().reduce((a,k)=> (a[k]=sort(v[k]),a),{}) : v);
+  return JSON.stringify(sort(obj));
+}
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -248,9 +297,11 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
-  const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
+  // Δ totaux signés (centrés sur 0)
+  const deltaExpTotal = newExpM - BASE_EXP; // <0 = économies
+  const deltaRevTotal = newRevM - BASE_REV; // >0 = recettes en plus
 
+  // Décompositions (positif strict) pour le petit résumé texte
   const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
     const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
     return sum + (d<0 ? -d : 0);
@@ -299,7 +350,8 @@ function updateHUD(){
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("validateBtn").disabled = !inRange || state.submitted;
 
-  document.getElementById("hud").classList.toggle("ok", inRange);
+  const hud = document.getElementById("hud");
+  hud.classList.toggle("ok", inRange);
 }
 
 /* --------- UI RENDER (sliders) ---------- */
@@ -353,8 +405,6 @@ function renderBlock(container, list, kind){
     if (!b.locked){
       let timer=null, stepper=null;
       const startRepeat = (dir)=>{
-        const btnDisabled = row.querySelector(`button.nudge[data-d="${dir>0?'+1':'-1'}"]`).hasAttribute("disabled");
-        if (btnDisabled) return; // garde anti-gel
         const d = Number(dir);
         const tick = ()=>{
           const next = Math.max(CFG.range.min, Math.min(CFG.range.max, Number(slider.value)+d));
@@ -368,7 +418,7 @@ function renderBlock(container, list, kind){
       const stopRepeat = ()=>{ if(timer){clearTimeout(timer);timer=null} if(stepper){clearInterval(stepper);stepper=null} };
       row.querySelectorAll(".nudge").forEach(btn=>{
         const dir = btn.dataset.d === "+1" ? +1 : -1;
-        btn.addEventListener("pointerdown", (e)=>{ if(btn.disabled) return; e.preventDefault(); btn.setPointerCapture?.(e.pointerId); startRepeat(dir); });
+        btn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); btn.setPointerCapture(e.pointerId); startRepeat(dir); });
         btn.addEventListener("pointerup",   ()=> stopRepeat());
         btn.addEventListener("pointercancel",()=> stopRepeat());
         btn.addEventListener("pointerleave", ()=> stopRepeat());
@@ -407,24 +457,18 @@ const FIELD_MAP_EXP = [
 const FIELD_MAP_REV = [
   {id:"imp_prod", label:"Impôts sur la production et importations", field:"R_imp_prod_delta_M€"},
   {id:"cotis", label:"Cotisations sociales", field:"R_cotis_delta_M€"},
-  {id:"ir", label:"Impôt sur le revenu (IRPP)", field:"R_ir_delta_M€"},
-  {id:"is", label:"Impôt sur les sociétés (IS)", field:"R_is_delta_M€"},
+  {id:"ir", label:"Impôt sur le revenu", field:"R_ir_delta_M€"},
+  {id:"is", label:"Impôt sur les sociétés", field:"R_is_delta_M€"},
   {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta_M€"},
 ];
 
-async function fetchJsonWithRetry(url, retries=1){
-  try{
-    const r = await fetch(url, {method:"GET", cache:"no-cache"});
-    return await r.json();
-  }catch(e){
-    if (retries>0){ await new Promise(res=>setTimeout(res,300)); return fetchJsonWithRetry(url, retries-1); }
-    return null;
-  }
-}
-
 async function fetchDistribution(field){
-  const j = await fetchJsonWithRetry(ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field), 1);
-  if (j && j.ok && Array.isArray(j.values)) return j;
+  try{
+    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field);
+    const r = await fetch(url, {method:"GET", cache:"no-cache"});
+    const j = await r.json();
+    if (j && j.ok && Array.isArray(j.values)) return j;
+  }catch(e){}
   return { ok:false, values:[], stats:{count:0,min:0,max:0,median:0} };
 }
 
@@ -465,16 +509,15 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     y: values.map(_ => ""),
     name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
-    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" }, /* points jaune */
+    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" }, /* jaune points */
     fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
-
   const shapes = [
-    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
-    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } }, /* médiane jaune */
+    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } }, /* vous bleu */
     { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
   ];
   const annotations = [
@@ -484,19 +527,16 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
       font:{color:"#eab308",size:12}, bgcolor:"rgba(234,179,8,0.08)", bordercolor:"#eab308" }
   ];
 
-  // Domaine = inclure distribution, zéro, médiane ET votre valeur
-  const minCand = [stats.min, 0, medianX, myValueME].filter(v => typeof v === "number" && isFinite(v));
-  const maxCand = [stats.max, 0, medianX, myValueME].filter(v => typeof v === "number" && isFinite(v));
-  const min = Math.min.apply(null, minCand.length?minCand:[0]);
-  const max = Math.max.apply(null, maxCand.length?maxCand:[0]);
-  const margin = Math.max(10, (max - min) * 0.06);
+  const min = (typeof stats.min === "number") ? stats.min : Math.min(0,myValueME);
+  const max = (typeof stats.max === "number") ? stats.max : Math.max(0,myValueME);
+  const margin = Math.max(10, (max - min) * 0.04);
 
   const layout = {
     paper_bgcolor:"#111827", plot_bgcolor:"#111827", font:{color:"#e2e8f0"},
     margin:{l:10,r:10,t:28,b:42},
     title:{ text: label, x:0, xanchor:"left", y:0.98, font:{size:14} },
     xaxis:{ title:"Variation (en M€)", gridcolor:"#334155", zerolinecolor:"#334155",
-            range:[ min - margin, max + margin ], tickformat:",.0f" },
+            range:[ (min ?? -100)-margin, (max ?? 100)+margin ], tickformat:",.0f" },
     yaxis:{ showticklabels:false },
     shapes, annotations, hovermode:"x unified", showlegend:false
   };
@@ -505,7 +545,7 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS ---------- */
+/* --------- RÉSULTATS (parallélisation) ---------- */
 async function renderAllViolinsParallel(){
   const expWrap = document.getElementById("violins-expenses");
   const revWrap = document.getElementById("violins-revenues");
@@ -538,13 +578,15 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   const dmin = Math.min(...vals) - pad;
   const dmax = Math.max(...vals) + pad;
 
+  // positions %
   const expZero = pctInDomain(0, dmin, dmax);
   const expY = pctInDomain(expYou, dmin, dmax);
   const expR = pctInDomain(expRef, dmin, dmax);
   $("#barExpZero").style.left = expZero + "%";
   $("#barExpYou").style.left  = expY + "%";
   $("#barExpRef").style.left  = expR + "%";
-  $("#barExpTitle").innerHTML = `<strong>Variation des dépenses (M€)</strong> — <span class="youC">Vous (${expYou>=0?'+':''}${fmtM(expYou)} M€)</span> · <span class="refC">Médiane (${expRef>=0?'+':''}${fmtM(expRef)} M€)</span>`;
+  $("#barExpYouVal").textContent = "Vous : " + (expYou>=0?"+":"") + fmtM(expYou) + " M€";
+  $("#barExpRefVal").textContent = "Médiane : " + (expRef>=0?"+":"") + fmtM(expRef) + " M€";
 
   const revZero = pctInDomain(0, dmin, dmax);
   const revY = pctInDomain(revYou, dmin, dmax);
@@ -552,28 +594,22 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   $("#barRevZero").style.left = revZero + "%";
   $("#barRevYou").style.left  = revY + "%";
   $("#barRevRef").style.left  = revR + "%";
-  $("#barRevTitle").innerHTML = `<strong>Variation des recettes (M€)</strong> — <span class="youC">Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€)</span> · <span class="refC">Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
+  $("#barRevYouVal").textContent = "Vous : " + (revYou>=0?"+":"") + fmtM(revYou) + " M€";
+  $("#barRevRefVal").textContent = "Médiane : " + (revRef>=0?"+":"") + fmtM(revRef) + " M€";
 }
 
-/* --------- GEL / DÉGEL ---------- */
+/* --------- VALIDATE (overlay + gel/déverrouillage) ---------- */
 function freezeInputs(freeze){
-  // sliders
-  document.querySelectorAll("input[type=range]").forEach(sl=>{
-    const wasLocked = sl.hasAttribute("data-locked");
-    if (sl.hasAttribute("disabled") && !sl.hasAttribute("data-locked")) sl.setAttribute("data-locked",""); // mémorise verrou natif (ex: intérêts)
-    if (freeze){
-      if (!sl.hasAttribute("disabled")) sl.setAttribute("disabled","");
-    }else{
-      if (!sl.hasAttribute("data-locked")) sl.removeAttribute("disabled");
+  document.querySelectorAll("input[type=range], .nudge").forEach(el=>{
+    if (el.classList.contains("nudge")) {
+      if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled");
+    } else {
+      const initiallyLocked = el.getAttribute("data-initially-locked")==="1";
+      if (!initiallyLocked) { if (freeze) el.setAttribute("disabled",""); else el.removeAttribute("disabled"); }
     }
   });
-  // boutons +/-
-  document.querySelectorAll(".nudge").forEach(btn=>{
-    if (freeze) btn.setAttribute("disabled",""); else btn.removeAttribute("disabled");
-  });
 }
 
-/* --------- VALIDATE ---------- */
 async function onValidate(){
   const validateBtn = $("#validateBtn");
   const editBtn = $("#editBtn");
@@ -585,36 +621,47 @@ async function onValidate(){
   overlay.classList.add("show");
   $("#validateHint").textContent = "Réponse envoyée — affichage des résultats…";
 
-  // Envoi POST compatible Apps Script (no-cors + text/plain)
+  const payload = buildCompactPayload();
+  const user_key = ensureUserKey();
+  const normalized = { e: payload.e.map(Math.round), r: payload.r.map(Math.round) };
+  const scenario_hash = await sha256Hex(stableStringify(normalized));
+
   try{
-    const payload = buildCompactPayload();
     fetch(ENDPOINT_URL, {
       method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body: JSON.stringify(payload)
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ ...payload, user_key, scenario_hash })
     }).catch(()=>{});
   }catch(_){}
 
-  // Affiche zone résultats
+  // Affiche résultats
   $("#results").style.display="block";
 
-  // Stats (moyennes) + count (avec mini-retry)
-  const stats = await fetchJsonWithRetry(ENDPOINT_URL + "?stats=1", 1);
-  if(stats && stats.ok){
-    state.avgExpPct = stats.avgExpPct || [];
-    state.avgRevPct = stats.avgRevPct || [];
-    state.count = stats.count || 0;
-    $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
-  } else {
+  // Récupère référence (moyennes) + count
+  try{
+    const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
+    const stats = await statsRes.json();
+    if(stats && stats.ok){
+      state.avgExpPct = stats.avgExpPct || [];
+      state.avgRevPct = stats.avgRevPct || [];
+      state.count = stats.count || 0;
+      $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
+    } else {
+      $("#ansCountLine").textContent = `Réponses enregistrées : —`;
+    }
+  }catch(_){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Résumé ref vs vous
+  // Résumé texte
   const you = compute();
   const ref  = computeRefFromAverages();
+  $("#sumCutsYou").textContent = fmtM(you.cutsExp);
+  $("#sumIncYou").textContent  = fmtM(you.incRev);
+  $("#sumCutsAvg").textContent = fmtM(ref.cutsExp || 0);
+  $("#sumIncAvg").textContent  = fmtM(ref.incRev || 0);
 
-  // Barres centrées sur 0
+  // Barres centrées sur 0 (Δ totaux signés)
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
   // Violons
@@ -634,8 +681,17 @@ function onEdit(){
 
 /* --------- INIT ---------- */
 function init(){
-  renderBlock(document.getElementById("expContainer"), CFG.expenses, "exp");
-  renderBlock(document.getElementById("revContainer"), CFG.revenues, "rev");
+  // Rendu UI
+  const expC = document.getElementById("expContainer");
+  const revC = document.getElementById("revContainer");
+  renderBlock(expC, CFG.expenses, "exp");
+  renderBlock(revC, CFG.revenues, "rev");
+
+  // Marqueurs pour ne jamais déverrouiller les blocs initialement verrouillés
+  document.querySelectorAll("input[type=range]").forEach((el, i)=>{
+    if (el.hasAttribute("disabled")) el.setAttribute("data-initially-locked","1");
+  });
+
   updateHUD();
   $("#validateBtn").addEventListener("click", onValidate);
   $("#editBtn").addEventListener("click", onEdit);
