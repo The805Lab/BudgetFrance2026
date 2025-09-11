@@ -4,7 +4,10 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>BudgetLab — Pour le budget 2026 de la France, trouvez 40 Md€</title>
+
+<!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
 <style>
   :root{
     --bg:#0a1022; --panel:#0f1a33; --panel2:#0b1530; --ring:#21315a;
@@ -19,14 +22,13 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
-  /* Titre + logo : le logo reste à droite même sur mobile */
+  /* Top header with logo pinned right (even on mobile) */
   .topHeader{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-bottom:6px}
-  .titleWrap{min-width:0}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
-  .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
-  .brandBadge805{justify-self:end;display:flex;align-items:center;justify-content:center;min-width:36px}
+  .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px}
+
+  .brandBadge805{display:flex;align-items:center;justify-content:center}
   .brandBadge805 svg{display:block;width:36px;height:36px}
-  @media (max-width:360px){.brandBadge805 svg{width:30px;height:30px}}
 
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
@@ -87,9 +89,10 @@
   .listWrap{display:grid;grid-template-columns:1fr;gap:10px}
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
-  .listTitle{font-weight:700;margin-bottom:4px}
+  .listTitle{font-weight:700;margin-bottom:6px}
+  .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
 
-  /* Mini-bar par item */
+  /* Mini-bar par poste */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
   .itemLabel{color:#dbe7ff}
   .itemVal{font-variant-numeric:tabular-nums}
@@ -98,6 +101,7 @@
   .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55);opacity:.6}
   .segGood{background:rgba(22,163,74,.9)}
   .segBad{background:rgba(239,68,68,.9)}
+  .seeMore{display:inline-flex;gap:6px;align-items:center;border:1px solid #2b3d6d;background:#0c1736;color:#e6f0ff;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer}
 
   /* Gel après validation */
   body[data-frozen="1"] input[type=range],
@@ -108,25 +112,21 @@
 
 <div class="wrap" aria-live="polite">
   <div class="topHeader">
-    <div class="titleWrap">
+    <div>
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-    <!-- Logo The805Lab -->
+    <!-- Logo The805Lab (inline SVG rond bleu/rouge) -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
-      <svg viewBox="0 0 64 64" role="img" aria-label="The805Lab">
+      <svg viewBox="0 0 48 48" role="img" aria-label="The805Lab">
         <defs>
-          <linearGradient id="g805" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0" stop-color="#1e3a8a"/>
+          <linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#2563eb"/>
             <stop offset="1" stop-color="#ef4444"/>
           </linearGradient>
         </defs>
-        <circle cx="32" cy="32" r="30" fill="url(#g805)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
-        <g fill="#e8f0ff" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" text-anchor="middle">
-          <text x="32" y="22" font-size="8" font-weight="700">THE</text>
-          <text x="32" y="38" font-size="22" font-weight="900">805</text>
-          <text x="32" y="50" font-size="8" font-weight="700">LAB</text>
-        </g>
+        <circle cx="24" cy="24" r="22" fill="url(#gradBR)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
+        <text x="24" y="29" text-anchor="middle" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" font-weight="800" font-size="16" fill="#e8f0ff">805</text>
       </svg>
     </div>
   </div>
@@ -172,15 +172,19 @@
     <div class="sumLine" id="sumHeadline">—</div>
 
     <div class="listWrap">
+      <!-- Dépenses -->
       <div class="listBox">
-        <div class="listTitle" id="listTitleExp"></div>
-        <div class="hint" style="margin-bottom:8px">Barres par poste : vert = réduit le déficit, rouge = l’augmente.</div>
+        <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
+        <div class="hint" style="margin:-2px 0 8px">Barres par poste : <strong>vert = réduit le déficit</strong>, <strong>rouge = l’augmente</strong>.</div>
         <div id="sumExpList"></div>
+        <button id="sumExpMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
+      <!-- Recettes -->
       <div class="listBox">
-        <div class="listTitle" id="listTitleRev"></div>
-        <div class="hint" style="margin-bottom:8px">Barres par poste : vert = réduit le déficit, rouge = l’augmente.</div>
+        <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
+        <div class="hint" style="margin:-2px 0 8px">Barres par poste : <strong>vert = réduit le déficit</strong>, <strong>rouge = l’augmente</strong>.</div>
         <div id="sumRevList"></div>
+        <button id="sumRevMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
     </div>
   </div>
@@ -190,21 +194,27 @@
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
+    <!-- Totaux dépenses -->
     <div class="synCard">
-      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong></div>
+      <div class="hint" id="barExpTitle" style="margin-bottom:6px">
+        <strong>Variation totale des dépenses (M€)</strong>
+      </div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barExpRef" style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barExpYou" style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barExpRef"  style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barExpYou"  style="left:50%;width:3px;background:var(--you)"></div>
       </div>
     </div>
 
+    <!-- Totaux recettes -->
     <div class="synCard" style="margin-top:10px">
-      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong></div>
+      <div class="hint" id="barRevTitle" style="margin-bottom:6px">
+        <strong>Variation totale des recettes (M€)</strong>
+      </div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barRevRef" style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barRevYou" style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barRevRef"  style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barRevYou"  style="left:50%;width:3px;background:var(--you)"></div>
       </div>
     </div>
 
@@ -239,7 +249,7 @@
 <script>
 /* --------- CONFIG ---------- */
 const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec"; // NE PAS MODIFIER
-const SHARE_URL = location.href.split('#')[0];
+const SIM_URL = location.href.split('#')[0]; // lien partagé
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -277,11 +287,10 @@ const state = {
 
 /* --------- UTILS ---------- */
 const $ = sel => document.querySelector(sel);
-const fmtM  = n => (Math.round(n)).toLocaleString("fr-FR");
-const fmtMd = n => { const s=n<0?"-":(n>0?"":""); const a=Math.round(Math.abs(n)/1000); return s + a.toLocaleString("fr-FR") + " Md€"; };
+const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
+const fmtMd = n => { const sign = n<0 ? "-" : (n>0 ? "" : ""); const abs = Math.round(Math.abs(n)/1000); return sign + abs.toLocaleString("fr-FR") + " Md€"; };
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
-const isIOS = ()=> /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
-function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2600); }
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -296,10 +305,20 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  const deltaExpTotal = newExpM - BASE_EXP; // net dépenses
-  const deltaRevTotal = newRevM - BASE_REV; // net recettes
+  // Sommes utiles pour la synthèse
+  const expDeltaSigned = newExpM - BASE_EXP; // <0 = dépenses réduites
+  const revDeltaSigned = newRevM - BASE_REV; // >0 = recettes augmentées
 
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, deltaExpTotal, deltaRevTotal};
+  // Sommes positives / négatives (par poste)
+  const expDeltas = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base);
+  const revDeltas = CFG.revenues.map((b,i)=> Math.round(b.base*(1+state.revPct[i]/100)) - b.base);
+  const expCuts = expDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0); // économies sur dépenses
+  const expAdds = expDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);    // hausses de dépenses
+  const revAdds = revDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);    // hausses de recettes
+  const revCuts = revDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0); // baisses de recettes
+
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM,
+          expDeltaSigned, revDeltaSigned, expCuts, expAdds, revAdds, revCuts};
 }
 function computeRefFromAverages(){
   const pctE = state.avgExpPct || [];
@@ -310,7 +329,10 @@ function computeRefFromAverages(){
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
-  return { deltaExpTotal: newExpM - BASE_EXP, deltaRevTotal: newRevM - BASE_REV };
+  return {
+    deltaExpTotal: newExpM - BASE_EXP,
+    deltaRevTotal: newRevM - BASE_REV
+  };
 }
 function updateHUD(){
   const r = compute();
@@ -325,7 +347,7 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- SLIDERS ---------- */
+/* --------- UI (sliders) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
@@ -414,7 +436,7 @@ function buildCompactPayload(){
   };
 }
 
-/* --------- VIOLINS (Plotly) ---------- */
+/* --------- VIOLINS (un seul fetch) ---------- */
 const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
@@ -435,14 +457,16 @@ const FIELD_MAP_REV = [
   {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta_M€"},
 ];
 
-async function fetchDistribution(field){
+let _allViolinData = null;
+async function fetchAllDistributions(){
+  if (_allViolinData) return _allViolinData;
   try{
-    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field);
+    const url = ENDPOINT_URL + "?action=violin_all";
     const r = await fetch(url, {method:"GET", cache:"no-cache"});
     const j = await r.json();
-    if (j && j.ok && Array.isArray(j.values)) return j;
-  }catch(e){}
-  return { ok:false, values:[], stats:{count:0,min:0,max:0,median:0} };
+    if (j && j.ok && j.fields){ _allViolinData = j.fields; return _allViolinData; }
+  }catch(e){ console.warn("violin_all failed", e); }
+  return (_allViolinData = {});
 }
 
 function myDeltaForField(field){
@@ -475,7 +499,8 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
-  const medianX = (typeof stats.median === "number") ? stats.median : 0;
+  const medianX = (typeof stats?.median === "number") ? stats.median : 0;
+
   const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const margin = Math.max(10, (max - min) * 0.06);
@@ -506,15 +531,14 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS ---------- */
-const violinCache = new Map();
+/* --------- RÉSULTATS (progressif) ---------- */
 async function renderAllViolinsProgressive(){
   const expWrap = $("#violins-expenses");
   const revWrap = $("#violins-revenues");
   expWrap.innerHTML=""; revWrap.innerHTML="";
 
-  const allMaps = [...FIELD_MAP_EXP, ...FIELD_MAP_REV];
-  allMaps.forEach(m=>{
+  const maps = [...FIELD_MAP_EXP, ...FIELD_MAP_REV];
+  maps.forEach(m=>{
     const div = document.createElement("div");
     div.id = "v-" + m.id;
     div.style.height = "280px";
@@ -525,26 +549,21 @@ async function renderAllViolinsProgressive(){
     (FIELD_MAP_EXP.includes(m) ? expWrap : revWrap).appendChild(div);
   });
 
-  const fetchField = async (field)=>{
-    if (violinCache.has(field)) return violinCache.get(field);
-    const j = await fetchDistribution(field);
-    violinCache.set(field, j);
-    return j;
-  };
+  const all = await fetchAllDistributions();
 
-  const jobs = allMaps.map(m=>({m,divId:"v-"+m.id}));
+  const jobs = maps.map(m=>({m,divId:"v-"+m.id}));
   const firstWave = jobs.slice(0,4);
   await Promise.all(firstWave.map(async (j)=>{
-    const data = await fetchField(j.m.field);
+    const pack = all[j.m.field] || {values:[], stats:{count:0,min:0,max:0,median:0}};
     const myVal = myDeltaForField(j.m.field);
-    drawViolinHybrid(j.divId, data.values||[], data.stats||{}, myVal, j.m.label);
+    drawViolinHybrid(j.divId, pack.values||[], pack.stats||{}, myVal, j.m.label);
   }));
 
   const rest = jobs.slice(4);
   for (const j of rest){
-    const data = await fetchField(j.m.field);
+    const pack = all[j.m.field] || {values:[], stats:{count:0,min:0,max:0,median:0}};
     const myVal = myDeltaForField(j.m.field);
-    drawViolinHybrid(j.divId, data.values||[], data.stats||{}, myVal, j.m.label);
+    drawViolinHybrid(j.divId, pack.values||[], pack.stats||{}, myVal, j.m.label);
     await new Promise(r=>setTimeout(r, 30));
   }
 }
@@ -562,27 +581,24 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
   setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
 
-  $("#barExpTitle").innerHTML =
-    `<strong>Variation totale des dépenses (M€)</strong> — ` +
-    `<span style="color:var(--you);font-weight:700">Vous (${expYou>=0?'+':''}${fmtM(expYou)} M€)</span>, ` +
-    `<span style="color:var(--ref);font-weight:700">Médiane (${expRef>=0?'+':''}${fmtM(expRef)} M€)</span>`;
-
-  $("#barRevTitle").innerHTML =
-    `<strong>Variation totale des recettes (M€)</strong> — ` +
-    `<span style="color:var(--you);font-weight:700">Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€)</span>, ` +
-    `<span style="color:var(--ref);font-weight:700">Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
+  // Titres avec couleurs
+  $("#barExpTitle").innerHTML = `<strong>Variation totale des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous (${expYou>=0?"+":""}${fmtM(expYou)} M€)</span>, <span style="color:var(--ref);font-weight:700">Médiane (${expRef>=0?"+":""}${fmtM(expRef)} M€)</span>`;
+  $("#barRevTitle").innerHTML = `<strong>Variation totale des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous (${revYou>=0?"+":""}${fmtM(revYou)} M€)</span>, <span style="color:var(--ref);font-weight:700">Médiane (${revRef>=0?"+":""}${fmtM(revRef)} M€)</span>`;
 }
 
-/* --------- SYNTHÈSE (texte + listes) ---------- */
-function buildListItems(kind, items){
-  const data = items.filter(d => d.delta !== 0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
+/* --------- LISTES synthèse ---------- */
+function buildListItems(kind, items, maxItems=6){
+  // items = [{label, delta}]
+  const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
+  const top = modified.slice(0,maxItems);
+  const rest = modified.slice(maxItems); // <-- pas de lignes à 0
+
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
-  if (!data.length) return;
 
-  const vals = data.map(d=>d.delta).concat([0]);
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
+  const allVals = modified.map(d=>d.delta).concat([0]);
+  const min = Math.min(...allVals);
+  const max = Math.max(...allVals);
 
   function addItem(it){
     const row = document.createElement("div");
@@ -606,31 +622,42 @@ function buildListItems(kind, items){
 
     bar.appendChild(seg);
     bar.appendChild(zero);
-    const wrap = document.createElement("div"); wrap.appendChild(bar);
+
+    const wrap = document.createElement("div");
+    wrap.appendChild(bar);
     row.appendChild(wrap);
     container.appendChild(row);
   }
 
-  data.forEach(addItem);
+  top.forEach(addItem);
+
+  const btn = kind==="exp" ? $("#sumExpMore") : $("#sumRevMore");
+  if (rest.length){
+    btn.style.display="inline-flex";
+    btn.onclick = ()=>{ rest.forEach(addItem); btn.style.display="none"; };
+  } else btn.style.display="none";
 }
 
 function buildSummary(){
   const r = compute();
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
-  $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>`;
+  $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>.`;
 
-  // NET par agrégat — vocabulaire harmonisé
-  const dExp = r.deltaExpTotal, dRev = r.deltaRevTotal;
-  const expText = dExp<0 ? `Vous avez réduit les dépenses de <strong>${fmtMd(Math.abs(dExp))}</strong>.`
-               : dExp>0 ? `Vous avez augmenté les dépenses de <strong>${fmtMd(Math.abs(dExp))}</strong>.`
-               : `Vos dépenses sont inchangées.`;
-  const revText = dRev>0 ? `Vous avez augmenté les recettes de <strong>${fmtMd(Math.abs(dRev))}</strong>.`
-               : dRev<0 ? `Vous avez réduit les recettes de <strong>${fmtMd(Math.abs(dRev))}</strong>.`
-               : `Vos recettes sont inchangées.`;
+  // Titres lisibles selon le signe
+  const depTxt = r.expDeltaSigned < 0
+    ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMd(r.expDeltaSigned)}</strong>.`
+    : r.expDeltaSigned > 0
+      ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMd(r.expDeltaSigned)}</strong>.`
+      : `Vos dépenses sont <strong>inchangées</strong>.`;
+  const recTxt = r.revDeltaSigned > 0
+    ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMd(r.revDeltaSigned)}</strong>.`
+    : r.revDeltaSigned < 0
+      ? `Vous avez <strong>diminué</strong> les recettes de <strong>${fmtMd(r.revDeltaSigned)}</strong>.`
+      : `Vos recettes sont <strong>inchangées</strong>.`;
 
-  $("#listTitleExp").innerHTML = expText;
-  $("#listTitleRev").innerHTML = revText;
+  $("#listTitleExp").innerHTML = `${depTxt}`;
+  $("#listTitleRev").innerHTML = `${recTxt}`;
 
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
   const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
@@ -639,116 +666,62 @@ function buildSummary(){
   buildListItems("rev", revDeltas);
 }
 
-/* --------- PARTAGE (iOS immédiat) ---------- */
+/* --------- PARTAGE (fiable iOS/Android/Desktop) ---------- */
 async function shareSummary(){
-  const r = compute();
-  const msg = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ?`;
-
-  // iOS : appeler share IMMÉDIATEMENT (pas d'image)
-  if (isIOS()){
-    try{
-      if (navigator.share){
-        await navigator.share({ text: msg, url: SHARE_URL, title: "BudgetLab" });
-        return;
-      }
-    }catch(_){/* annulé ou erreur */}
-    // Fallback iOS : copier dans le presse-papiers
-    try{
-      await navigator.clipboard.writeText(`${msg}\n${SHARE_URL}`);
-      toast("Message copié. Collez-le dans WhatsApp, Messages, etc.");
-    }catch(_){
-      const ta=document.createElement('textarea');
-      ta.value=`${msg}\n${SHARE_URL}`; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy'); ta.remove();
-      toast("Message copié. Collez-le dans WhatsApp, Messages, etc.");
-    }
-    return;
-  }
-
-  // Android / Desktop : générer PNG UNIQUEMENT si besoin
-  let pngBlob=null, file=null;
   try{
-    const W=1200, H=800, pad=40;
-    const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}))
-                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
-    const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}))
-                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+    const r = compute();
+    const msg = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ?`;
+    const shareText = `${msg}\n${SIM_URL}`;
 
-    const title = `Économie nette : ${fmtMd(r.savingM)}`;
-    const subtitle = `Budget 2026 (base 2024) • ${new Date().toLocaleDateString("fr-FR")}`;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    const svgParts=[];
-    svgParts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-      <rect width="100%" height="100%" fill="#0b1730"/>
-      <style>.t{fill:#E8F0FF;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}</style>
-      <text x="${pad}" y="${pad+16}" class="t" font-size="28" font-weight="700">${title}</text>
-      <text x="${pad}" y="${pad+46}" class="t" font-size="18" opacity=".8">${subtitle}</text>`);
-    function addList(x,y,title,list,isExp){
-      svgParts.push(`<text x="${x}" y="${y}" class="t" font-size="20" font-weight="700">${title}</text>`);
-      const y0 = y+16, lineH=26, barH=12, top= y0+8;
-      const vals = list.map(d=>d.delta).concat([0]);
-      const min = Math.min(...vals), max=Math.max(...vals);
-      const xpct = v => max===min ? 0.5 : (v-min)/(max-min);
-      for(let i=0;i<list.length;i++){
-        const d = list[i], yy = top + i*lineH;
-        svgParts.push(`<text x="${x}" y="${yy}" class="t" font-size="16" opacity=".95">${d.label}</text>`);
-        const gx=x, gw=480, gy=yy+6, gh=barH;
-        svgParts.push(`<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="#0b1633" stroke="#233047"/>`);
-        const z=xpct(0), v=xpct(d.delta); const left=Math.min(z,v), right=Math.max(z,v);
-        const ww=Math.max(2,(right-left)*gw), xx=gx+left*gw;
-        const good = isExp ? (d.delta<0) : (d.delta>0);
-        const color = good ? "#16a34a" : "#ef4444";
-        svgParts.push(`<rect x="${xx}" y="${gy}" width="${ww}" height="${gh}" fill="${color}"/>`);
-        svgParts.push(`<text x="${gx+gw+10}" y="${gy+gh-2}" class="t" font-size="14" opacity=".9">${d.delta>=0?'+':''}${fmtM(d.delta)} M€</text>`);
+    // 1) Cas file-share (Android/Chrome, desktop compatibles) — on tente l'image, sinon on passe en texte
+    if (!isIOS && navigator.canShare){
+      // Génération SVG→PNG (robuste)
+      const W=1200, H=630, pad=40;
+      const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies`;
+      const subtitle = `BudgetLab — dépenses & recettes`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+        <defs><linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#0c1636"/><stop offset="1" stop-color="#0b172f"/></linearGradient></defs>
+        <rect width="100%" height="100%" fill="url(#bg)"/>
+        <style>.t{fill:#E8F0FF;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}</style>
+        <text x="${pad}" y="${pad+26}" class="t" font-size="32" font-weight="700">${title}</text>
+        <text x="${pad}" y="${pad+58}" class="t" font-size="20" opacity=".85">${subtitle}</text>
+        <text x="${pad}" y="${H-pad}" class="t" font-size="16" opacity=".7">${SIM_URL}</text>
+      </svg>`;
+      const svgBlob = new Blob([svg], {type:'image/svg+xml'});
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; if('decode' in img) img.decode().then(res).catch(()=>{}); });
+      const canvas = document.createElement('canvas'); canvas.width=W; canvas.height=H;
+      const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0);
+      let pngBlob = await new Promise(resolve=>{ try{ canvas.toBlob(b=>resolve(b||null),"image/png",0.92); }catch(_){ resolve(null); } });
+      if(!pngBlob){ const dataURL=canvas.toDataURL("image/png",0.92); const bin=atob(dataURL.split(',')[1]); const ia=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) ia[i]=bin.charCodeAt(i); pngBlob=new Blob([ia],{type:"image/png"}); }
+      URL.revokeObjectURL(url);
+
+      const file = new File([pngBlob], "budgetlab.png", {type:"image/png"});
+      if (navigator.canShare({files:[file]})){
+        try{
+          await navigator.share({ files:[file], text: shareText, title:"BudgetLab" });
+          return;
+        }catch(_){/* annulé, on tombe sur texte */}
       }
     }
-    addList(pad, 120, "Dépenses — variations par poste", expDeltas, true);
-    addList(W/2+pad/2, 120, "Recettes — variations par poste", revDeltas, false);
-    svgParts.push(`</svg>`);
-    const svg = svgParts.join("");
 
-    const img = new Image();
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-    await new Promise(res=>{ img.onload=res; });
-    const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
-    const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0);
-    pngBlob = await new Promise(resolve => { try{ canvas.toBlob(b=>resolve(b||null),"image/png",0.92);}catch(_){resolve(null);} });
-    if(!pngBlob){
-      const dataURL=canvas.toDataURL("image/png",0.92);
-      const bin=atob(dataURL.split(',')[1]); const ia=new Uint8Array(bin.length);
-      for (let i=0;i<bin.length;i++) ia[i]=bin.charCodeAt(i);
-      pngBlob = new Blob([ia], {type:"image/png"});
-    }
-    try{ file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"});}catch(_){}
-  }catch(_){}
-
-  // Partage Android/Chrome (image si possible), sinon message+URL, sinon téléchargement
-  try{
-    if (file && navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({ files:[file], text: msg, url: SHARE_URL, title: "BudgetLab" });
-      return;
-    }
+    // 2) Partage texte (iOS Safari + fallback universel)
     if (navigator.share){
-      await navigator.share({ text: msg, url: SHARE_URL, title: "BudgetLab" });
-      return;
+      try{ await navigator.share({ text: shareText, title:"BudgetLab", url: SIM_URL }); return; }catch(_){}
     }
-  }catch(_){}
 
-  if (pngBlob){
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(pngBlob); a.download="budgetlab-mes-resultats.png";
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-    toast("Image téléchargée. Partagez-la sur vos réseaux !");
-  }else{
-    try{
-      await navigator.clipboard.writeText(`${msg}\n${SHARE_URL}`);
-      toast("Message copié. Collez-le dans WhatsApp, Messages, etc.");
-    }catch(_){
-      const ta=document.createElement('textarea');
-      ta.value=`${msg}\n${SHARE_URL}`; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy'); ta.remove();
-      toast("Message copié. Collez-le dans WhatsApp, Messages, etc.");
+    // 3) Fallback : copie presse-papiers
+    try{ await navigator.clipboard.writeText(shareText); toast("Message copié dans le presse-papiers ✨"); }
+    catch(_){
+      // Secours : mailto
+      location.href = `mailto:?subject=${encodeURIComponent("BudgetLab")}&body=${encodeURIComponent(shareText)}`;
     }
+  }catch(e){
+    console.error(e);
+    toast("Impossible de préparer le partage.");
   }
 }
 
@@ -765,21 +738,17 @@ async function onValidate(){
   $("#validateHint").textContent = "Réponse envoyée — résultats en cours d’affichage";
   toast("Réponse envoyée — résultats en cours d’affichage");
 
+  // POST (non bloquant)
   const payload = buildCompactPayload();
-  try{
-    await fetch(ENDPOINT_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"text/plain;charset=UTF-8" },
-      body: JSON.stringify(payload),
-      keepalive: true
-    });
-  }catch(_){
-    try{ navigator.sendBeacon?.(ENDPOINT_URL, new Blob([JSON.stringify(payload)], {type:'text/plain'})); }catch(__){}
-  }
+  (async ()=>{ try{
+      await fetch(ENDPOINT_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+    }catch(_){ } })();
 
+  // Affiche synthèse tout de suite
   $("#summary").style.display="block";
   buildSummary();
 
+  // Référence (moyenne sliders) + count
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -788,14 +757,20 @@ async function onValidate(){
       state.avgRevPct = stats.avgRevPct || [];
       state.count = stats.count || 0;
       $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
-    } else $("#ansCountLine").textContent = `Réponses enregistrées : —`;
-  }catch(_){ $("#ansCountLine").textContent = `Réponses enregistrées : —`; }
+    } else {
+      $("#ansCountLine").textContent = `Réponses enregistrées : —`;
+    }
+  }catch(_){
+    $("#ansCountLine").textContent = `Réponses enregistrées : —`;
+  }
 
+  // Comparaison
   const you = compute();
   const ref  = computeRefFromAverages();
   $("#results").style.display="block";
-  renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
+  renderBarsZero(you.expDeltaSigned, ref.deltaExpTotal || 0, you.revDeltaSigned, ref.deltaRevTotal || 0);
 
+  // Violons (progressif)
   await renderAllViolinsProgressive();
 }
 
