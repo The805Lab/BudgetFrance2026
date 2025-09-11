@@ -22,14 +22,17 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
-  /* Top header with logo */
-  .topHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+  /* Header: titre + logo (grid) */
+  .topHeader{
+    display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; margin-bottom:6px;
+  }
+  .titleWrap{min-width:0} /* permet au titre de wrap sans pousser le logo */
   h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
 
-  /* Logo — jamais masqué en mobile */
-  .brandBadge805{display:flex;align-items:center;justify-content:center}
+  .brandBadge805{justify-self:end; display:flex; align-items:center; justify-content:center}
   .brandBadge805 svg{display:block;width:36px;height:36px}
+  @media (max-width:380px){.brandBadge805 svg{width:30px;height:30px}}
 
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
@@ -90,7 +93,7 @@
   .listWrap{display:grid;grid-template-columns:1fr;gap:10px}
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
-  .listTitle{font-weight:700;margin-bottom:6px}
+  .listTitle{font-weight:700;margin-bottom:4px}
 
   /* Mini-bar per item */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
@@ -102,7 +105,7 @@
   .segGood{background:rgba(22,163,74,.9)}
   .segBad{background:rgba(239,68,68,.9)}
 
-  /* Gel après validation (sécurité) */
+  /* Gel après validation */
   body[data-frozen="1"] input[type=range],
   body[data-frozen="1"] .nudge{pointer-events:none}
 </style>
@@ -111,7 +114,7 @@
 
 <div class="wrap" aria-live="polite">
   <div class="topHeader">
-    <div>
+    <div class="titleWrap">
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
@@ -134,7 +137,7 @@
     </div>
   </div>
 
-  <!-- Intro pédagogique -->
+  <!-- Intro -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
       En 2024, la France a dépensé plus qu’elle n’a reçu : c’est le <strong>déficit</strong>. L’Europe vise un retour vers <strong>3 % du PIB</strong> de déficit. <br/>
@@ -166,7 +169,7 @@
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
-  <!-- Synthèse de mes résultats -->
+  <!-- Synthèse -->
   <div id="summary" class="card results" aria-label="Synthèse de mes résultats">
     <div class="synHeader">
       <h2 class="synH">Synthèse de mes résultats</h2>
@@ -177,23 +180,23 @@
     <div class="listWrap">
       <!-- Dépenses -->
       <div class="listBox">
-        <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
+        <div class="listTitle" id="listTitleExp"></div>
         <div id="sumExpList"></div>
       </div>
       <!-- Recettes -->
       <div class="listBox">
-        <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
+        <div class="listTitle" id="listTitleRev"></div>
         <div id="sumRevList"></div>
       </div>
     </div>
   </div>
 
-  <!-- Comparaison normalisée -->
+  <!-- Comparaison -->
   <div id="results" class="card results">
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Barres centrées sur 0 : Vous vs Médiane (totaux) -->
+    <!-- Totaux -->
     <div class="synCard">
       <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong></div>
       <div class="barLine" style="margin-bottom:6px">
@@ -232,7 +235,7 @@
   </div>
 </div>
 
-<!-- Bulle flottante -->
+<!-- HUD -->
 <div id="hud" class="floatBubble" aria-live="polite">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -273,7 +276,7 @@ const CFG = {
 const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
-  avgExpPct: [], avgRevPct: [], // pour référence agrégée
+  avgExpPct: [], avgRevPct: [],
   count: 0,
   submitted:false
 };
@@ -288,6 +291,12 @@ const fmtMd = n => {
 };
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
+
+/* iOS detection */
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -311,9 +320,8 @@ function compute(){
     return sum + (d>0 ? d : 0);
   },0);
 
-  // Δ totaux signés
-  const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
-  const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
+  const deltaExpTotal = newExpM - BASE_EXP;
+  const deltaRevTotal = newRevM - BASE_REV;
 
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev, deltaExpTotal, deltaRevTotal};
 }
@@ -346,7 +354,7 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- UI RENDER (sliders) ---------- */
+/* --------- UI (sliders) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
@@ -378,7 +386,7 @@ function renderBlock(container, list, kind){
     const delEl=row.querySelector(`#${id}_delta`);
 
     const update=()=>{
-      if (document.body.getAttribute('data-frozen')==="1") return; // sécurité
+      if (document.body.getAttribute('data-frozen')==="1") return;
       const pct=Number(slider.value)||0;
       if(kind==="exp") state.expPct[idx]=pct; else state.revPct[idx]=pct;
       const newVal = Math.round(b.base*(1+(b.locked?0:pct)/100));
@@ -491,14 +499,13 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     y: values.map(_ => ""),
     name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
-    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" }, /* jaune points */
+    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
     fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
 
-  // Domaine : inclure toujours "vous" + médiane + zéro
   const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const margin = Math.max(10, (max - min) * 0.06);
@@ -555,7 +562,6 @@ async function renderAllViolinsProgressive(){
     return j;
   };
 
-  // Première vague: 4 premiers
   const jobs = allMaps.map(m=>({m,divId:"v-"+m.id}));
   const firstWave = jobs.slice(0,4);
   await Promise.all(firstWave.map(async (j)=>{
@@ -564,7 +570,6 @@ async function renderAllViolinsProgressive(){
     drawViolinHybrid(j.divId, data.values||[], data.stats||{}, myVal, j.m.label);
   }));
 
-  // Reste
   const rest = jobs.slice(4);
   for (const j of rest){
     const data = await fetchField(j.m.field);
@@ -599,15 +604,13 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
     `<span style="color:var(--ref);font-weight:700">Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
 }
 
-/* --------- SYNTHÈSE (barres centrées 0 par poste) ---------- */
+/* --------- SYNTHÈSE ---------- */
 function buildListItems(kind, items){
-  // Filtrer: ne garder QUE les postes modifiés (Δ ≠ 0)
   const data = items.filter(d => d.delta !== 0)
                     .sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
 
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
-
   if (!data.length) return;
 
   const allVals = data.map(d=>d.delta).concat([0]);
@@ -643,7 +646,7 @@ function buildListItems(kind, items){
     container.appendChild(row);
   }
 
-  data.forEach(addItem); // tout afficher, plus de "Voir tout"
+  data.forEach(addItem);
 }
 
 function buildSummary(){
@@ -652,9 +655,13 @@ function buildSummary(){
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
   $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>`;
 
-  // Titres raccourcis
-  $("#listTitleExp").innerHTML = `Vous avez réduit les dépenses de <strong>${fmtMd(r.cutsExp)}</strong> (en vert), augmenté en rouge.`;
-  $("#listTitleRev").innerHTML = `Vous avez augmenté les recettes de <strong>${fmtMd(r.incRev)}</strong> (en vert), diminué en rouge.`;
+  // Libellés simples et compréhensibles
+  $("#listTitleExp").innerHTML =
+    `Vous avez réduit les dépenses de <strong>${fmtMd(r.cutsExp)}</strong>.<br>` +
+    `<span class="hint">En vert : diminutions • En rouge : augmentations</span>`;
+  $("#listTitleRev").innerHTML =
+    `Vous avez augmenté les recettes de <strong>${fmtMd(r.incRev)}</strong>.<br>` +
+    `<span class="hint">En vert : augmentations • En rouge : diminutions</span>`;
 
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
   const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
@@ -665,6 +672,13 @@ function buildSummary(){
 
 /* --------- PARTAGE (image synthèse + texte) ---------- */
 async function shareSummary(){
+  const ios = isIOS();
+  // iOS : ouvrir tout de suite un onglet (chaîne de geste utilisateur)
+  const iosPopup = ios ? window.open('', '_blank') : null;
+  if (iosPopup){
+    iosPopup.document.write('<!doctype html><title>BudgetLab</title><body style="margin:0;background:#0b1730;color:#e8f0ff;font-family:system-ui">Préparation de l’image…</body>');
+  }
+
   try{
     const r = compute();
     const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France`;
@@ -712,30 +726,22 @@ async function shareSummary(){
     svgParts.push(`</svg>`);
     const svg = svgParts.join("");
 
-    /* Conversion PNG robuste : data-URL -> Image -> Canvas */
     const svgDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-    const img = new Image();
-    img.src = svgDataUrl;
+    const img = new Image(); img.src = svgDataUrl;
 
-    // decode() si dispo, sinon attendre onload
-    if (img.decode) {
-      try { await img.decode(); } catch { await new Promise(r=> img.onload = r); }
-    } else {
-      await new Promise(r=> img.onload = r);
-    }
+    if (img.decode) { try { await img.decode(); } catch { await new Promise(r=> img.onload = r); } }
+    else { await new Promise(r=> img.onload = r); }
 
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img,0,0);
 
+    // Blob + dataURL (on garde les deux pour iOS)
     let pngBlob = await new Promise(resolve => {
-      try{
-        canvas.toBlob(b=> resolve(b||null), "image/png", 0.92);
-      }catch(_){ resolve(null); }
+      try{ canvas.toBlob(b=> resolve(b||null), "image/png", 0.92); }catch(_){ resolve(null); }
     });
     if(!pngBlob){
-      // Fallback Safari : toDataURL -> Blob
       const dataURL = canvas.toDataURL("image/png", 0.92);
       const byteString = atob(dataURL.split(',')[1]);
       const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
@@ -743,36 +749,44 @@ async function shareSummary(){
       for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
       pngBlob = new Blob([ia], {type: mimeString});
     }
+    const pngDataUrl = canvas.toDataURL("image/png", 0.92);
 
     const downloadBlob = (blob, filename) => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      document.body.appendChild(a); a.click(); a.remove();
       setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
     };
 
     let file = null;
-    try { file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"}); } catch(_) { /* iOS < 14 */ }
+    try { file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"}); } catch(_) {}
 
     const shareText = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France en ajustant dépenses et recettes. Et vous, vous feriez comment ?`;
 
-    // Android/Chrome (files), iOS (texte + téléchargement), Desktop (téléchargement)
-    if (file && navigator.canShare && navigator.canShare({files:[file]})){
+    if (!ios && file && navigator.canShare && navigator.canShare({files:[file]})){
       try { await navigator.share({files:[file], text:shareText, title:"BudgetLab"}); }
       catch(_) { /* annulé */ }
-    } else if (navigator.share){
+    } else if (!ios && navigator.share){
       try { await navigator.share({text:shareText, title:"BudgetLab"}); } catch(_) {}
       downloadBlob(pngBlob, "budgetlab-mes-resultats.png");
       toast("Image téléchargée. Partagez-la sur vos réseaux !");
+    } else if (ios){
+      // iOS : ouvrir l’image dans l’onglet pré-ouvert + share texte si dispo
+      if (iosPopup){
+        iosPopup.location.replace(pngDataUrl);
+      } else {
+        window.open(pngDataUrl, '_blank');
+      }
+      if (navigator.share){ try { await navigator.share({text:shareText, title:"BudgetLab"}); } catch(_) {} }
+      toast("Image ouverte. Touchez le bouton de partage iOS.");
     } else {
       downloadBlob(pngBlob, "budgetlab-mes-resultats.png");
       toast("Image téléchargée. Partagez-la sur vos réseaux !");
     }
   }catch(e){
     console.error(e);
+    if (iosPopup) iosPopup.close();
     toast("Impossible de générer l’image de synthèse.");
   }
 }
@@ -790,23 +804,26 @@ async function onValidate(){
   $("#validateHint").textContent = "Réponse envoyée — résultats en cours d’affichage";
   toast("Réponse envoyée — résultats en cours d’affichage");
 
-  // POST (non bloquant)
+  // POST: éviter le préflight; fallback beacon
   const payload = buildCompactPayload();
-  (async ()=>{
+  try{
+    await fetch(ENDPOINT_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=UTF-8" }, // simple request
+      body: JSON.stringify(payload),
+      keepalive: true
+    });
+  }catch(_){
     try{
-      await fetch(ENDPOINT_URL, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify(payload)
-      });
-    }catch(_){}
-  })();
+      navigator.sendBeacon?.(ENDPOINT_URL, new Blob([JSON.stringify(payload)], {type:'text/plain'}));
+    }catch(__){}
+  }
 
   // Affiche synthèse immédiatement puis comparaison
   $("#summary").style.display="block";
   buildSummary();
 
-  // Référence (moyennes) + count
+  // Récupère référence (moyennes) + count
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -822,13 +839,12 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Barres 0
+  // Barres totales + violons
   const you = compute();
   const ref  = computeRefFromAverages();
   $("#results").style.display="block";
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
-  // Violons en progressif
   await renderAllViolinsProgressive();
 }
 
