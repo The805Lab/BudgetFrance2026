@@ -22,7 +22,7 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
-  /* Top header with logo pinned right (even on mobile) */
+  /* Top header with logo pinned right */
   .topHeader{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-bottom:6px}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px}
@@ -116,7 +116,7 @@
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-    <!-- Logo The805Lab (inline SVG rond bleu/rouge) -->
+    <!-- Logo The805Lab -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
       <svg viewBox="0 0 48 48" role="img" aria-label="The805Lab">
         <defs>
@@ -305,17 +305,15 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  // Sommes utiles pour la synthèse
   const expDeltaSigned = newExpM - BASE_EXP; // <0 = dépenses réduites
   const revDeltaSigned = newRevM - BASE_REV; // >0 = recettes augmentées
 
-  // Sommes positives / négatives (par poste)
   const expDeltas = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base);
   const revDeltas = CFG.revenues.map((b,i)=> Math.round(b.base*(1+state.revPct[i]/100)) - b.base);
-  const expCuts = expDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0); // économies sur dépenses
-  const expAdds = expDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);    // hausses de dépenses
-  const revAdds = revDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);    // hausses de recettes
-  const revCuts = revDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0); // baisses de recettes
+  const expCuts = expDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0);
+  const expAdds = expDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);
+  const revAdds = revDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);
+  const revCuts = revDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0);
 
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM,
           expDeltaSigned, revDeltaSigned, expCuts, expAdds, revAdds, revCuts};
@@ -436,7 +434,7 @@ function buildCompactPayload(){
   };
 }
 
-/* --------- VIOLINS (un seul fetch) ---------- */
+/* --------- VIOLINS : un seul fetch avec fallback ---------- */
 const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
@@ -464,9 +462,26 @@ async function fetchAllDistributions(){
     const url = ENDPOINT_URL + "?action=violin_all";
     const r = await fetch(url, {method:"GET", cache:"no-cache"});
     const j = await r.json();
-    if (j && j.ok && j.fields){ _allViolinData = j.fields; return _allViolinData; }
-  }catch(e){ console.warn("violin_all failed", e); }
-  return (_allViolinData = {});
+    if (j && j.ok && j.fields && Object.keys(j.fields).length){
+      _allViolinData = j.fields;
+      return _allViolinData;
+    }
+    throw new Error("violin_all empty");
+  }catch(e){
+    console.warn("violin_all indisponible, fallback par champ", e);
+    const all = {};
+    const tasks = [...FIELD_MAP_EXP, ...FIELD_MAP_REV].map(async m=>{
+      const u = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(m.field);
+      try{
+        const r = await fetch(u, {method:"GET", cache:"no-cache"});
+        const j = await r.json();
+        if (j && j.ok) all[m.field] = { values:j.values||[], stats:j.stats||{count:0,min:0,max:0,median:0} };
+      }catch(_){}
+    });
+    await Promise.all(tasks);
+    _allViolinData = all;
+    return _allViolinData;
+  }
 }
 
 function myDeltaForField(field){
@@ -490,8 +505,8 @@ function myDeltaForField(field){
 function drawViolinHybrid(divId, values, stats, myValueME, label){
   const violin = {
     type: "violin", orientation: "h",
-    x: values.length? values : [0],
-    y: values.map(_ => ""),
+    x: (values && values.length) ? values : [0],
+    y: (values && values.length) ? values.map(_ => "") : [""],
     name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
     marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
@@ -499,10 +514,14 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
-  const medianX = (typeof stats?.median === "number") ? stats.median : 0;
+  const medianX = (typeof stats?.median === "number" && isFinite(stats.median)) ? stats.median : 0;
+  const sMin = (typeof stats?.min === "number" && isFinite(stats.min)) ? stats.min : 0;
+  const sMax = (typeof stats?.max === "number" && isFinite(stats.max)) ? stats.max : 0;
 
-  const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
-  const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
+  // Toujours inclure 0, 'vous' et 'médiane'
+  let min = Math.min(sMin, myValueME||0, medianX, 0);
+  let max = Math.max(sMax, myValueME||0, medianX, 0);
+  if (min === max){ min -= 10; max += 10; }
   const margin = Math.max(10, (max - min) * 0.06);
 
   const shapes = [
@@ -581,17 +600,15 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
   setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
 
-  // Titres avec couleurs
   $("#barExpTitle").innerHTML = `<strong>Variation totale des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous (${expYou>=0?"+":""}${fmtM(expYou)} M€)</span>, <span style="color:var(--ref);font-weight:700">Médiane (${expRef>=0?"+":""}${fmtM(expRef)} M€)</span>`;
   $("#barRevTitle").innerHTML = `<strong>Variation totale des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous (${revYou>=0?"+":""}${fmtM(revYou)} M€)</span>, <span style="color:var(--ref);font-weight:700">Médiane (${revRef>=0?"+":""}${fmtM(revRef)} M€)</span>`;
 }
 
 /* --------- LISTES synthèse ---------- */
 function buildListItems(kind, items, maxItems=6){
-  // items = [{label, delta}]
   const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
   const top = modified.slice(0,maxItems);
-  const rest = modified.slice(maxItems); // <-- pas de lignes à 0
+  const rest = modified.slice(maxItems);
 
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
@@ -644,7 +661,6 @@ function buildSummary(){
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
   $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>.`;
 
-  // Titres lisibles selon le signe
   const depTxt = r.expDeltaSigned < 0
     ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMd(r.expDeltaSigned)}</strong>.`
     : r.expDeltaSigned > 0
@@ -666,18 +682,16 @@ function buildSummary(){
   buildListItems("rev", revDeltas);
 }
 
-/* --------- PARTAGE (fiable iOS/Android/Desktop) ---------- */
+/* --------- PARTAGE (iOS texte, Android/Desktop image si possible) ---------- */
 async function shareSummary(){
   try{
     const r = compute();
     const msg = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ?`;
     const shareText = `${msg}\n${SIM_URL}`;
-
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    // 1) Cas file-share (Android/Chrome, desktop compatibles) — on tente l'image, sinon on passe en texte
     if (!isIOS && navigator.canShare){
-      // Génération SVG→PNG (robuste)
+      // Petite image sociale (SVG -> PNG)
       const W=1200, H=630, pad=40;
       const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies`;
       const subtitle = `BudgetLab — dépenses & recettes`;
@@ -701,24 +715,16 @@ async function shareSummary(){
 
       const file = new File([pngBlob], "budgetlab.png", {type:"image/png"});
       if (navigator.canShare({files:[file]})){
-        try{
-          await navigator.share({ files:[file], text: shareText, title:"BudgetLab" });
-          return;
-        }catch(_){/* annulé, on tombe sur texte */}
+        try{ await navigator.share({ files:[file], text: shareText, title:"BudgetLab" }); return; }catch(_){}
       }
     }
 
-    // 2) Partage texte (iOS Safari + fallback universel)
     if (navigator.share){
       try{ await navigator.share({ text: shareText, title:"BudgetLab", url: SIM_URL }); return; }catch(_){}
     }
 
-    // 3) Fallback : copie presse-papiers
     try{ await navigator.clipboard.writeText(shareText); toast("Message copié dans le presse-papiers ✨"); }
-    catch(_){
-      // Secours : mailto
-      location.href = `mailto:?subject=${encodeURIComponent("BudgetLab")}&body=${encodeURIComponent(shareText)}`;
-    }
+    catch(_){ location.href = `mailto:?subject=${encodeURIComponent("BudgetLab")}&body=${encodeURIComponent(shareText)}`; }
   }catch(e){
     console.error(e);
     toast("Impossible de préparer le partage.");
@@ -744,7 +750,7 @@ async function onValidate(){
       await fetch(ENDPOINT_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
     }catch(_){ } })();
 
-  // Affiche synthèse tout de suite
+  // Synthèse immédiate
   $("#summary").style.display="block";
   buildSummary();
 
