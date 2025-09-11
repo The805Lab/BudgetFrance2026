@@ -27,8 +27,8 @@
   h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
 
+  /* Logo — jamais masqué en mobile */
   .brandBadge805{display:flex;align-items:center;justify-content:center}
-  @media (max-width:420px){.brandBadge805{display:none}}
   .brandBadge805 svg{display:block;width:36px;height:36px}
 
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
@@ -91,7 +91,6 @@
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
   .listTitle{font-weight:700;margin-bottom:6px}
-  .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
 
   /* Mini-bar per item */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
@@ -102,7 +101,6 @@
   .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55);opacity:.6}
   .segGood{background:rgba(22,163,74,.9)}
   .segBad{background:rgba(239,68,68,.9)}
-  .seeMore{display:inline-flex;gap:6px;align-items:center;border:1px solid #2b3d6d;background:#0c1736;color:#e6f0ff;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer}
 
   /* Gel après validation (sécurité) */
   body[data-frozen="1"] input[type=range],
@@ -117,17 +115,21 @@
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-    <!-- Logo The805Lab (inline SVG rond bleu/rouge) -->
+    <!-- Logo The805Lab (inline SVG rond) -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
-      <svg viewBox="0 0 48 48" role="img" aria-label="The805Lab">
+      <svg viewBox="0 0 64 64" role="img" aria-label="The805Lab">
         <defs>
-          <linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0" stop-color="#2563eb"/>
+          <linearGradient id="g805" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
             <stop offset="1" stop-color="#ef4444"/>
           </linearGradient>
         </defs>
-        <circle cx="24" cy="24" r="22" fill="url(#gradBR)" opacity="0.85" stroke="#21315a" stroke-width="2"/>
-        <text x="24" y="29" text-anchor="middle" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" font-weight="800" font-size="16" fill="#e8f0ff">805</text>
+        <circle cx="32" cy="32" r="30" fill="url(#g805)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
+        <g fill="#e8f0ff" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" text-anchor="middle">
+          <text x="32" y="22" font-size="8" font-weight="700">THE</text>
+          <text x="32" y="38" font-size="22" font-weight="900">805</text>
+          <text x="32" y="50" font-size="8" font-weight="700">LAB</text>
+        </g>
       </svg>
     </div>
   </div>
@@ -164,7 +166,7 @@
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
-  <!-- Synthèse de mes résultats (NOUVEAU) -->
+  <!-- Synthèse de mes résultats -->
   <div id="summary" class="card results" aria-label="Synthèse de mes résultats">
     <div class="synHeader">
       <h2 class="synH">Synthèse de mes résultats</h2>
@@ -177,13 +179,11 @@
       <div class="listBox">
         <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
         <div id="sumExpList"></div>
-        <button id="sumExpMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
       <!-- Recettes -->
       <div class="listBox">
         <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
         <div id="sumRevList"></div>
-        <button id="sumRevMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
     </div>
   </div>
@@ -311,7 +311,7 @@ function compute(){
     return sum + (d>0 ? d : 0);
   },0);
 
-  // Δ totaux signés (centrés 0)
+  // Δ totaux signés
   const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
   const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
 
@@ -555,7 +555,7 @@ async function renderAllViolinsProgressive(){
     return j;
   };
 
-  // Première vague: 4 premiers pour ressenti rapide
+  // Première vague: 4 premiers
   const jobs = allMaps.map(m=>({m,divId:"v-"+m.id}));
   const firstWave = jobs.slice(0,4);
   await Promise.all(firstWave.map(async (j)=>{
@@ -564,13 +564,13 @@ async function renderAllViolinsProgressive(){
     drawViolinHybrid(j.divId, data.values||[], data.stats||{}, myVal, j.m.label);
   }));
 
-  // Reste par paquets
+  // Reste
   const rest = jobs.slice(4);
   for (const j of rest){
     const data = await fetchField(j.m.field);
     const myVal = myDeltaForField(j.m.field);
     drawViolinHybrid(j.divId, data.values||[], data.stats||{}, myVal, j.m.label);
-    await new Promise(r=>setTimeout(r, 30)); // respiration
+    await new Promise(r=>setTimeout(r, 30));
   }
 }
 
@@ -587,25 +587,30 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
   setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
 
-  // En-têtes uniques avec valeurs
-  $("#barExpTitle").innerHTML = "<strong>Variation totale des dépenses (M€)</strong> — Vous (" + (expYou>=0?"+":"") + fmtM(expYou) + " M€), Médiane (" + (expRef>=0?"+":"") + fmtM(expRef) + " M€)";
-  $("#barRevTitle").innerHTML = "<strong>Variation totale des recettes (M€)</strong> — Vous (" + (revYou>=0?"+":"") + fmtM(revYou) + " M€), Médiane (" + (revRef>=0?"+":"") + fmtM(revRef) + " M€)";
+  // Titre unique avec code couleur + valeurs
+  $("#barExpTitle").innerHTML =
+    `<strong>Variation totale des dépenses (M€)</strong> — ` +
+    `<span style="color:var(--you);font-weight:700">Vous (${expYou>=0?'+':''}${fmtM(expYou)} M€)</span>, ` +
+    `<span style="color:var(--ref);font-weight:700">Médiane (${expRef>=0?'+':''}${fmtM(expRef)} M€)</span>`;
+
+  $("#barRevTitle").innerHTML =
+    `<strong>Variation totale des recettes (M€)</strong> — ` +
+    `<span style="color:var(--you);font-weight:700">Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€)</span>, ` +
+    `<span style="color:var(--ref);font-weight:700">Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
 }
 
 /* --------- SYNTHÈSE (barres centrées 0 par poste) ---------- */
-function buildListItems(kind, items, maxItems=6){
-  // items = [{label, delta}]
-  // Tri par impact (valeur absolue desc), mais on affichera d'abord uniquement les postes modifiés
-  const sorted = items.slice().sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
-
-  const modified = sorted.filter(d=>d.delta!==0);
-  const top = modified.slice(0,maxItems);
-  const rest = sorted.filter(d => !top.includes(d)); // inclut les Δ=0 à la fin par tri
+function buildListItems(kind, items){
+  // Filtrer: ne garder QUE les postes modifiés (Δ ≠ 0)
+  const data = items.filter(d => d.delta !== 0)
+                    .sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
 
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
 
-  const allVals = sorted.map(d=>d.delta).concat([0]);
+  if (!data.length) return;
+
+  const allVals = data.map(d=>d.delta).concat([0]);
   const min = Math.min(...allVals);
   const max = Math.max(...allVals);
 
@@ -625,7 +630,6 @@ function buildListItems(kind, items, maxItems=6){
     seg.style.left = left + "%";
     seg.style.width = Math.max(2, width) + "%";
 
-    // Trait zéro par item
     const zero = document.createElement("div");
     zero.className = "barZero";
     zero.style.left = zeroPct + "%";
@@ -639,13 +643,7 @@ function buildListItems(kind, items, maxItems=6){
     container.appendChild(row);
   }
 
-  top.forEach(addItem);
-
-  const btn = kind==="exp" ? $("#sumExpMore") : $("#sumRevMore");
-  if (rest.length){
-    btn.style.display="inline-flex";
-    btn.onclick = ()=>{ rest.forEach(addItem); btn.style.display="none"; };
-  } else btn.style.display="none";
+  data.forEach(addItem); // tout afficher, plus de "Voir tout"
 }
 
 function buildSummary(){
@@ -654,7 +652,7 @@ function buildSummary(){
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
   $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>`;
 
-  // Textes titres raccourcis
+  // Titres raccourcis
   $("#listTitleExp").innerHTML = `Vous avez réduit les dépenses de <strong>${fmtMd(r.cutsExp)}</strong> (en vert), augmenté en rouge.`;
   $("#listTitleRev").innerHTML = `Vous avez augmenté les recettes de <strong>${fmtMd(r.incRev)}</strong> (en vert), diminué en rouge.`;
 
@@ -672,9 +670,9 @@ async function shareSummary(){
     const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France`;
     const subtitle = `en ajustant dépenses et recettes (Budget 2026, base 2024)`;
     const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}))
-                      .sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
     const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}))
-                      .sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
 
     const W=1200, H=800, pad=40;
     const svgParts=[];
@@ -691,7 +689,7 @@ async function shareSummary(){
       const lineH=26, barH=12, top= y0+8;
       const vals = list.map(d=>d.delta).concat([0]);
       const min = Math.min(...vals), max=Math.max(...vals);
-      function xpct(v){ if(max===min) return 0.5; return (v-min)/(max-min); }
+      const xpct = v => max===min ? 0.5 : (v-min)/(max-min);
       for(let i=0;i<list.length;i++){
         const d = list[i];
         const yy = top + i*lineH;
@@ -714,17 +712,17 @@ async function shareSummary(){
     svgParts.push(`</svg>`);
     const svg = svgParts.join("");
 
-    // Convertir en PNG via canvas (robuste)
-    const svgBlob = new Blob([svg], {type:'image/svg+xml'});
-    const url = URL.createObjectURL(svgBlob);
+    /* Conversion PNG robuste : data-URL -> Image -> Canvas */
+    const svgDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
     const img = new Image();
-    const loadImage = () => new Promise((resolve,reject)=>{
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = url;
-      if ('decode' in img) { img.decode().then(resolve).catch(()=>{}); }
-    });
-    await loadImage();
+    img.src = svgDataUrl;
+
+    // decode() si dispo, sinon attendre onload
+    if (img.decode) {
+      try { await img.decode(); } catch { await new Promise(r=> img.onload = r); }
+    } else {
+      await new Promise(r=> img.onload = r);
+    }
 
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
@@ -733,7 +731,7 @@ async function shareSummary(){
 
     let pngBlob = await new Promise(resolve => {
       try{
-        canvas.toBlob(b=>{ resolve(b||null); }, "image/png", 0.92);
+        canvas.toBlob(b=> resolve(b||null), "image/png", 0.92);
       }catch(_){ resolve(null); }
     });
     if(!pngBlob){
@@ -745,31 +743,32 @@ async function shareSummary(){
       for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
       pngBlob = new Blob([ia], {type: mimeString});
     }
-    URL.revokeObjectURL(url);
 
-    const file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"});
+    const downloadBlob = (blob, filename) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    };
+
+    let file = null;
+    try { file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"}); } catch(_) { /* iOS < 14 */ }
+
     const shareText = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France en ajustant dépenses et recettes. Et vous, vous feriez comment ?`;
 
-    // Partage : Android/Chrome (files), iOS Safari (texte seul + téléchargement), Desktop (téléchargement)
-    if (navigator.canShare && navigator.canShare({files:[file]})){
+    // Android/Chrome (files), iOS (texte + téléchargement), Desktop (téléchargement)
+    if (file && navigator.canShare && navigator.canShare({files:[file]})){
       try { await navigator.share({files:[file], text:shareText, title:"BudgetLab"}); }
-      catch(_) { /* utilisateur a annulé */ }
+      catch(_) { /* annulé */ }
     } else if (navigator.share){
       try { await navigator.share({text:shareText, title:"BudgetLab"}); } catch(_) {}
-      // Téléchargement auto du PNG après share (iOS/Safari)
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(pngBlob);
-      a.download = "budgetlab-mes-resultats.png";
-      document.body.appendChild(a);
-      a.click(); a.remove();
+      downloadBlob(pngBlob, "budgetlab-mes-resultats.png");
       toast("Image téléchargée. Partagez-la sur vos réseaux !");
     } else {
-      // Desktop : téléchargement direct
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(pngBlob);
-      a.download = "budgetlab-mes-resultats.png";
-      document.body.appendChild(a);
-      a.click(); a.remove();
+      downloadBlob(pngBlob, "budgetlab-mes-resultats.png");
       toast("Image téléchargée. Partagez-la sur vos réseaux !");
     }
   }catch(e){
@@ -791,7 +790,7 @@ async function onValidate(){
   $("#validateHint").textContent = "Réponse envoyée — résultats en cours d’affichage";
   toast("Réponse envoyée — résultats en cours d’affichage");
 
-  // POST (sans bloquer l'affichage)
+  // POST (non bloquant)
   const payload = buildCompactPayload();
   (async ()=>{
     try{
@@ -800,14 +799,14 @@ async function onValidate(){
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify(payload)
       });
-    }catch(_){/* on ignore les erreurs réseau pour l'UX */}
+    }catch(_){}
   })();
 
   // Affiche synthèse immédiatement puis comparaison
   $("#summary").style.display="block";
   buildSummary();
 
-  // Récupère référence (moyennes) + count puis affiche barres et violons
+  // Référence (moyennes) + count
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -823,7 +822,7 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Mise à jour numérique (totaux) + barres 0
+  // Barres 0
   const you = compute();
   const ref  = computeRefFromAverages();
   $("#results").style.display="block";
