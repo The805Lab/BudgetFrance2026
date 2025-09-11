@@ -22,14 +22,14 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
-  /* Header: titre + logo (grid) */
+  /* Header: titre + logo en 2 colonnes (toujours à droite) */
   .topHeader{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-bottom:6px}
   .titleWrap{min-width:0}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
-  .brandBadge805{justify-self:end;display:flex;align-items:center;justify-content:center}
+  .brandBadge805{justify-self:end;display:flex;align-items:center;justify-content:center;min-width:36px}
   .brandBadge805 svg{display:block;width:36px;height:36px}
-  @media (max-width:380px){.brandBadge805 svg{width:30px;height:30px}}
+  @media (max-width:360px){.brandBadge805 svg{width:30px;height:30px}}
 
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
@@ -281,7 +281,7 @@ const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const fmtMd = n => { const s=n<0?"-":(n>0?"":""); const a=Math.round(Math.abs(n)/1000); return s + a.toLocaleString("fr-FR") + " Md€"; };
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 const isIOS = ()=> /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
-function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2600); }
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -296,19 +296,11 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  const cutsExp = CFG.expenses.reduce((sum,b,i)=>{
-    const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
-    return sum + (d<0 ? -d : 0);
-  },0);
-  const incRev = CFG.revenues.reduce((sum,b,i)=>{
-    const d = Math.round(b.base*(1+state.revPct[i]/100)) - b.base;
-    return sum + (d>0 ? d : 0);
-  },0);
+  // Δ totaux signés (centrés 0)
+  const deltaExpTotal = newExpM - BASE_EXP; // <0 économies de dépenses (baisse des dépenses)
+  const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus (hausse des recettes)
 
-  const deltaExpTotal = newExpM - BASE_EXP;
-  const deltaRevTotal = newRevM - BASE_REV;
-
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, cutsExp, incRev, deltaExpTotal, deltaRevTotal};
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, deltaExpTotal, deltaRevTotal};
 }
 function computeRefFromAverages(){
   const pctE = state.avgExpPct || [];
@@ -320,8 +312,6 @@ function computeRefFromAverages(){
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
   return {
-    cutsExp: CFG.expenses.reduce((sum,b,i)=>{ const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0); },0),
-    incRev: CFG.revenues.reduce((sum,b,i)=>{ const d = newRev[i]-b.base; return sum + (d>0 ? d : 0); },0),
     deltaExpTotal: newExpM - BASE_EXP,
     deltaRevTotal: newRevM - BASE_REV
   };
@@ -339,7 +329,7 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- RENDER sliders ---------- */
+/* --------- SLIDERS ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
@@ -594,9 +584,9 @@ function buildListItems(kind, items){
   container.innerHTML = "";
   if (!data.length) return;
 
-  const allVals = data.map(d=>d.delta).concat([0]);
-  const min = Math.min(...allVals);
-  const max = Math.max(...allVals);
+  const vals = data.map(d=>d.delta).concat([0]);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
 
   function addItem(it){
     const row = document.createElement("div");
@@ -634,12 +624,17 @@ function buildSummary(){
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
   $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>`;
 
-  $("#listTitleExp").innerHTML =
-    `Vous avez réduit les dépenses de <strong>${fmtMd(r.cutsExp)}</strong>.<br>` +
-    `<span class="hint">En vert : diminutions • En rouge : augmentations</span>`;
-  $("#listTitleRev").innerHTML =
-    `Vous avez augmenté les recettes de <strong>${fmtMd(r.incRev)}</strong>.<br>` +
-    `<span class="hint">En vert : augmentations • En rouge : diminutions</span>`;
+  // NET par agrégat (cohérent avec barres "Mes résultats comparés")
+  const dExp = r.deltaExpTotal, dRev = r.deltaRevTotal;
+  const expText = dExp<0 ? `Vous avez réduit les dépenses de <strong>${fmtMd(Math.abs(dExp))}</strong>.`
+               : dExp>0 ? `Vous avez augmenté les dépenses de <strong>${fmtMd(Math.abs(dExp))}</strong>.`
+               : `Vos dépenses sont inchangées.`;
+  const revText = dRev>0 ? `Vous avez augmenté les recettes de <strong>${fmtMd(Math.abs(dRev))}</strong>.`
+               : dRev<0 ? `Vous avez diminué les recettes de <strong>${fmtMd(Math.abs(dRev))}</strong>.`
+               : `Vos recettes sont inchangées.`;
+
+  $("#listTitleExp").innerHTML = expText + `<br><span class="hint">Barres par poste : vert = améliore le déficit, rouge = l’aggrave.</span>`;
+  $("#listTitleRev").innerHTML = revText + `<br><span class="hint">Barres par poste : vert = améliore le déficit, rouge = l’aggrave.</span>`;
 
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
   const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
@@ -650,28 +645,29 @@ function buildSummary(){
 
 /* --------- PARTAGE ---------- */
 async function shareSummary(){
-  const ios = isIOS();
-  // iOS : ouvrir immédiatement un onglet (dans le geste utilisateur)
-  const iosWin = ios ? window.open('about:blank','_blank') : null;
-  if (iosWin){ iosWin.document.write('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="margin:0;background:#0b1730;color:#e8f0ff;font-family:system-ui;display:grid;place-items:center;height:100vh">Préparation de l’image…</body>'); }
+  const r = compute();
+  const msg = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ?`;
+  const shareDataMsgUrl = { text: msg, url: SHARE_URL, title: "BudgetLab" };
 
+  // Génère PNG (utile pour Android/desktop). iOS utilisera juste le message+URL.
+  let file = null, pngBlob = null;
   try{
-    const r = compute();
-    const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France`;
-    const subtitle = `en ajustant dépenses et recettes (Budget 2026, base 2024)`;
+    // Construire un visuel simple (même canevas que précédemment)
+    const W=1200, H=800, pad=40;
     const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}))
                       .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
     const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}))
                       .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
 
-    const W=1200, H=800, pad=40;
+    const title = `Économie nette : ${fmtMd(r.savingM)}`;
+    const subtitle = `Budget 2026 (base 2024) • ${new Date().toLocaleDateString("fr-FR")}`;
+
     const svgParts=[];
     svgParts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
       <rect width="100%" height="100%" fill="#0b1730"/>
       <style>.t{fill:#E8F0FF;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}</style>
       <text x="${pad}" y="${pad+16}" class="t" font-size="28" font-weight="700">${title}</text>
-      <text x="${pad}" y="${pad+46}" class="t" font-size="18" opacity=".8">${subtitle}</text>
-    `);
+      <text x="${pad}" y="${pad+46}" class="t" font-size="18" opacity=".8">${subtitle}</text>`);
 
     function addList(x,y,title,list,isExp){
       svgParts.push(`<text x="${x}" y="${y}" class="t" font-size="20" font-weight="700">${title}</text>`);
@@ -695,66 +691,64 @@ async function shareSummary(){
         svgParts.push(`<text x="${gx+gw+10}" y="${gy+gh-2}" class="t" font-size="14" opacity=".9">${d.delta>=0?'+':''}${fmtM(d.delta)} M€</text>`);
       }
     }
-
     addList(pad, 120, "Dépenses — variations par poste", expDeltas, true);
     addList(W/2+pad/2, 120, "Recettes — variations par poste", revDeltas, false);
     svgParts.push(`</svg>`);
     const svg = svgParts.join("");
 
-    // DataURL (pas d’objectURL → pas de révoquer, pas de CORS)
-    const svgUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
     const img = new Image();
-    img.src = svgUrl;
-    await new Promise(res => { img.onload = res; }); // robuste pour iOS
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    await new Promise(res => { img.onload = res; });
 
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img,0,0);
 
-    // Obtenir Blob + DataURL
-    let pngBlob = await new Promise(resolve => {
-      try{ canvas.toBlob(b => resolve(b||null), "image/png", 0.92); }catch(_){ resolve(null); }
-    });
-    const pngDataUrl = canvas.toDataURL("image/png", 0.92);
+    pngBlob = await new Promise(resolve => { try{ canvas.toBlob(b=>resolve(b||null),"image/png",0.92); }catch(_){ resolve(null); }});
     if(!pngBlob){
-      // fallback si toBlob null
-      const bin = atob(pngDataUrl.split(',')[1]);
+      const dataURL = canvas.toDataURL("image/png",0.92);
+      const bin = atob(dataURL.split(',')[1]);
       const ia = new Uint8Array(bin.length);
-      for (let i=0;i<bin.length;i++) ia[i] = bin.charCodeAt(i);
+      for (let i=0;i<bin.length;i++) ia[i]=bin.charCodeAt(i);
       pngBlob = new Blob([ia], {type:"image/png"});
     }
-    let file = null; try{ file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"}); }catch(_){}
 
-    const shareText = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France en ajustant dépenses et recettes. Et vous, vous feriez comment ?`;
+    try{ file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"}); }catch(_){}
+  }catch(_){ /* si la génération d'image échoue, on continuera en texte+URL */ }
+
+  // Partage selon plateforme
+  const ios = isIOS();
+  try{
     if (!ios && file && navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], text:shareText, title:"BudgetLab"}).catch(()=>{});
-    } else if (!ios && navigator.share){
-      await navigator.share({text:shareText, url:SHARE_URL, title:"BudgetLab"}).catch(()=>{});
-      // téléchargement en plus
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(pngBlob); a.download = "budgetlab-mes-resultats.png";
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-      toast("Image téléchargée. Partagez-la sur vos réseaux !");
-    } else if (ios){
-      // iOS : afficher l’image dans l’onglet + share texte (pas de fichiers)
-      if (iosWin){
-        iosWin.document.body.innerHTML = `<img src="${pngDataUrl}" style="display:block;width:100%;height:auto"/>`;
-      } else {
-        window.open(pngDataUrl,'_blank');
-      }
-      if (navigator.share){ await navigator.share({text:shareText, url:SHARE_URL, title:"BudgetLab"}).catch(()=>{}); }
-      toast("Image ouverte. Utilisez le partage iOS.");
-    } else {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(pngBlob); a.download = "budgetlab-mes-resultats.png";
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-      toast("Image téléchargée. Partagez-la sur vos réseaux !");
+      await navigator.share({ files:[file], text: msg, url: SHARE_URL, title: "BudgetLab" });
+      return;
     }
-  }catch(e){
-    console.error(e);
-    if (iosWin) iosWin.close();
-    toast("Impossible de générer l’image de synthèse.");
+    if (navigator.share){
+      await navigator.share(shareDataMsgUrl);
+      return;
+    }
+  }catch(_){ /* utilisateur a pu annuler */ }
+
+  // Fallbacks
+  if (!ios && pngBlob){
+    // Desktop / Android sans Web Share : téléchargement PNG
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(pngBlob); a.download = "budgetlab-mes-resultats.png";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    toast("Image téléchargée. Partagez-la sur vos réseaux !");
+  } else {
+    // Copier le message dans le presse-papier
+    try{
+      await navigator.clipboard.writeText(`${msg}\n${SHARE_URL}`);
+      toast("Message copié. Collez-le dans WhatsApp, Messages, etc.");
+    }catch(_){
+      // vieux iOS : fallback textarea
+      const ta = document.createElement('textarea');
+      ta.value = `${msg}\n${SHARE_URL}`; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+      toast("Message copié. Collez-le dans WhatsApp, Messages, etc.");
+    }
   }
 }
 
@@ -786,7 +780,7 @@ async function onValidate(){
     }catch(__){}
   }
 
-  // Affiche synthèse immédiatement puis comparaison
+  // Synthèse immédiate
   $("#summary").style.display="block";
   buildSummary();
 
@@ -806,7 +800,7 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Barres totales + violons
+  // Barres + violons
   const you = compute();
   const ref  = computeRefFromAverages();
   $("#results").style.display="block";
