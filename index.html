@@ -21,8 +21,16 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
-  h1{margin:0 0 6px;font-size:1.22rem;line-height:1.25}
+
+  /* Top header with logo */
+  .topHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+  h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-bottom:10px}
+
+  .brandBadge805{display:flex;align-items:center;justify-content:center}
+  @media (max-width:420px){.brandBadge805{display:none}}
+  .brandBadge805 svg{display:block;width:36px;height:36px}
+
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
 
@@ -69,15 +77,8 @@
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
-  .footer{color:var(--muted);font-size:.85rem;margin-top:16px;position:relative;padding-bottom:56px}
+  .footer{color:var(--muted);font-size:.85rem;margin-top:16px;position:relative;padding-bottom:12px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
-
-  /* Overlay chargement */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:80}
-  .overlay.show{display:flex}
-  .loader{background:#0b1633;border:1px solid var(--ring);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px rgba(0,0,0,.4);min-width:280px;text-align:center}
-  .spinner{width:18px;height:18px;border:3px solid #334155;border-top-color:var(--brand);border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
-  @keyframes spin{to{transform:rotate(360deg)}}
 
   /* Synthèse (barres centrées sur 0) */
   .synCard{background:#0b1935;border:1px solid #1e2d55;border-radius:14px;padding:14px}
@@ -91,18 +92,17 @@
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
   .listTitle{font-weight:700;margin-bottom:6px}
   .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
+
+  /* Mini-bar per item */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
   .itemLabel{color:#dbe7ff}
   .itemVal{font-variant-numeric:tabular-nums}
   .barLine{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
   .barSeg{position:absolute;top:0;height:100%}
+  .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55);opacity:.6}
   .segGood{background:rgba(22,163,74,.9)}
   .segBad{background:rgba(239,68,68,.9)}
   .seeMore{display:inline-flex;gap:6px;align-items:center;border:1px solid #2b3d6d;background:#0c1736;color:#e6f0ff;border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer}
-
-  /* Footer signature (Option B, inline SVG) */
-  .brand805{position:absolute;right:16px;bottom:8px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--ring);padding:6px 10px;border-radius:999px}
-  .brand805 svg{display:block;height:22px}
 
   /* Gel après validation (sécurité) */
   body[data-frozen="1"] input[type=range],
@@ -111,17 +111,26 @@
 </head>
 <body>
 
-<!-- Overlay -->
-<div class="overlay" id="overlay">
-  <div class="loader">
-    <div><span class="spinner"></span><strong>Vos résultats sont en cours de traitement…</strong></div>
-    <div class="subtitle" style="margin-top:6px">Quelques secondes suffisent.</div>
-  </div>
-</div>
-
 <div class="wrap" aria-live="polite">
-  <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
-  <div class="subtitle">Référence : <em>base 2024</em></div>
+  <div class="topHeader">
+    <div>
+      <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
+      <div class="subtitle">Référence : <em>base 2024</em></div>
+    </div>
+    <!-- Logo The805Lab (inline SVG rond bleu/rouge) -->
+    <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
+      <svg viewBox="0 0 48 48" role="img" aria-label="The805Lab">
+        <defs>
+          <linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#2563eb"/>
+            <stop offset="1" stop-color="#ef4444"/>
+          </linearGradient>
+        </defs>
+        <circle cx="24" cy="24" r="22" fill="url(#gradBR)" opacity="0.85" stroke="#21315a" stroke-width="2"/>
+        <text x="24" y="29" text-anchor="middle" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" font-weight="800" font-size="16" fill="#e8f0ff">805</text>
+      </svg>
+    </div>
+  </div>
 
   <!-- Intro pédagogique -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
@@ -166,15 +175,13 @@
     <div class="listWrap">
       <!-- Dépenses -->
       <div class="listBox">
-        <div class="listTitle">Dépenses — variations par poste (Δ en M€, <span style="color:var(--good)">vert</span> réduit le déficit, <span style="color:var(--bad2)">rouge</span> l’augmente)</div>
-        <div class="zeroLine" aria-hidden="true"></div>
+        <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
         <div id="sumExpList"></div>
         <button id="sumExpMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
       <!-- Recettes -->
       <div class="listBox">
-        <div class="listTitle">Recettes — variations par poste (Δ en M€, <span style="color:var(--good)">vert</span> réduit le déficit, <span style="color:var(--bad2)">rouge</span> l’augmente)</div>
-        <div class="zeroLine" aria-hidden="true"></div>
+        <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
         <div id="sumRevList"></div>
         <button id="sumRevMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
@@ -188,28 +195,25 @@
 
     <!-- Barres centrées sur 0 : Vous vs Médiane (totaux) -->
     <div class="synCard">
-      <div class="hint" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span></div>
+      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong></div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
         <div class="barSeg" id="barExpRef" style="left:50%;width:3px;background:var(--ref)"></div>
         <div class="barSeg" id="barExpYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
-      <div class="barlegend"><span id="barExpYouVal" style="color:var(--you)">Vous : —</span> <span id="barExpRefVal" style="color:var(--ref)">Médiane : —</span></div>
     </div>
 
     <div class="synCard" style="margin-top:10px">
-      <div class="hint" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous</span> vs <span style="color:var(--ref);font-weight:700">médiane</span></div>
+      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong></div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
         <div class="barSeg" id="barRevRef" style="left:50%;width:3px;background:var(--ref)"></div>
         <div class="barSeg" id="barRevYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
-      <div class="barlegend"><span id="barRevYouVal" style="color:var(--you)">Vous : —</span> <span id="barRevRefVal" style="color:var(--ref)">Médiane : —</span></div>
     </div>
 
     <div class="legend" id="normNote" style="margin-top:10px">
-      Chaque graphique montre la distribution des réponses (variation en M€ vs 2024), votre valeur (bleu) et la médiane (jaune).
-      <div class="hint" style="margin-top:4px;color:#a7b5cf">La <strong>médiane</strong> sépare les réponses en deux moitiés : 50 % au-dessus, 50 % au-dessous.</div>
+      Chaque graphique montre la distribution des réponses (variation en M€ vs 2024).
     </div>
 
     <!-- Violons -->
@@ -225,21 +229,6 @@
 
   <div class="footer">
     Sources : Insee (APU), Ministère de l’Économie, Commission européenne. Chiffres 2024 arrondis. Certains postes sont difficiles à ajuster à court terme (ex. intérêts de la dette).
-
-    <!-- Signature The805Lab — SVG inline (Option B) -->
-    <div class="brand805" aria-label="The805Lab">
-      <!-- wordmark minimal : pill + texte -->
-      <svg viewBox="0 0 240 40" aria-hidden="true">
-        <defs>
-          <linearGradient id="g805" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0" stop-color="#1e3a8a"/>
-            <stop offset="1" stop-color="#2563eb"/>
-          </linearGradient>
-        </defs>
-        <rect x="0.5" y="0.5" width="239" height="39" rx="20" fill="url(#g805)" opacity="0.18" stroke="#21315a"/>
-        <text x="120" y="26" text-anchor="middle" fill="#e8f0ff" font-size="18" font-weight="700" font-family="Inter,system-ui,Segoe UI,Roboto,Arial">The805Lab</text>
-      </svg>
-    </div>
   </div>
 </div>
 
@@ -292,6 +281,11 @@ const state = {
 /* --------- UTILS ---------- */
 const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
+const fmtMd = n => {
+  const sign = n<0 ? "-" : (n>0 ? "" : "");
+  const abs = Math.round(Math.abs(n)/1000);
+  return sign + abs.toLocaleString("fr-FR") + " Md€";
+};
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 
@@ -482,7 +476,7 @@ function myDeltaForField(field){
     const nv   = Math.round(base*(1+pct/100));
     return nv - base;
   }else{
-    const idx = CFG.revenues.findIndex(x => ("R_"+x.k+"_delta_M€") === field);
+    const idx = CFG.revenues.findIndex x => ("R_"+x.k+"_delta_M€") === field;
     const base = CFG.revenues[idx].base;
     const pct  = (state.revPct[idx]||0);
     const nv   = Math.round(base*(1+pct/100));
@@ -593,23 +587,25 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
   setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
 
-  $("#barExpYouVal").textContent = "Vous : " + (expYou>=0?"+":"") + fmtM(expYou) + " M€";
-  $("#barExpRefVal").textContent = "Médiane : " + (expRef>=0?"+":"") + fmtM(expRef) + " M€";
-  $("#barRevYouVal").textContent = "Vous : " + (revYou>=0?"+":"") + fmtM(revYou) + " M€";
-  $("#barRevRefVal").textContent = "Médiane : " + (revRef>=0?"+":"") + fmtM(revRef) + " M€";
+  // En-têtes uniques avec valeurs
+  $("#barExpTitle").innerHTML = "<strong>Variation totale des dépenses (M€)</strong> — Vous (" + (expYou>=0?"+":"") + fmtM(expYou) + " M€), Médiane (" + (expRef>=0?"+":"") + fmtM(expRef) + " M€)";
+  $("#barRevTitle").innerHTML = "<strong>Variation totale des recettes (M€)</strong> — Vous (" + (revYou>=0?"+":"") + fmtM(revYou) + " M€), Médiane (" + (revRef>=0?"+":"") + fmtM(revRef) + " M€)";
 }
 
 /* --------- SYNTHÈSE (barres centrées 0 par poste) ---------- */
-function buildListItems(kind, deltas, maxItems=6){
-  const filtered = deltas.filter(d=>d.delta!==0);
-  filtered.sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
-  const top = filtered.slice(0,maxItems);
-  const more = filtered.slice(maxItems);
+function buildListItems(kind, items, maxItems=6){
+  // items = [{label, delta}]
+  // Tri par impact (valeur absolue desc), mais on affichera d'abord uniquement les postes modifiés
+  const sorted = items.slice().sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
+
+  const modified = sorted.filter(d=>d.delta!==0);
+  const top = modified.slice(0,maxItems);
+  const rest = sorted.filter(d => !top.includes(d)); // inclut les Δ=0 à la fin par tri
 
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
 
-  const allVals = filtered.map(d=>d.delta).concat([0]);
+  const allVals = sorted.map(d=>d.delta).concat([0]);
   const min = Math.min(...allVals);
   const max = Math.max(...allVals);
 
@@ -619,6 +615,7 @@ function buildListItems(kind, deltas, maxItems=6){
     row.innerHTML = `<div class="itemLabel">${it.label}</div><div class="itemVal">${(it.delta>=0?"+":"")}${fmtM(it.delta)} M€</div>`;
     const bar = document.createElement("div");
     bar.className="barLine"; bar.setAttribute("aria-hidden","true");
+
     const seg = document.createElement("div");
     seg.className="barSeg " + ((kind==="exp" ? it.delta<0 : it.delta>0) ? "segGood":"segBad");
     const zeroPct = pctInDomain(0, min, max);
@@ -627,7 +624,14 @@ function buildListItems(kind, deltas, maxItems=6){
     const width = Math.abs(valPct - zeroPct);
     seg.style.left = left + "%";
     seg.style.width = Math.max(2, width) + "%";
+
+    // Trait zéro par item
+    const zero = document.createElement("div");
+    zero.className = "barZero";
+    zero.style.left = zeroPct + "%";
+
     bar.appendChild(seg);
+    bar.appendChild(zero);
 
     const wrap = document.createElement("div");
     wrap.appendChild(bar);
@@ -638,17 +642,21 @@ function buildListItems(kind, deltas, maxItems=6){
   top.forEach(addItem);
 
   const btn = kind==="exp" ? $("#sumExpMore") : $("#sumRevMore");
-  if (more.length){
+  if (rest.length){
     btn.style.display="inline-flex";
-    btn.onclick = ()=>{ more.forEach(addItem); btn.style.display="none"; };
+    btn.onclick = ()=>{ rest.forEach(addItem); btn.style.display="none"; };
   } else btn.style.display="none";
 }
 
 function buildSummary(){
   const r = compute();
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
-  $("#targetBadge").textContent = inRange ? "Dans la cible (40–45 Md€)" : "Hors cible";
-  $("#sumHeadline").innerHTML = `🎯 Bravo ! Vous réduisez le déficit de <strong>${fmtM(r.savingM)}</strong> M€`;
+  $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
+  $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>`;
+
+  // Textes titres raccourcis
+  $("#listTitleExp").innerHTML = `Vous avez réduit les dépenses de <strong>${fmtMd(r.cutsExp)}</strong> (en vert), augmenté en rouge.`;
+  $("#listTitleRev").innerHTML = `Vous avez augmenté les recettes de <strong>${fmtMd(r.incRev)}</strong> (en vert), diminué en rouge.`;
 
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
   const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
@@ -664,9 +672,9 @@ async function shareSummary(){
     const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France`;
     const subtitle = `en ajustant dépenses et recettes (Budget 2026, base 2024)`;
     const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}))
-                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+                      .sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
     const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}))
-                      .filter(d=>d.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+                      .sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
 
     const W=1200, H=800, pad=40;
     const svgParts=[];
@@ -706,39 +714,62 @@ async function shareSummary(){
     svgParts.push(`</svg>`);
     const svg = svgParts.join("");
 
-    // Convertir en PNG via canvas
-    const img = new Image();
+    // Convertir en PNG via canvas (robuste)
     const svgBlob = new Blob([svg], {type:'image/svg+xml'});
     const url = URL.createObjectURL(svgBlob);
-    const pngBlob = await new Promise((resolve,reject)=>{
-      img.onload = ()=>{
-        const canvas = document.createElement('canvas');
-        canvas.width = W; canvas.height = H;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img,0,0);
-        canvas.toBlob(b=>{ if(b) resolve(b); else reject(new Error("blob-null")); }, "image/png", 0.92);
-        URL.revokeObjectURL(url);
-      };
+    const img = new Image();
+    const loadImage = () => new Promise((resolve,reject)=>{
+      img.onload = resolve;
       img.onerror = reject;
       img.src = url;
+      if ('decode' in img) { img.decode().then(resolve).catch(()=>{}); }
     });
+    await loadImage();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img,0,0);
+
+    let pngBlob = await new Promise(resolve => {
+      try{
+        canvas.toBlob(b=>{ resolve(b||null); }, "image/png", 0.92);
+      }catch(_){ resolve(null); }
+    });
+    if(!pngBlob){
+      // Fallback Safari : toDataURL -> Blob
+      const dataURL = canvas.toDataURL("image/png", 0.92);
+      const byteString = atob(dataURL.split(',')[1]);
+      const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+      const ia = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      pngBlob = new Blob([ia], {type: mimeString});
+    }
+    URL.revokeObjectURL(url);
 
     const file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"});
     const shareText = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France en ajustant dépenses et recettes. Et vous, vous feriez comment ?`;
 
+    // Partage : Android/Chrome (files), iOS Safari (texte seul + téléchargement), Desktop (téléchargement)
     if (navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], text:shareText, title:"BudgetLab"});
+      try { await navigator.share({files:[file], text:shareText, title:"BudgetLab"}); }
+      catch(_) { /* utilisateur a annulé */ }
     } else if (navigator.share){
-      await navigator.share({text:shareText, title:"BudgetLab"});
+      try { await navigator.share({text:shareText, title:"BudgetLab"}); } catch(_) {}
+      // Téléchargement auto du PNG après share (iOS/Safari)
       const a = document.createElement('a');
       a.href = URL.createObjectURL(pngBlob);
       a.download = "budgetlab-mes-resultats.png";
-      a.click();
+      document.body.appendChild(a);
+      a.click(); a.remove();
+      toast("Image téléchargée. Partagez-la sur vos réseaux !");
     } else {
+      // Desktop : téléchargement direct
       const a = document.createElement('a');
       a.href = URL.createObjectURL(pngBlob);
       a.download = "budgetlab-mes-resultats.png";
-      a.click();
+      document.body.appendChild(a);
+      a.click(); a.remove();
       toast("Image téléchargée. Partagez-la sur vos réseaux !");
     }
   }catch(e){
@@ -752,30 +783,31 @@ async function onValidate(){
   const validateBtn = $("#validateBtn");
   const editBtn = $("#editBtn");
   const shareBtn = $("#shareBtn");
-  const overlay = $("#overlay");
   state.submitted = true;
   document.body.setAttribute('data-frozen','1');
   validateBtn.disabled = true;
   editBtn.style.display = "inline-flex";
   shareBtn.style.display = "inline-flex";
-  overlay.classList.add("show");
-  $("#validateHint").textContent = "Réponse envoyée — affichage des résultats…";
+  $("#validateHint").textContent = "Réponse envoyée — résultats en cours d’affichage";
+  toast("Réponse envoyée — résultats en cours d’affichage");
 
-  // POST
+  // POST (sans bloquer l'affichage)
   const payload = buildCompactPayload();
-  try{
-    await fetch(ENDPOINT_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify(payload)
-    });
-  }catch(_){/* continue */ }
+  (async ()=>{
+    try{
+      await fetch(ENDPOINT_URL, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+    }catch(_){/* on ignore les erreurs réseau pour l'UX */}
+  })();
 
-  // Affiche synthèse puis comparaison
+  // Affiche synthèse immédiatement puis comparaison
   $("#summary").style.display="block";
   buildSummary();
 
-  // Récupère référence (moyennes) + count
+  // Récupère référence (moyennes) + count puis affiche barres et violons
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -799,9 +831,6 @@ async function onValidate(){
 
   // Violons en progressif
   await renderAllViolinsProgressive();
-
-  $("#validateHint").textContent="Réponse enregistrée ✔ — synthèse et comparaison ci-dessous.";
-  overlay.classList.remove("show");
 }
 
 function onEdit(){
