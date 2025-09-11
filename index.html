@@ -476,7 +476,7 @@ function myDeltaForField(field){
     const nv   = Math.round(base*(1+pct/100));
     return nv - base;
   }else{
-    const idx = CFG.revenues.findIndex x => ("R_"+x.k+"_delta_M€") === field;
+    const idx = CFG.revenues.findIndex(x => ("R_"+x.k+"_delta_M€") === field);
     const base = CFG.revenues[idx].base;
     const pct  = (state.revPct[idx]||0);
     const nv   = Math.round(base*(1+pct/100));
