@@ -4,7 +4,10 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>The805Lab - Simulateur Budget</title>
+
+<!-- Plotly pour les distributions -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
 <style>
   :root{
     --bg:#0a1022; --panel:#0f1a33; --panel2:#0b1530; --ring:#21315a;
@@ -18,15 +21,20 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
+
+  /* Top header with logo pinned right even on mobile */
   .topHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:nowrap}
   .titleCol{min-width:0;flex:1 1 auto}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px;margin-bottom:10px}
+
   .brandBadge805{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
   .brandBadge805 svg{display:block;width:44px;height:44px}
   @media (max-width:380px){ .brandBadge805 svg{width:36px;height:36px} }
+
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
+
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
   .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overscroll-behavior:contain;overflow:visible}
   .section.exp{background:var(--expBg)} .section.rev{background:var(--revBg)}
@@ -37,60 +45,91 @@
   .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
   .detailInfo{color:#97a8c9;font-size:.86rem;margin-top:4px}
   .baseInfo{color:#cbd5e1;font-size:.86rem;margin-top:2px}
+
   .sliderWrap{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center;margin-top:8px}
   .nudge{width:48px;height:48px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
-  .nudge:active{transform:scale(.98)} .nudge[disabled]{opacity:.4;cursor:not-allowed}
+  .nudge:active{transform:scale(.98)}
+  .nudge[disabled]{opacity:.4;cursor:not-allowed}
   input[type=range]{width:100%;margin:8px 0;height:36px;touch-action:pan-y}
   input[type=range]::-webkit-slider-runnable-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-7px;width:28px;height:28px;border-radius:50%;background:var(--brand);border:2px solid #a5b4fc}
   input[type=range]::-moz-range-track{height:10px;background:#2a3c69;border-radius:999px}
   input[type=range]::-moz-range-thumb{width:28px;height:28px;border:none;border-radius:50%;background:var(--brand)}
   input[type=range][disabled]{opacity:.6}
+
   .valLine{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
-  .floatBubble{position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
-    border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;border-left:6px solid var(--bad);}
+
+  /* HUD flottant */
+  .floatBubble{
+    position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
+    border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
+    border-left:6px solid var(--bad);
+  }
   .floatBubble.ok{ border-left-color: var(--ok); }
   .floatBubble strong{color:#fff}
+
   .btn{display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem}
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
-  .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px)}
+  .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
+
   .results{display:none}
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
+
+  /* Grille des violons */
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
+
   .footer{color:var(--muted);font-size:.85rem;margin-top:16px;position:relative;padding-bottom:12px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
+
+  /* Synthèse (barres centrées sur 0) */
   .synCard{background:#0b1935;border:1px solid #1e2d55;border-radius:14px;padding:14px}
   .synHeader{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
   .synBadge{border:1px solid #274067;border-radius:999px;padding:2px 8px;color:#d9e3ff;background:#0c1a3a;font-size:.8rem}
   .synH{margin:0 0 4px;font-size:1.05rem}
   .sumLine{font-size:1rem;margin:2px 0 8px}
+
   .listWrap{display:grid;grid-template-columns:1fr;gap:10px}
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
   .listTitle{font-weight:700;margin-bottom:6px}
   .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
+
+  /* Mini-bar per item */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
-  .itemLabel{color:#dbe7ff} .itemVal{font-variant-numeric:tabular-nums}
+  .itemLabel{color:#dbe7ff}
+  .itemVal{font-variant-numeric:tabular-nums}
   .barLine{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
-  .barSeg{position:absolute;top:0;height:100%} .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55);opacity:.6}
-  .segGood{background:rgba(22,163,74,.9)} .segBad{background:rgba(239,68,68,.9)}
+  .barSeg{position:absolute;top:0;height:100%}
+  .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55);opacity:.6}
+  .segGood{background:rgba(22,163,74,.9)}
+  .segBad{background:rgba(239,68,68,.9)}
   .seeMore{display:none}
-  body[data-frozen="1"] input[type=range], body[data-frozen="1"] .nudge{pointer-events:none}
+
+  /* Gel après validation (sécurité) */
+  body[data-frozen="1"] input[type=range],
+  body[data-frozen="1"] .nudge{pointer-events:none}
 </style>
 </head>
 <body>
+
 <div class="wrap" aria-live="polite">
   <div class="topHeader">
     <div class="titleCol">
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
+    <!-- Logo The805Lab (inline SVG rond + mot-symbole sur 3 lignes) -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
       <svg viewBox="0 0 64 64" role="img" aria-label="The805Lab">
-        <defs><linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs>
+        <defs>
+          <linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#2563eb"/>
+            <stop offset="1" stop-color="#ef4444"/>
+          </linearGradient>
+        </defs>
         <circle cx="32" cy="32" r="30" fill="url(#gradBR)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
         <g font-family="Inter,system-ui,Segoe UI,Roboto,Arial" fill="#e8f0ff" font-weight="800">
           <text x="32" y="24" text-anchor="middle" font-size="10">The</text>
@@ -101,6 +140,7 @@
     </div>
   </div>
 
+  <!-- Intro pédagogique -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
       <strong>Pourquoi cet exercice ?</strong><br/>
@@ -114,16 +154,19 @@
 
   <div class="bar" aria-hidden="true"><span id="bar"></span></div>
 
+  <!-- Dépenses -->
   <div class="section exp" aria-label="Réglages des dépenses">
     <div class="head">Dépenses <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="expContainer"></div>
   </div>
 
+  <!-- Recettes -->
   <div class="section rev" aria-label="Réglages des recettes">
     <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="revContainer"></div>
   </div>
 
+  <!-- Actions -->
   <div class="card">
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button id="validateBtn" class="btn wide" disabled aria-disabled="true">Valider mon budget</button>
@@ -133,26 +176,42 @@
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
+  <!-- Synthèse de mes résultats -->
   <div id="summary" class="card results" aria-label="Synthèse de mes résultats">
-    <div class="synHeader"><h2 class="synH">Synthèse de mes résultats</h2><span class="synBadge" id="targetBadge">Hors cible</span></div>
+    <div class="synHeader">
+      <h2 class="synH">Synthèse de mes résultats</h2>
+      <span class="synBadge" id="targetBadge">Hors cible</span>
+    </div>
     <div class="sumLine" id="sumHeadline">—</div>
+
     <div class="legend" style="margin-top:4px">Barres par poste : <strong>vert</strong> = réduit le déficit, <strong>rouge</strong> = l’augmente.</div>
+
     <div class="listWrap">
-      <div class="listBox"><div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div><div id="sumExpList"></div></div>
-      <div class="listBox"><div class="listTitle" id="listTitleRev">Recettes — variations par poste</div><div id="sumRevList"></div></div>
+      <!-- Dépenses -->
+      <div class="listBox">
+        <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
+        <div id="sumExpList"></div>
+      </div>
+      <!-- Recettes -->
+      <div class="listBox">
+        <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
+        <div id="sumRevList"></div>
+      </div>
     </div>
   </div>
 
+  <!-- Comparaison normalisée -->
   <div id="results" class="card results">
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
+    <!-- Barres centrées sur 0 : Vous vs Médiane (totaux) -->
     <div class="synCard">
       <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong></div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barExpRef"  style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barExpYou"  style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barExpRef" style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barExpYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
     </div>
 
@@ -160,8 +219,8 @@
       <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong></div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barRevRef"  style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barRevYou"  style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barRevRef" style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barRevYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
     </div>
 
@@ -169,6 +228,7 @@
       Chaque graphique montre la distribution des réponses (variation en M€ vs 2024).
     </div>
 
+    <!-- Violons -->
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
       <div id="violins-expenses" class="violinsGrid"></div>
@@ -184,28 +244,18 @@
   </div>
 </div>
 
+<!-- Bulle flottante -->
 <div id="hud" class="floatBubble" aria-live="polite">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
 </div>
+
 <div id="toast" class="toast" role="status"></div>
 
 <script>
 /* --------- CONFIG ---------- */
-const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
-const SHARE_URL = window.location.origin + window.location.pathname;
-
-// Sanity check ENDPOINT_URL
-(function(){
-  const bad = !/^https:\/\/script\.google\.com\/macros\/s\//.test(ENDPOINT_URL);
-  if (bad) {
-    console.error("ENDPOINT_URL non configurée :", ENDPOINT_URL);
-    const btn = document.getElementById('validateBtn');
-    if (btn) btn.disabled = true;
-    const hint = document.getElementById('validateHint');
-    if (hint) hint.textContent = "Configuration serveur manquante. Renseignez l’URL Apps Script (/exec).";
-  }
-})();
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec"; // <= mets ici l'URL /exec du déploiement en cours
+const SHARE_URL = window.location.origin + window.location.pathname; // ou colle l’URL publique si besoin
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -233,12 +283,22 @@ const CFG = {
 };
 
 /* --------- STATE ---------- */
-const state = { expPct: CFG.expenses.map(()=>0), revPct: CFG.revenues.map(()=>0), avgExpPct: [], avgRevPct: [], count: 0, submitted:false };
+const state = {
+  expPct: CFG.expenses.map(()=>0),
+  revPct: CFG.revenues.map(()=>0),
+  avgExpPct: [], avgRevPct: [], // pour référence agrégée
+  count: 0,
+  submitted:false
+};
 
 /* --------- UTILS ---------- */
 const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
-const fmtMd = n => { const sign = n<0 ? "-" : (n>0 ? "" : ""); const abs = Math.round(Math.abs(n)/1000); return sign + abs.toLocaleString("fr-FR") + " Md€"; };
+const fmtMd = n => {
+  const sign = n<0 ? "-" : (n>0 ? "" : "");
+  const abs = Math.round(Math.abs(n)/1000);
+  return sign + abs.toLocaleString("fr-FR") + " Md€";
+};
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 
@@ -249,31 +309,43 @@ function compute(){
   const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
   const baseDef = BASE_EXP - BASE_REV;
+
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  let expPos=0, expNeg=0, revPos=0, revNeg=0;
-  CFG.expenses.forEach((b,i)=>{ const d=Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100))-b.base; if(d>0) expPos+=d; else expNeg+=d; });
-  CFG.revenues.forEach((b,i)=>{ const d=Math.round(b.base*(1+state.revPct[i]/100))-b.base; if(d>0) revPos+=d; else revNeg+=d; });
+  // Sommes positives/négatives par famille (pour le texte clair)
+  let expPos=0, expNeg=0;
+  CFG.expenses.forEach((b,i)=>{
+    const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
+    if (d>0) expPos += d; else expNeg += d;
+  });
+  let revPos=0, revNeg=0;
+  CFG.revenues.forEach((b,i)=>{
+    const d = Math.round(b.base*(1+state.revPct[i]/100)) - b.base;
+    if (d>0) revPos += d; else revNeg += d;
+  });
 
-  const deltaExpTotal = newExpM - BASE_EXP;
-  const deltaRevTotal = newRevM - BASE_REV;
+  // Δ totaux signés (centrés 0)
+  const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
+  const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
 
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM,
     expPos, expNeg, revPos, revNeg, deltaExpTotal, deltaRevTotal};
 }
 function computeRefFromAverages(){
-  const pctE = state.avgExpPct || [], pctR = state.avgRevPct || [];
+  const pctE = state.avgExpPct || [];
+  const pctR = state.avgRevPct || [];
   const newExp = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:(pctE[i]||0))/100)) );
   const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+(pctR[i]||0)/100)) );
   const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
-  const newExpM = newExp.reduce((s,x)=>s+x,0), newRevM = newRev.reduce((s,x)=>s+x,0);
+  const newExpM = newExp.reduce((s,x)=>s+x,0);
+  const newRevM = newRev.reduce((s,x)=>s+x,0);
   return {
-    cutsExp: CFG.expenses.reduce((s,b,i)=>{ const d = newExp[i]-b.base; return s + (d<0 ? -d : 0); },0),
-    incRev:  CFG.revenues.reduce((s,b,i)=>{ const d = newRev[i]-b.base; return s + (d>0 ? d : 0); },0),
+    cutsExp: CFG.expenses.reduce((sum,b,i)=>{ const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0); },0),
+    incRev: CFG.revenues.reduce((sum,b,i)=>{ const d = newRev[i]-b.base; return sum + (d>0 ? d : 0); },0),
     deltaExpTotal: newExpM - BASE_EXP,
     deltaRevTotal: newRevM - BASE_REV
   };
@@ -291,7 +363,7 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- UI (sliders) ---------- */
+/* --------- UI RENDER (sliders) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
@@ -313,17 +385,23 @@ function renderBlock(container, list, kind){
           <div><strong><span id="${id}_new">${fmtM(b.base)}</span> M€</strong></div>
           <div class="delta" id="${id}_delta">0 M€</div>
         </div>
-      </div>`;
+      </div>
+    `;
     container.appendChild(row);
 
-    const slider=row.querySelector(`#${id}`), pctEl=row.querySelector(`#${id}_pct`), newEl=row.querySelector(`#${id}_new`), delEl=row.querySelector(`#${id}_delta`);
+    const slider=row.querySelector(`#${id}`);
+    const pctEl=row.querySelector(`#${id}_pct`);
+    const newEl=row.querySelector(`#${id}_new`);
+    const delEl=row.querySelector(`#${id}_delta`);
+
     const update=()=>{
-      if (document.body.getAttribute('data-frozen')==="1") return;
+      if (document.body.getAttribute('data-frozen')==="1") return; // sécurité
       const pct=Number(slider.value)||0;
       if(kind==="exp") state.expPct[idx]=pct; else state.revPct[idx]=pct;
       const newVal = Math.round(b.base*(1+(b.locked?0:pct)/100));
       const delta  = newVal - b.base;
-      pctEl.textContent = pct; newEl.textContent = fmtM(newVal);
+      pctEl.textContent = pct;
+      newEl.textContent = fmtM(newVal);
       delEl.textContent = `${delta>=0?'+':''}${fmtM(delta)} M€`;
       const isExpense = (kind==="exp");
       const gain = isExpense ? (delta<0) : (delta>0);
@@ -331,6 +409,7 @@ function renderBlock(container, list, kind){
       delEl.classList.toggle("loss", !gain && delta!==0);
       updateHUD();
     };
+
     slider.addEventListener("input", update); update();
 
     if (!b.locked){
@@ -359,7 +438,7 @@ function renderBlock(container, list, kind){
   });
 }
 
-/* --------- POST (sans préflight) ---------- */
+/* --------- BACK (payload + envoi, SANS PRÉFLIGHT) ---------- */
 function buildCompactPayload(){
   const r=compute();
   return {
@@ -374,14 +453,18 @@ function buildCompactPayload(){
 }
 function postResponseNoPreflight(payloadObj){
   const params = new URLSearchParams({ payload: JSON.stringify(payloadObj) });
+  // 1) Essai beacon (fiable iOS quand l’onglet bouge)
   try{
     const ok = navigator.sendBeacon(ENDPOINT_URL, new Blob([params.toString()], {type:'application/x-www-form-urlencoded;charset=UTF-8'}));
     if (ok) return;
   }catch(_){}
-  try{ fetch(ENDPOINT_URL, { method:'POST', body: params }); }catch(_){}
+  // 2) Fallback fetch en form-urlencoded (pas d’en-têtes -> pas de préflight)
+  try{
+    fetch(ENDPOINT_URL, { method:'POST', body: params }); // pas de await
+  }catch(_){}
 }
 
-/* --------- VIOLINS ---------- */
+/* --------- VIOLINS (Plotly) ---------- */
 const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
@@ -421,26 +504,31 @@ function myDeltaForField(field){
 }
 
 function drawViolinHybrid(divId, values, stats, myValueME, label){
-  const violin = {type:"violin", orientation:"h", x: values.length? values : [0], y: values.map(_=>""), name: label,
-    points:"all", jitter:0.6, scalemode:"count", pointpos:0,
-    marker:{ size:5, opacity:0.35, color:"rgba(245,203,92,0.7)" },
-    fillcolor:"rgba(245,203,92,0.25)", line:{ color:"rgba(0,0,0,0)" },
-    hovertemplate:"%{x:.0f} M€<extra></extra>"
+  const violin = {
+    type: "violin", orientation: "h",
+    x: values.length? values : [0],
+    y: values.map(_ => ""),
+    name: label,
+    points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
+    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
+    fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
+    hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
-  const medianX = (typeof stats?.median === "number") ? stats.median : 0;
+  const medianX = (typeof stats.median === "number") ? stats.median : 0;
+
   const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const margin = Math.max(10, (max - min) * 0.06);
 
   const shapes = [
-    { type:"line", x0: medianX, x1: medianX, y0:-0.6, y1:0.6, line:{ color:"#eab308", width:6 } },
-    { type:"line", x0: myValueME, x1: myValueME, y0:-0.7, y1:0.7, line:{ color:"#38bdf8", width:6 } },
-    { type:"line", x0: 0, x1: 0, y0:-0.8, y1:0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
+    { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
+    { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
   ];
   const annotations = [
     { x: myValueME, y: 0.75, text: "Vous : " + fmtM(myValueME) + " M€", showarrow:true, arrowhead:6, ax:0, ay:-35,
       font:{color:"#38bdf8",size:12}, bgcolor:"rgba(56,189,248,0.08)", bordercolor:"#38bdf8" },
-    { x: medianX, y:-0.75, text: "Médiane : " + fmtM(medianX) + " M€", showarrow:true, arrowhead:6, ax:0, ay:35,
+    { x: medianX, y: -0.75, text: "Médiane : " + fmtM(medianX) + " M€", showarrow:true, arrowhead:6, ax:0, ay:35,
       font:{color:"#eab308",size:12}, bgcolor:"rgba(234,179,8,0.08)", bordercolor:"#eab308" }
   ];
 
@@ -450,97 +538,156 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     title:{ text: label, x:0, xanchor:"left", y:0.98, font:{size:14} },
     xaxis:{ title:"Variation (en M€)", gridcolor:"#334155", zerolinecolor:"#334155",
             range:[ min - margin, max + margin ], tickformat:",.0f" },
-    yaxis:{ showticklabels:false }, shapes, annotations, hovermode:"x unified", showlegend:false
+    yaxis:{ showticklabels:false },
+    shapes, annotations, hovermode:"x unified", showlegend:false
   };
   const isMobile = window.matchMedia("(max-width: 520px)").matches;
   const config = { responsive:true, displayModeBar:false, staticPlot:isMobile };
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS (GET unique + rendu progressif) ---------- */
+/* --------- RÉSULTATS (un seul GET + rendu progressif) ---------- */
 async function fetchAllDistributions(){
   try{
-    const r = await fetch(ENDPOINT_URL + "?action=violins", {method:"GET", cache:"no-cache"});
+    const url = ENDPOINT_URL + "?action=violins";
+    const r = await fetch(url, {method:"GET", cache:"no-cache"});
     const j = await r.json();
     if (j && j.ok && j.fields) return j.fields;
   }catch(e){}
   return null;
 }
 async function renderAllViolinsProgressive(){
-  const expWrap = $("#violins-expenses"), revWrap = $("#violins-revenues");
+  const expWrap = $("#violins-expenses");
+  const revWrap = $("#violins-revenues");
   expWrap.innerHTML=""; revWrap.innerHTML="";
+
   const allMaps = [...FIELD_MAP_EXP, ...FIELD_MAP_REV];
   allMaps.forEach(m=>{
     const div = document.createElement("div");
-    div.id = "v-" + m.id; div.style.height = "280px";
-    div.style.background = "rgba(255,255,255,.02)"; div.style.border = "1px dashed #2a3c64";
-    div.style.borderRadius = "10px"; div.style.padding = "6px";
+    div.id = "v-" + m.id;
+    div.style.height = "280px";
+    div.style.background = "rgba(255,255,255,.02)";
+    div.style.border = "1px dashed #2a3c64";
+    div.style.borderRadius = "10px";
+    div.style.padding = "6px";
     (FIELD_MAP_EXP.includes(m) ? expWrap : revWrap).appendChild(div);
   });
 
   const all = await fetchAllDistributions();
-  if (!all) return;
+  if (!all){ // fallback si agrégateur indispo
+    // Ne rien planter, juste laisser des blocs vides.
+    return;
+  }
 
   const jobs = allMaps.map(m=>({m,divId:"v-"+m.id, data: all[m.field] || {values:[],stats:{}} }));
   const firstWave = jobs.slice(0,4);
-  await Promise.all(firstWave.map(async (j)=> drawViolinHybrid(j.divId, j.data.values||[], j.data.stats||{}, myDeltaForField(j.m.field), j.m.label)));
-  for (const j of jobs.slice(4)){
-    drawViolinHybrid(j.divId, j.data.values||[], j.data.stats||{}, myDeltaForField(j.m.field), j.m.label);
+  await Promise.all(firstWave.map(async (j)=>{
+    const myVal = myDeltaForField(j.m.field);
+    drawViolinHybrid(j.divId, j.data.values||[], j.data.stats||{}, myVal, j.m.label);
+  }));
+
+  const rest = jobs.slice(4);
+  for (const j of rest){
+    const myVal = myDeltaForField(j.m.field);
+    drawViolinHybrid(j.divId, j.data.values||[], j.data.stats||{}, myVal, j.m.label);
     await new Promise(r=>setTimeout(r, 30));
   }
 }
 
-/* --------- BARRES totales ---------- */
+/* --------- BARRES totales centrées sur 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
-  const span = Math.max(...vals) - Math.min(...vals), pad = Math.max(5, span * 0.15);
-  const dmin = Math.min(...vals) - pad, dmax = Math.max(...vals) + pad;
+  const span = Math.max(...vals) - Math.min(...vals);
+  const pad = Math.max(5, span * 0.15);
+  const dmin = Math.min(...vals) - pad;
+  const dmax = Math.max(...vals) + pad;
+
   const setPos = (id,val)=>{ $(id).style.left = pctInDomain(val, dmin, dmax) + "%"; };
   setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
   setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
+
   $("#barExpTitle").innerHTML = "<strong>Variation totale des dépenses (M€)</strong> — <span style='color:var(--you);font-weight:700'>Vous (" + (expYou>=0?"+":"") + fmtM(expYou) + " M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (" + (expRef>=0?"+":"") + fmtM(expRef) + " M€)</span>";
   $("#barRevTitle").innerHTML = "<strong>Variation totale des recettes (M€)</strong> — <span style='color:var(--you);font-weight:700'>Vous (" + (revYou>=0?"+":"") + fmtM(revYou) + " M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (" + (revRef>=0?"+":"") + fmtM(revRef) + " M€)</span>";
 }
 
-/* --------- SYNTHÈSE ---------- */
-function buildListItems(kind, items){
+/* --------- SYNTHÈSE (texte clair + barres par poste) ---------- */
+function buildListItems(kind, items, maxItems=9999){
   const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
-  if (!modified.length){ const small=document.createElement("div"); small.className="hint"; small.textContent="Aucune variation sur cette section."; container.appendChild(small); return; }
-  const allVals = modified.map(d=>d.delta).concat([0]); const min=Math.min(...allVals), max=Math.max(...allVals);
+
+  if (!modified.length){
+    const small = document.createElement("div");
+    small.className="hint";
+    small.textContent = "Aucune variation sur cette section.";
+    container.appendChild(small);
+    return;
+  }
+
+  const allVals = modified.map(d=>d.delta).concat([0]);
+  const min = Math.min(...allVals);
+  const max = Math.max(...allVals);
+
   function addItem(it){
-    const row = document.createElement("div"); row.className="item";
+    const row = document.createElement("div");
+    row.className="item";
     row.innerHTML = `<div class="itemLabel">${it.label}</div><div class="itemVal">${(it.delta>=0?"+":"")}${fmtM(it.delta)} M€</div>`;
-    const bar = document.createElement("div"); bar.className="barLine"; bar.setAttribute("aria-hidden","true");
+    const bar = document.createElement("div");
+    bar.className="barLine"; bar.setAttribute("aria-hidden","true");
+
     const seg = document.createElement("div");
     seg.className="barSeg " + ((kind==="exp" ? it.delta<0 : it.delta>0) ? "segGood":"segBad");
-    const zeroPct=pctInDomain(0,min,max), valPct=pctInDomain(it.delta,min,max);
-    const left=Math.min(zeroPct,valPct), width=Math.abs(valPct-zeroPct);
-    seg.style.left=left+"%"; seg.style.width=Math.max(2,width)+"%";
-    const zero=document.createElement("div"); zero.className="barZero"; zero.style.left=zeroPct+"%";
-    bar.appendChild(seg); bar.appendChild(zero);
-    const wrap=document.createElement("div"); wrap.appendChild(bar);
-    row.appendChild(wrap); container.appendChild(row);
+    const zeroPct = pctInDomain(0, min, max);
+    const valPct  = pctInDomain(it.delta, min, max);
+    const left = Math.min(zeroPct, valPct);
+    const width = Math.abs(valPct - zeroPct);
+    seg.style.left = left + "%";
+    seg.style.width = Math.max(2, width) + "%";
+
+    const zero = document.createElement("div");
+    zero.className = "barZero";
+    zero.style.left = zeroPct + "%";
+
+    bar.appendChild(seg);
+    bar.appendChild(zero);
+
+    const wrap = document.createElement("div");
+    wrap.appendChild(bar);
+    row.appendChild(wrap);
+    container.appendChild(row);
   }
-  modified.forEach(addItem);
+
+  modified.slice(0,maxItems).forEach(addItem);
 }
+
 function buildSummary(){
   const r = compute();
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
-  const depTxt = r.deltaExpTotal<0 ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
-               : r.deltaExpTotal>0 ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
-               : `Vous n’avez pas modifié le total des dépenses.`;
-  const recTxt = r.deltaRevTotal>0 ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
-               : r.deltaRevTotal<0 ? `Vous avez <strong>réduit</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
-               : `Vous n’avez pas modifié le total des recettes.`;
+
+  // Texte clair avec sommes positif/négatif
+  const depTxt = r.deltaExpTotal<0
+    ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
+    : r.deltaExpTotal>0
+      ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
+      : `Vous n’avez pas modifié le total des dépenses.`;
+
+  const recTxt = r.deltaRevTotal>0
+    ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
+    : r.deltaRevTotal<0
+      ? `Vous avez <strong>réduit</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
+      : `Vous n’avez pas modifié le total des recettes.`;
+
   $("#sumHeadline").innerHTML = `🎯 ${depTxt} ${recTxt} Globalement, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>.`;
+
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
   const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
-  $("#listTitleExp").innerHTML = "Dépenses — variations par poste"; $("#listTitleRev").innerHTML = "Recettes — variations par poste";
-  buildListItems("exp", expDeltas); buildListItems("rev", revDeltas);
+
+  $("#listTitleExp").innerHTML = "Dépenses — variations par poste";
+  $("#listTitleRev").innerHTML = "Recettes — variations par poste";
+  buildListItems("exp", expDeltas);
+  buildListItems("rev", revDeltas);
 }
 
 /* --------- PARTAGE ---------- */
@@ -548,60 +695,165 @@ async function shareSummary(){
   try{
     const r = compute();
     const textOnly = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ? ${SHARE_URL}`;
+
+    // iOS/Safari : texte + lien uniquement (évite les ouvertures d’onglet)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (navigator.share){
-      if (isIOS){ await navigator.share({ text:textOnly, title:"The805Lab - Simulateur Budget" }); return; }
+      if (isIOS){
+        await navigator.share({ text: textOnly, title:"The805Lab - Simulateur Budget" });
+        return;
+      }
+      // Android/desktop compatible : on essaie l’image, sinon texte seul
       try{
         const pngBlob = await buildSummaryPNG();
         const file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"});
         if (navigator.canShare && navigator.canShare({ files:[file] })){
-          await navigator.share({ files:[file], text:textOnly, title:"The805Lab - Simulateur Budget" }); return;
+          await navigator.share({ files:[file], text:textOnly, title:"The805Lab - Simulateur Budget" });
+          return;
         }
       }catch(_){}
-      await navigator.share({ text:textOnly, title:"The805Lab - Simulateur Budget" }); return;
+      await navigator.share({ text:textOnly, title:"The805Lab - Simulateur Budget" });
+      return;
     }
+    // Fallback : copie dans le presse-papier + toast
     try{ await navigator.clipboard.writeText(textOnly); toast("Message copié. Collez-le dans votre app de messagerie."); }
     catch(_){ toast("Partage non supporté. Copiez/collez ce message : " + textOnly); }
-  }catch(e){ console.error(e); toast("Partage indisponible sur cet appareil."); }
+  }catch(e){
+    console.error(e);
+    toast("Partage indisponible sur cet appareil.");
+  }
 }
-async function buildSummaryPNG(){ /* … (identique à la version précédente) … */ return new Blob(); } // raccourci ici pour tenir
+
+// Génération PNG (utilisé uniquement si partage fichiers possible)
+async function buildSummaryPNG(){
+  const r = compute();
+  const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France`;
+  const subtitle = `en ajustant dépenses et recettes (Budget 2026, base 2024)`;
+  const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}))
+                    .sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+  const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}))
+                    .sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)).slice(0,8);
+
+  const W=1200, H=800, pad=40;
+  const svgParts=[];
+  svgParts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <rect width="100%" height="100%" fill="#0b1730"/>
+    <style>.t{fill:#E8F0FF;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}</style>
+    <text x="${pad}" y="${pad+16}" class="t" font-size="28" font-weight="700">${title}</text>
+    <text x="${pad}" y="${pad+46}" class="t" font-size="18" opacity=".8">${subtitle}</text>
+  `);
+  function addList(x,y,title,list,isExp){
+    svgParts.push(`<text x="${x}" y="${y}" class="t" font-size="20" font-weight="700">${title}</text>`);
+    const y0 = y+16;
+    const lineH=26, barH=12, top= y0+8;
+    const vals = list.map(d=>d.delta).concat([0]);
+    const min = Math.min(...vals), max=Math.max(...vals);
+    function xpct(v){ if(max===min) return 0.5; return (v-min)/(max-min); }
+    for(let i=0;i<list.length;i++){
+      const d = list[i];
+      const yy = top + i*lineH;
+      svgParts.push(`<text x="${x}" y="${yy}" class="t" font-size="16" opacity=".95">${d.label}</text>`);
+      const gx = x, gw = 480, gy = yy+6, gh=barH;
+      svgParts.push(`<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="#0b1633" stroke="#233047"/>`);
+      const z = xpct(0), v = xpct(d.delta);
+      const left = Math.min(z,v), right=Math.max(z,v);
+      const ww = Math.max(2,(right-left)*gw);
+      const xx = gx + left*gw;
+      const good = isExp ? (d.delta<0) : (d.delta>0);
+      const color = good ? "#16a34a" : "#ef4444";
+      svgParts.push(`<rect x="${xx}" y="${gy}" width="${ww}" height="${gh}" fill="${color}"/>`);
+      svgParts.push(`<text x="${gx+gw+10}" y="${gy+gh-2}" class="t" font-size="14" opacity=".9">${d.delta>=0?'+':''}${fmtM(d.delta)} M€</text>`);
+    }
+  }
+  addList(pad, 120, "Dépenses — variations par poste", expDeltas, true);
+  addList(W/2+pad/2, 120, "Recettes — variations par poste", revDeltas, false);
+  svgParts.push(`</svg>`);
+  const svg = svgParts.join("");
+
+  const svgBlob = new Blob([svg], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  await new Promise((resolve,reject)=>{
+    img.onload = resolve; img.onerror = reject; img.src = url;
+    if ('decode' in img) { img.decode().then(resolve).catch(()=>{}); }
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img,0,0);
+  URL.revokeObjectURL(url);
+
+  let pngBlob = await new Promise(resolve=>{
+    try{ canvas.toBlob(b=>resolve(b||null),"image/png",0.92); }catch(_){ resolve(null); }
+  });
+  if(!pngBlob){
+    const dataURL = canvas.toDataURL("image/png",0.92);
+    const bstr = atob(dataURL.split(',')[1]);
+    const mime = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    const ia = new Uint8Array(bstr.length);
+    for (let i=0;i<bstr.length;i++) ia[i]=bstr.charCodeAt(i);
+    pngBlob = new Blob([ia],{type:mime});
+  }
+  return pngBlob;
+}
 
 /* --------- VALIDATE ---------- */
 async function onValidate(){
-  const validateBtn = $("#validateBtn"), editBtn=$("#editBtn"), shareBtn=$("#shareBtn");
-  state.submitted = true; document.body.setAttribute('data-frozen','1');
-  validateBtn.disabled = true; editBtn.style.display = "inline-flex"; shareBtn.style.display = "inline-flex";
+  const validateBtn = $("#validateBtn");
+  const editBtn = $("#editBtn");
+  const shareBtn = $("#shareBtn");
+  state.submitted = true;
+  document.body.setAttribute('data-frozen','1');
+  validateBtn.disabled = true;
+  editBtn.style.display = "inline-flex";
+  shareBtn.style.display = "inline-flex";
+
+  // POST fire-and-forget (no preflight)
   postResponseNoPreflight(buildCompactPayload());
-  $("#summary").style.display="block"; buildSummary();
+
+  // Affiche synthèse immédiatement puis comparaison
+  $("#summary").style.display="block";
+  buildSummary();
+
+  // Nettoyer la ligne sous le bouton (retirer le message)
   $("#validateHint").textContent = "";
+
+  // Récupère référence (moyennes) + count puis affiche barres et violons
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
     if(stats && stats.ok){
-      state.avgExpPct = stats.avgExpPct || []; state.avgRevPct = stats.avgRevPct || []; state.count = stats.count || 0;
+      state.avgExpPct = stats.avgExpPct || [];
+      state.avgRevPct = stats.avgRevPct || [];
+      state.count = stats.count || 0;
       $("#ansCountLine").textContent = `Réponses enregistrées : ${state.count.toLocaleString("fr-FR")}`;
-    } else $("#ansCountLine").textContent = `Réponses enregistrées : —`;
-  }catch(_){ $("#ansCountLine").textContent = `Réponses enregistrées : —`; }
-  const you = compute(), ref = computeRefFromAverages();
-  $("#results").style.display="block"; renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
+    } else {
+      $("#ansCountLine").textContent = `Réponses enregistrées : —`;
+    }
+  }catch(_){
+    $("#ansCountLine").textContent = `Réponses enregistrées : —`;
+  }
+
+  // Mise à jour numérique (totaux) + barres 0
+  const you = compute();
+  const ref  = computeRefFromAverages();
+  $("#results").style.display="block";
+  renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
+
+  // Violons en progressif (un seul GET)
   await renderAllViolinsProgressive();
 }
-function onEdit(){ state.submitted=false; document.body.removeAttribute('data-frozen'); $("#validateBtn").disabled=false; $("#editBtn").style.display="none"; $("#validateHint").textContent="Modifiez vos curseurs puis revalidez."; }
 
-/* --------- DIAG SERVEUR + INIT ---------- */
-async function pingServer(){
-  try{
-    const r = await fetch(ENDPOINT_URL + "?ping=1", { method:"GET", cache:"no-cache" });
-    const j = await r.json();
-    if (!j || !j.ok) throw new Error("ping nok");
-    console.log("Ping OK — feuille:", j.sheetName, "lignes:", j.lastRow);
-  }catch(e){
-    console.error("Ping serveur échoué :", e);
-    toast("Serveur indisponible (URL / permissions / Sheet).");
-  }
+function onEdit(){
+  state.submitted = false;
+  document.body.removeAttribute('data-frozen');
+  $("#validateBtn").disabled = false;
+  $("#editBtn").style.display = "none";
+  $("#validateHint").textContent="Modifiez vos curseurs puis revalidez.";
 }
+
+/* --------- INIT ---------- */
 function init(){
-  pingServer();
   renderBlock($("#expContainer"), CFG.expenses, "exp");
   renderBlock($("#revContainer"), CFG.revenues, "rev");
   updateHUD();
