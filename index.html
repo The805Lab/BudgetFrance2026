@@ -19,13 +19,12 @@
     --revBorder:#7c3aed;  /* violet */
     --chip:#0c1636; --brand:#2563eb;
     --you:#38bdf8; --ref:#eab308; --axis:#94a3b8;
-    --good:#16a34a; --bad2:#ef4444;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
-  /* Top header with logo pinned right even on mobile */
+  /* Top header */
   .topHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:nowrap}
   .titleCol{min-width:0;flex:1 1 auto}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
@@ -50,7 +49,6 @@
   .detailInfo{color:#97a8c9;font-size:.86rem;margin-top:4px}
   .baseInfo{color:#cbd5e1;font-size:.86rem;margin-top:2px}
 
-  /* séparateurs visuels nettes Dépenses / Recettes */
   .divider{height:2px; background:linear-gradient(90deg, var(--expBorder), transparent)}
   .divider.rev{background:linear-gradient(90deg, var(--revBorder), transparent)}
 
@@ -82,8 +80,10 @@
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
   .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
 
-  /* Toujours masqués avant validation (double verrous) */
-  .results{display:none !important}
+  /* Affichage des résultats : cachés par défaut, visibles avec .show */
+  .results{display:none}
+  .results.show{display:block}
+
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
 
   /* Grille des violons */
@@ -104,9 +104,8 @@
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
   .listTitle{font-weight:700;margin-bottom:6px}
-  .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
 
-  /* Mini-bar per item (synthèse, PAS d’emoji ici) */
+  /* Mini-bar per item (synthèse) */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
   .itemLabel{color:#dbe7ff}
   .itemVal{font-variant-numeric:tabular-nums}
@@ -116,7 +115,7 @@
   .segGood{background:rgba(22,163,74,.9)}
   .segBad{background:rgba(239,68,68,.9)}
 
-  /* Totaux: plage centrée zéro + médiane vs vous */
+  /* Totaux: jauge centrée zéro + médiane vs vous */
   .barRange{position:relative;height:18px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
   .rangeRef{position:absolute;top:0;height:100%;background:rgba(234,179,8,.9);z-index:2}
   .rangeYou{position:absolute;top:0;height:100%;
@@ -125,7 +124,7 @@
     z-index:3
   }
 
-  /* Gel après validation (sécurité) */
+  /* Gel après validation */
   body[data-frozen="1"] input[type=range],
   body[data-frozen="1"] .nudge{pointer-events:none}
 </style>
@@ -138,7 +137,7 @@
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-    <!-- Logo The805Lab (inline SVG rond + mot-symbole sur 3 lignes, plus grand) -->
+    <!-- Logo The805Lab -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
       <svg viewBox="0 0 72 72" role="img" aria-label="The805Lab">
         <defs>
@@ -157,7 +156,7 @@
     </div>
   </div>
 
-  <!-- Intro pédagogique -->
+  <!-- Intro -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
       <strong>Pourquoi cet exercice ?</strong><br/>
@@ -195,8 +194,8 @@
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
-  <!-- Synthèse de mes résultats (MASQUÉE par défaut) -->
-  <div id="summary" class="card results" aria-label="Synthèse de mes résultats" hidden style="display:none">
+  <!-- Synthèse (cachée) -->
+  <div id="summary" class="card results" aria-label="Synthèse de mes résultats">
     <div class="synHeader">
       <h2 class="synH">Synthèse de mes résultats</h2>
       <span class="synBadge" id="targetBadge">Hors cible</span>
@@ -206,12 +205,10 @@
     <div class="legend" style="margin-top:4px">Barres par poste : <strong>vert</strong> = réduit le déficit, <strong>rouge</strong> = l’augmente.</div>
 
     <div class="listWrap">
-      <!-- Dépenses -->
       <div class="listBox">
         <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
         <div id="sumExpList"></div>
       </div>
-      <!-- Recettes -->
       <div class="listBox">
         <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
         <div id="sumRevList"></div>
@@ -219,12 +216,11 @@
     </div>
   </div>
 
-  <!-- Comparaison normalisée (MASQUÉE par défaut) -->
-  <div id="results" class="card results" hidden style="display:none">
+  <!-- Comparaison (cachée) -->
+  <div id="results" class="card results">
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Totaux centrés sur 0 : Vous vs Médiane -->
     <div class="synCard">
       <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Dépenses : —</strong></div>
       <div class="barRange" style="margin-bottom:6px; position:relative">
@@ -247,7 +243,6 @@
       Chaque graphique montre la distribution des réponses (variation en M€ vs 2024).
     </div>
 
-    <!-- Violons -->
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
       <div class="divider"></div>
@@ -281,7 +276,7 @@ const SHARE_URL = window.location.origin + window.location.pathname;
 /* Emoji uniquement pour les CURSEURS */
 const EMOJI_EXP = {
   prot_soc:"🧓", sante:"🏥", education:"🎓", serv_gen:"⚙️",
-  interets_dette:"💶", aff_econ:"🚧", defense:"🪖", ordre_secu:"🚔",
+  interets_dette:"💶", aff_econ:"🚧", defense:"🚀", ordre_secu:"🚔",
   logement:"🏠", environnement:"🌿", culture:"🎭"
 };
 const EMOJI_REV = {
@@ -294,7 +289,7 @@ const CFG = {
     {k:"prot_soc",label:"Protection sociale",base:701400,locked:false,info:"Retraites, assurance chômage, minima sociaux, prestations familiales, aides handicap."},
     {k:"sante",label:"Santé",base:250500,locked:false,info:"Hôpitaux, soins de ville, médicaments, prévention, santé publique."},
     {k:"education",label:"Éducation",base:167000,locked:false,info:"Écoles, collèges, lycées, universités, vie étudiante, orientation."},
-    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,locked:false,info:"État, administrations centrales, coordination, fonctions transverses, R&D publique générale."},
+    {k:"serv_gen",label:"Services publics généraux",base:120000,locked:false,info:"État, administrations centrales, coordination, fonctions transverses, R&D publique générale."},
     {k:"interets_dette",label:"Charges d’intérêts de la dette (non modifiable)",base:58700,locked:true,info:"Service de la dette de l’État (verrouillé à court terme)."},
     {k:"aff_econ",label:"Affaires économiques",base:167000,locked:false,info:"Transports, agriculture, énergie, industrie, emploi, soutien à l’investissement."},
     {k:"defense",label:"Défense",base:75200,locked:false,info:"Renseignement, forces, équipements, dissuasion, OPEX, maintien en condition."},
@@ -360,10 +355,7 @@ function computeRefFromAverages(){
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
-  return {
-    deltaExpTotal: newExpM - BASE_EXP,
-    deltaRevTotal: newRevM - BASE_REV
-  };
+  return { deltaExpTotal: newExpM - BASE_EXP, deltaRevTotal: newRevM - BASE_REV };
 }
 function updateHUD(){
   const r = compute();
@@ -378,7 +370,7 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- UI RENDER (sliders avec emoji) ---------- */
+/* --------- UI (curseurs + emoji) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
@@ -483,7 +475,7 @@ const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
   {id:"education", label:"Éducation", field:"E_education_delta_M€"},
-  {id:"serv_gen", label:"Services publics généraux (hors intérêts dette)", field:"E_serv_gen_delta_M€"},
+  {id:"serv_gen", label:"Services publics généraux", field:"E_serv_gen_delta_M€"},
   {id:"aff_econ", label:"Affaires économiques", field:"E_aff_econ_delta_M€"},
   {id:"defense", label:"Défense", field:"E_defense_delta_M€"},
   {id:"ordre_secu", label:"Ordre & sécurité publics", field:"E_ordre_secu_delta_M€"},
@@ -559,7 +551,7 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS (un seul GET + rendu progressif) ---------- */
+/* --------- RÉSULTATS (un GET) ---------- */
 async function fetchAllDistributions(){
   try{
     const url = ENDPOINT_URL + "?action=violins";
@@ -604,7 +596,7 @@ async function renderAllViolinsProgressive(){
   }
 }
 
-/* --------- BARRES totales centrées sur 0 ---------- */
+/* --------- Jauges totales centrées 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
@@ -633,7 +625,6 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   setRange("#barExpZero", "#barExpYouRange", "#barExpRefRange", expYou, expRef);
   setRange("#barRevZero", "#barRevYouRange", "#barRevRefRange", revYou, revRef);
 
-  // Titres lisibles : "Dépenses : X Md€ de diminution/augmentation"
   const expTxt = expYou<0 ? `Dépenses : ${fmtMd(expYou)} de diminution`
                 : expYou>0 ? `Dépenses : ${fmtMd(expYou)} d’augmentation`
                 : "Dépenses : aucun changement";
@@ -644,7 +635,7 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   $("#barRevTitle").innerHTML = `<strong>${revTxt}</strong> — <span style='color:var(--you);font-weight:700'>Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
 }
 
-/* --------- SYNTHÈSE (texte clair + barres par poste, SANS emoji) ---------- */
+/* --------- Synthèse (texte + mini-barres) ---------- */
 function buildListItems(kind, items){
   const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
@@ -698,8 +689,6 @@ function buildSummary(){
   const r = compute();
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
-
-  // Message simple (icône + bravo)
   $("#sumHeadline").innerHTML = `🎯 Bravo, vous avez trouvé <strong>${fmtMd(r.savingM)}</strong> pour réduire le déficit de la France.`;
 
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
@@ -711,7 +700,7 @@ function buildSummary(){
   buildListItems("rev", revDeltas);
 }
 
-/* --------- PARTAGE ---------- */
+/* --------- Partage ---------- */
 async function shareSummary(){
   try{
     const r = compute();
@@ -825,17 +814,17 @@ async function onValidate(){
   editBtn.style.display = "inline-flex";
   shareBtn.style.display = "inline-flex";
 
-  // POST fire-and-forget (no preflight)
+  // POST fire-and-forget
   postResponseNoPreflight(buildCompactPayload());
 
   // Affiche synthèse immédiatement puis comparaison
-  const s = $("#summary"); s.hidden=false; s.style.display="block";
+  $("#summary").classList.add("show");
   buildSummary();
 
-  // Retirer le message sous le bouton
+  // Nettoyer la ligne sous le bouton
   $("#validateHint").textContent = "";
 
-  // Récupère référence (moyennes) + count puis affiche barres et violons
+  // Référence (moyennes) + count puis barres et violons
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -851,13 +840,11 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Totaux + barres 0 (avec libellés)
   const you = compute();
   const ref  = computeRefFromAverages();
-  const rEl = $("#results"); rEl.hidden=false; rEl.style.display="block";
+  $("#results").classList.add("show");
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
-  // Violons en progressif (un seul GET)
   await renderAllViolinsProgressive();
 }
 
@@ -869,8 +856,8 @@ function onEdit(){
   $("#validateHint").textContent="Modifiez vos curseurs puis revalidez.";
 
   // Remasquer les blocs résultats
-  const s = $("#summary"); s.hidden=true; s.style.display="none";
-  const r = $("#results"); r.hidden=true; r.style.display="none";
+  $("#summary").classList.remove("show");
+  $("#results").classList.remove("show");
 }
 
 /* --------- INIT ---------- */
@@ -881,6 +868,10 @@ function init(){
   $("#validateBtn").addEventListener("click", onValidate);
   $("#editBtn").addEventListener("click", onEdit);
   $("#shareBtn").addEventListener("click", shareSummary);
+
+  // Sécurité iOS : garantir masquage initial
+  $("#summary").classList.remove("show");
+  $("#results").classList.remove("show");
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
