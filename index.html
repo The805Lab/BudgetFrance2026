@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>BudgetLab — Pour le budget 2026 de la France, trouvez 40 Md€</title>
+<title>The805Lab - Simulateur Budget</title>
+
+<!-- Social (facultatif mais recommandé) -->
+<meta property="og:title" content="The805Lab - Simulateur Budget">
+<meta property="og:site_name" content="The805Lab">
+<meta property="og:description" content="Trouvez 40 Md€ en ajustant dépenses et recettes, puis comparez votre scénario.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 
 <!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
@@ -22,7 +29,7 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
-  /* Top header with logo pinned right */
+  /* Header: titre + logo à droite (même sur mobile) */
   .topHeader{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-bottom:6px}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px}
@@ -247,9 +254,12 @@
 <div id="toast" class="toast" role="status"></div>
 
 <script>
+/* --------- BRAND & URL ---------- */
+const BRAND = "The805Lab - Simulateur Budget";
+const SIM_URL = location.href.split('#')[0];
+
 /* --------- CONFIG ---------- */
 const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec"; // NE PAS MODIFIER
-const SIM_URL = location.href.split('#')[0]; // lien partagé
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -289,6 +299,7 @@ const state = {
 const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
 const fmtMd = n => { const sign = n<0 ? "-" : (n>0 ? "" : ""); const abs = Math.round(Math.abs(n)/1000); return sign + abs.toLocaleString("fr-FR") + " Md€"; };
+const fmtMdAbs = n => { const abs = Math.round(Math.abs(n)/1000); return abs.toLocaleString("fr-FR") + " Md€"; };
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 
@@ -659,17 +670,17 @@ function buildSummary(){
   const r = compute();
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
-  $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>.`;
+  $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMdAbs(r.savingM)}</strong>.`;
 
   const depTxt = r.expDeltaSigned < 0
-    ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMd(r.expDeltaSigned)}</strong>.`
+    ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMdAbs(r.expDeltaSigned)}</strong>.`
     : r.expDeltaSigned > 0
-      ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMd(r.expDeltaSigned)}</strong>.`
+      ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMdAbs(r.expDeltaSigned)}</strong>.`
       : `Vos dépenses sont <strong>inchangées</strong>.`;
   const recTxt = r.revDeltaSigned > 0
-    ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMd(r.revDeltaSigned)}</strong>.`
+    ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMdAbs(r.revDeltaSigned)}</strong>.`
     : r.revDeltaSigned < 0
-      ? `Vous avez <strong>diminué</strong> les recettes de <strong>${fmtMd(r.revDeltaSigned)}</strong>.`
+      ? `Vous avez <strong>réduit</strong> les recettes de <strong>${fmtMdAbs(r.revDeltaSigned)}</strong>.`
       : `Vos recettes sont <strong>inchangées</strong>.`;
 
   $("#listTitleExp").innerHTML = `${depTxt}`;
@@ -682,19 +693,19 @@ function buildSummary(){
   buildListItems("rev", revDeltas);
 }
 
-/* --------- PARTAGE (iOS texte, Android/Desktop image si possible) ---------- */
+/* --------- PARTAGE (iOS texte; Android/Desktop image si possible) ---------- */
 async function shareSummary(){
   try{
     const r = compute();
-    const msg = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ?`;
+    const msg = `J’ai réussi à trouver ${fmtMdAbs(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ?`;
     const shareText = `${msg}\n${SIM_URL}`;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
     if (!isIOS && navigator.canShare){
-      // Petite image sociale (SVG -> PNG)
+      // Image sociale simple
       const W=1200, H=630, pad=40;
-      const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies`;
-      const subtitle = `BudgetLab — dépenses & recettes`;
+      const title = `J’ai trouvé ${fmtMdAbs(r.savingM)}`;
+      const subtitle = BRAND;
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
         <defs><linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#0c1636"/><stop offset="1" stop-color="#0b172f"/></linearGradient></defs>
         <rect width="100%" height="100%" fill="url(#bg)"/>
@@ -713,18 +724,18 @@ async function shareSummary(){
       if(!pngBlob){ const dataURL=canvas.toDataURL("image/png",0.92); const bin=atob(dataURL.split(',')[1]); const ia=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) ia[i]=bin.charCodeAt(i); pngBlob=new Blob([ia],{type:"image/png"}); }
       URL.revokeObjectURL(url);
 
-      const file = new File([pngBlob], "budgetlab.png", {type:"image/png"});
+      const file = new File([pngBlob], "the805lab-simulateur-budget.png", {type:"image/png"});
       if (navigator.canShare({files:[file]})){
-        try{ await navigator.share({ files:[file], text: shareText, title:"BudgetLab" }); return; }catch(_){}
+        try{ await navigator.share({ files:[file], text: shareText, title: BRAND }); return; }catch(_){}
       }
     }
 
     if (navigator.share){
-      try{ await navigator.share({ text: shareText, title:"BudgetLab", url: SIM_URL }); return; }catch(_){}
+      try{ await navigator.share({ text: shareText, title: BRAND }); return; }catch(_){}
     }
 
     try{ await navigator.clipboard.writeText(shareText); toast("Message copié dans le presse-papiers ✨"); }
-    catch(_){ location.href = `mailto:?subject=${encodeURIComponent("BudgetLab")}&body=${encodeURIComponent(shareText)}`; }
+    catch(_){ location.href = `mailto:?subject=${encodeURIComponent(BRAND)}&body=${encodeURIComponent(shareText)}`; }
   }catch(e){
     console.error(e);
     toast("Impossible de préparer le partage.");
@@ -754,7 +765,7 @@ async function onValidate(){
   $("#summary").style.display="block";
   buildSummary();
 
-  // Référence (moyenne sliders) + count
+  // Référence (moyennes sliders) + count
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
