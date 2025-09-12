@@ -13,7 +13,10 @@
     --bg:#0a1022; --panel:#0f1a33; --panel2:#0b1530; --ring:#21315a;
     --text:#e8f0ff; --muted:#a7b5cf;
     --ok:#16a34a; --bad:#ef4444;
-    --expBg:#0e254f; --revBg:#0b1f45;
+    --expBg:#120f05;      /* fond dépenses (orange très sombre) */
+    --expBorder:#b45309;  /* orange foncé */
+    --revBg:#0f0a24;      /* fond recettes (violet très sombre) */
+    --revBorder:#7c3aed;  /* violet */
     --chip:#0c1636; --brand:#2563eb;
     --you:#38bdf8; --ref:#eab308; --axis:#94a3b8;
     --good:#16a34a; --bad2:#ef4444;
@@ -29,25 +32,27 @@
   .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px;margin-bottom:10px}
 
   .brandBadge805{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-  .brandBadge805 svg{display:block;width:44px;height:44px}
-  @media (max-width:380px){ .brandBadge805 svg{width:36px;height:36px} }
+  .brandBadge805 svg{display:block;width:56px;height:56px}
+  @media (max-width:380px){ .brandBadge805 svg{width:48px;height:48px} }
 
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
 
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
   .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overscroll-behavior:contain;overflow:visible}
-  .section.exp{background:var(--expBg);border-color:rgba(22,163,74,.45)}
-  .section.rev{background:var(--revBg);border-color:rgba(239,68,68,.45)}
-  .head{padding:12px 14px;background:rgba(255,255,255,.06);display:flex;gap:12px;align-items:center;font-weight:700;flex-wrap:wrap;border-left:6px solid transparent}
-  .section.exp .head{border-left-color:var(--ok)}
-  .section.rev .head{border-left-color:var(--bad)}
+  .section.exp{background:var(--expBg); border-color:var(--expBorder)}
+  .section.rev{background:var(--revBg); border-color:var(--revBorder)}
+  .head{padding:12px 14px;background:rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;font-weight:700;flex-wrap:wrap}
   .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:#0b152f;color:#dce7ff;font-size:.8rem}
   .row{padding:12px 14px;border-top:1px dashed #274067}
   .label{font-weight:700}
   .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
   .detailInfo{color:#97a8c9;font-size:.86rem;margin-top:4px}
   .baseInfo{color:#cbd5e1;font-size:.86rem;margin-top:2px}
+
+  /* séparateurs visuels nettes Dépenses / Recettes */
+  .divider{height:2px; background:linear-gradient(90deg, var(--expBorder), transparent)}
+  .divider.rev{background:linear-gradient(90deg, var(--revBorder), transparent)}
 
   .sliderWrap{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center;margin-top:8px}
   .nudge{width:48px;height:48px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
@@ -75,9 +80,10 @@
 
   .btn{display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem}
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
-  .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px)}
+  .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
 
-  .results{display:none}
+  /* Toujours masqués avant validation (double verrous) */
+  .results{display:none !important}
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
 
   /* Grille des violons */
@@ -97,35 +103,28 @@
   .listWrap{display:grid;grid-template-columns:1fr;gap:10px}
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
-  .listBox.exp{border-color:rgba(22,163,74,.55)}
-  .listBox.rev{border-color:rgba(239,68,68,.55)}
   .listTitle{font-weight:700;margin-bottom:6px}
   .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
 
-  /* Mini-bar per item */
+  /* Mini-bar per item (synthèse, PAS d’emoji ici) */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
   .itemLabel{color:#dbe7ff}
   .itemVal{font-variant-numeric:tabular-nums}
   .barLine{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
   .barSeg{position:absolute;top:0;height:100%}
-  .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.7);opacity:.9}
+  .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.65);opacity:.9;z-index:4}
+  .segGood{background:rgba(22,163,74,.9)}
+  .segBad{background:rgba(239,68,68,.9)}
 
-  /* Style jauge totaux */
-  .segMedian{background:rgba(234,179,8,.35)}
-  .segYou{
-    background:
-      repeating-linear-gradient(45deg, rgba(56,189,248,.9) 0 6px, rgba(56,189,248,.3) 6px 12px),
-      rgba(56,189,248,.35);
+  /* Totaux: plage centrée zéro + médiane vs vous */
+  .barRange{position:relative;height:18px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
+  .rangeRef{position:absolute;top:0;height:100%;background:rgba(234,179,8,.9);z-index:2}
+  .rangeYou{position:absolute;top:0;height:100%;
+    background:repeating-linear-gradient(45deg, rgba(56,189,248,.35) 0 6px, rgba(56,189,248,0) 6px 12px);
+    border-top:1px solid rgba(56,189,248,.5); border-bottom:1px solid rgba(56,189,248,.5);
+    z-index:3
   }
-  .barKey{display:flex;gap:12px;align-items:center;color:#cbd5e1;font-size:.9rem;margin-top:6px}
-  .sw{display:inline-block;width:14px;height:10px;border-radius:3px;border:1px solid #334155}
-  .sw.you{background:
-      repeating-linear-gradient(45deg, rgba(56,189,248,.9) 0 6px, rgba(56,189,248,.3) 6px 12px),
-      rgba(56,189,248,.35)}
-  .sw.median{background:rgba(234,179,8,.5)}
 
-  /* Emoji label */
-  .emoji{margin-right:.25rem}
   /* Gel après validation (sécurité) */
   body[data-frozen="1"] input[type=range],
   body[data-frozen="1"] .nudge{pointer-events:none}
@@ -139,20 +138,20 @@
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-    <!-- Logo The805Lab (inline SVG rond + mot-symbole sur 3 lignes, tailles + grandes) -->
+    <!-- Logo The805Lab (inline SVG rond + mot-symbole sur 3 lignes, plus grand) -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
-      <svg viewBox="0 0 64 64" role="img" aria-label="The805Lab">
+      <svg viewBox="0 0 72 72" role="img" aria-label="The805Lab">
         <defs>
           <linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1">
             <stop offset="0" stop-color="#2563eb"/>
             <stop offset="1" stop-color="#ef4444"/>
           </linearGradient>
         </defs>
-        <circle cx="32" cy="32" r="30" fill="url(#gradBR)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
+        <circle cx="36" cy="36" r="33" fill="url(#gradBR)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
         <g font-family="Inter,system-ui,Segoe UI,Roboto,Arial" fill="#e8f0ff" font-weight="800">
-          <text x="32" y="23" text-anchor="middle" font-size="12">The</text>
-          <text x="32" y="37" text-anchor="middle" font-size="16">805</text>
-          <text x="32" y="51" text-anchor="middle" font-size="12">Lab</text>
+          <text x="36" y="26" text-anchor="middle" font-size="13">The</text>
+          <text x="36" y="39" text-anchor="middle" font-size="16">805</text>
+          <text x="36" y="52" text-anchor="middle" font-size="13">Lab</text>
         </g>
       </svg>
     </div>
@@ -161,12 +160,12 @@
   <!-- Intro pédagogique -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
-      <strong>Pourquoi ce simulateur ?</strong><br/>
-      Le déficit public, c’est la différence entre toutes les dépenses de l’État et des administrations publiques et leurs recettes sur une année. En 2024, la France dépense encore davantage qu’elle ne reçoit : la dette augmente. L’objectif européen est de revenir vers <strong>3 % du PIB</strong> de déficit, contre <strong>5,8 % en 2024</strong>.<br/>
-      Ici, vous proposez des évolutions sur les dépenses et les recettes pour trouver <strong>entre 40 et 45 Md€</strong> de réduction du déficit – ordre de grandeur discuté politiquement en ce moment. Vous pourrez ensuite <strong>comparer</strong> vos résultats à ceux des autres répondants.
+      <strong>Pourquoi cet exercice ?</strong><br/>
+      Le déficit public correspond à la différence entre toutes les dépenses de l’État et des administrations publiques et leurs recettes sur une année. En 2024, la France dépense encore davantage qu’elle ne reçoit : la dette augmente. L’objectif européen est de revenir vers 3 % du PIB de déficit.<br/>
+      Ici, vous testez des arbitrages pour trouver entre <strong>40 et 45 Md€</strong> – ordre de grandeur discuté politiquement en ce moment – en jouant sur des postes de dépenses et de recettes, afin de visualiser les impacts et vous comparez aux autres Français.
     </div>
     <div class="hint" style="margin-top:8px;color:#a7b5cf">
-      <strong>Nota bene.</strong> Exercice volontairement <em>simplifié</em> : on ajuste les grands postes via des <em>pourcentages</em>. Cela ne correspond pas directement à des mesures détaillées, mais aide à se faire un avis <em>sur où mettre les efforts</em>.
+      <strong>Nota bene.</strong> Exercice volontairement <em>simplifié</em> : on ajuste des pourcentages sur de grandes catégories de dépenses et de recettes. Cela ne correspond pas directement à des mesures détaillées, mais permet de se faire un avis sur les efforts à répartir.
     </div>
   </div>
 
@@ -175,12 +174,14 @@
   <!-- Dépenses -->
   <div class="section exp" aria-label="Réglages des dépenses">
     <div class="head">Dépenses <span class="badge">curseurs −15 % à +15 %</span></div>
+    <div class="divider"></div>
     <div id="expContainer"></div>
   </div>
 
   <!-- Recettes -->
-  <div class="section rev" aria-label="Réglages des recettes" style="margin-top:22px">
+  <div class="section rev" aria-label="Réglages des recettes">
     <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
+    <div class="divider rev"></div>
     <div id="revContainer"></div>
   </div>
 
@@ -194,8 +195,8 @@
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
-  <!-- Synthèse de mes résultats -->
-  <div id="summary" class="card results" aria-label="Synthèse de mes résultats">
+  <!-- Synthèse de mes résultats (MASQUÉE par défaut) -->
+  <div id="summary" class="card results" aria-label="Synthèse de mes résultats" hidden style="display:none">
     <div class="synHeader">
       <h2 class="synH">Synthèse de mes résultats</h2>
       <span class="synBadge" id="targetBadge">Hors cible</span>
@@ -206,47 +207,39 @@
 
     <div class="listWrap">
       <!-- Dépenses -->
-      <div class="listBox exp">
+      <div class="listBox">
         <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
         <div id="sumExpList"></div>
       </div>
       <!-- Recettes -->
-      <div class="listBox rev">
+      <div class="listBox">
         <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
         <div id="sumRevList"></div>
       </div>
     </div>
   </div>
 
-  <!-- Comparaison normalisée -->
-  <div id="results" class="card results">
+  <!-- Comparaison normalisée (MASQUÉE par défaut) -->
+  <div id="results" class="card results" hidden style="display:none">
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Barres centrées sur 0 : Vous vs Médiane (totaux) -->
+    <!-- Totaux centrés sur 0 : Vous vs Médiane -->
     <div class="synCard">
       <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Dépenses : —</strong></div>
-      <div class="barLine" style="margin-bottom:6px">
-        <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.85)"></div>
-        <div class="barSeg segMedian" id="barExpRef"></div>
-        <div class="barSeg segYou" id="barExpYou"></div>
-      </div>
-      <div class="barKey" id="barExpKey">
-        <span class="sw median"></span> Médiane <span id="barExpRefVal"></span>
-        <span class="sw you"></span> Vous <span id="barExpYouVal"></span>
+      <div class="barRange" style="margin-bottom:6px; position:relative">
+        <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.8);z-index:4"></div>
+        <div class="rangeRef" id="barExpRefRange" style="left:50%;width:0%"></div>
+        <div class="rangeYou" id="barExpYouRange" style="left:50%;width:0%"></div>
       </div>
     </div>
 
     <div class="synCard" style="margin-top:10px">
       <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Recettes : —</strong></div>
-      <div class="barLine" style="margin-bottom:6px">
-        <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.85)"></div>
-        <div class="barSeg segMedian" id="barRevRef"></div>
-        <div class="barSeg segYou" id="barRevYou"></div>
-      </div>
-      <div class="barKey" id="barRevKey">
-        <span class="sw median"></span> Médiane <span id="barRevRefVal"></span>
-        <span class="sw you"></span> Vous <span id="barRevYouVal"></span>
+      <div class="barRange" style="margin-bottom:6px; position:relative">
+        <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.8);z-index:4"></div>
+        <div class="rangeRef" id="barRevRefRange" style="left:50%;width:0%"></div>
+        <div class="rangeYou" id="barRevYouRange" style="left:50%;width:0%"></div>
       </div>
     </div>
 
@@ -257,10 +250,12 @@
     <!-- Violons -->
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
+      <div class="divider"></div>
       <div id="violins-expenses" class="violinsGrid"></div>
     </div>
     <div class="section rev" style="margin-top:10px">
       <div class="head">Recettes — variation (M€)</div>
+      <div class="divider rev"></div>
       <div id="violins-revenues" class="violinsGrid"></div>
     </div>
   </div>
@@ -283,13 +278,14 @@
 const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
 const SHARE_URL = window.location.origin + window.location.pathname;
 
-/* Emojis par catégorie */
-const EXP_EMOJI = {
-  prot_soc:"🛡️", sante:"🏥", education:"🎓", serv_gen:"🏛️", interets_dette:"💸",
-  aff_econ:"💼", defense:"🚀", ordre_secu:"🚓", logement:"🏠", environnement:"🌿", culture:"🎭"
+/* Emoji uniquement pour les CURSEURS */
+const EMOJI_EXP = {
+  prot_soc:"🧓", sante:"🏥", education:"🎓", serv_gen:"⚙️",
+  interets_dette:"💶", aff_econ:"🚧", defense:"🪖", ordre_secu:"🚔",
+  logement:"🏠", environnement:"🌿", culture:"🎭"
 };
-const REV_EMOJI = {
-  imp_prod:"🧾", cotis:"👥", ir:"👤", is:"🏢", autres_rec:"📦"
+const EMOJI_REV = {
+  imp_prod:"🛍️", cotis:"💼", ir:"👤💶", is:"🏢💶", autres_rec:"📦"
 };
 
 const CFG = {
@@ -321,7 +317,7 @@ const CFG = {
 const state = {
   expPct: CFG.expenses.map(()=>0),
   revPct: CFG.revenues.map(()=>0),
-  avgExpPct: [], avgRevPct: [], // pour référence agrégée
+  avgExpPct: [], avgRevPct: [],
   count: 0,
   submitted:false
 };
@@ -329,7 +325,6 @@ const state = {
 /* --------- UTILS ---------- */
 const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
-const fmtMdAbs = n => Math.round(Math.abs(n)/1000).toLocaleString("fr-FR") + " Md€";
 const fmtMd = n => {
   const sign = n<0 ? "-" : (n>0 ? "" : "");
   const abs = Math.round(Math.abs(n)/1000);
@@ -337,11 +332,6 @@ const fmtMd = n => {
 };
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
-function titleChange(label, delta){
-  const abs = fmtMdAbs(delta);
-  const word = delta<0 ? "diminution" : delta>0 ? "augmentation" : "aucune variation";
-  return delta===0 ? `${label} : ${word}` : `${label} : ${abs} de ${word}`;
-}
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -359,8 +349,7 @@ function compute(){
   const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
   const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
 
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM,
-    deltaExpTotal, deltaRevTotal};
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, deltaExpTotal, deltaRevTotal};
 }
 function computeRefFromAverages(){
   const pctE = state.avgExpPct || [];
@@ -389,16 +378,16 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- UI RENDER (sliders) ---------- */
+/* --------- UI RENDER (sliders avec emoji) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
     row.className="row";
     const id=`${kind}_${idx}`;
     const disabledAttr = b.locked ? "disabled" : "";
-    const emoji = kind==="exp" ? (EXP_EMOJI[b.k]||"") : (REV_EMOJI[b.k]||"");
+    const emoji = (kind==="exp" ? EMOJI_EXP[b.k] : EMOJI_REV[b.k]) || "";
     row.innerHTML = `
-      <div class="label"><span class="emoji">${emoji}</span>${b.label}</div>
+      <div class="label">${emoji ? `<span style="margin-right:6px">${emoji}</span>`:""}${b.label}</div>
       ${b.info?`<div class="detailInfo">${b.info}</div>`:""}
       <div class="baseInfo">Base : ${Math.round(b.base/1000)} Md€</div>
       <div class="sliderWrap">
@@ -422,7 +411,7 @@ function renderBlock(container, list, kind){
     const delEl=row.querySelector(`#${id}_delta`);
 
     const update=()=>{
-      if (document.body.getAttribute('data-frozen')==="1") return; // sécurité
+      if (document.body.getAttribute('data-frozen')==="1") return;
       const pct=Number(slider.value)||0;
       if(kind==="exp") state.expPct[idx]=pct; else state.revPct[idx]=pct;
       const newVal = Math.round(b.base*(1+(b.locked?0:pct)/100));
@@ -540,7 +529,6 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
-
   const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const margin = Math.max(10, (max - min) * 0.06);
@@ -618,9 +606,6 @@ async function renderAllViolinsProgressive(){
 
 /* --------- BARRES totales centrées sur 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
-function setSegment(segEl, zeroPct, val){
-  const min = 0, max = 100; // on travaille déjà en pourcentages
-}
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
   const span = Math.max(...vals) - Math.min(...vals);
@@ -628,42 +613,39 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   const dmin = Math.min(...vals) - pad;
   const dmax = Math.max(...vals) + pad;
 
-  function placeBar(linePrefix, youVal, refVal){
+  const setRange = (zeroId, youId, refId, youVal, refVal)=>{
     const zeroPct = pctInDomain(0, dmin, dmax);
     const youPct  = pctInDomain(youVal, dmin, dmax);
     const refPct  = pctInDomain(refVal, dmin, dmax);
+    $(zeroId).style.left = zeroPct + "%";
 
-    const youLeft = Math.min(zeroPct, youPct);
-    const youW    = Math.max(2, Math.abs(youPct - zeroPct));
-    const refLeft = Math.min(zeroPct, refPct);
-    const refW    = Math.max(2, Math.abs(refPct - zeroPct));
+    const setSpan = (elId, valPct)=>{
+      const left = Math.min(zeroPct, valPct);
+      const width = Math.abs(valPct - zeroPct);
+      const el = $(elId);
+      el.style.left = left + "%";
+      el.style.width = Math.max(1, width) + "%";
+    };
+    setSpan(youId, youPct);
+    setSpan(refId, refPct);
+  };
 
-    // segments
-    const refEl = document.querySelector(`#${linePrefix}Ref`);
-    const youEl = document.querySelector(`#${linePrefix}You`);
-    const zeroEl = document.querySelector(`#${linePrefix}Zero`);
-    if (refEl){ refEl.style.left = refLeft + "%"; refEl.style.width = refW + "%"; }
-    if (youEl){ youEl.style.left = youLeft + "%"; youEl.style.width = youW + "%"; }
-    if (zeroEl){ zeroEl.style.left = zeroPct + "%"; }
+  setRange("#barExpZero", "#barExpYouRange", "#barExpRefRange", expYou, expRef);
+  setRange("#barRevZero", "#barRevYouRange", "#barRevRefRange", revYou, revRef);
 
-    // titre + légende (avec signe masqué dans le titre, on met la nature)
-    if (linePrefix==="barExp"){
-      $("#barExpTitle").innerHTML = "<strong>"+titleChange("Dépenses", youVal)+"</strong>";
-      $("#barExpRefVal").textContent = "("+ (refVal>=0?"+":"") + fmtM(refVal) +" M€)";
-      $("#barExpYouVal").textContent = "("+ (youVal>=0?"+":"") + fmtM(youVal) +" M€)";
-    } else {
-      $("#barRevTitle").innerHTML = "<strong>"+titleChange("Recettes", youVal)+"</strong>";
-      $("#barRevRefVal").textContent = "("+ (refVal>=0?"+":"") + fmtM(refVal) +" M€)";
-      $("#barRevYouVal").textContent = "("+ (youVal>=0?"+":"") + fmtM(youVal) +" M€)";
-    }
-  }
-
-  placeBar("barExp", expYou, expRef);
-  placeBar("barRev", revYou, revRef);
+  // Titres lisibles : "Dépenses : X Md€ de diminution/augmentation"
+  const expTxt = expYou<0 ? `Dépenses : ${fmtMd(expYou)} de diminution`
+                : expYou>0 ? `Dépenses : ${fmtMd(expYou)} d’augmentation`
+                : "Dépenses : aucun changement";
+  const revTxt = revYou>0 ? `Recettes : ${fmtMd(revYou)} d’augmentation`
+                : revYou<0 ? `Recettes : ${fmtMd(revYou)} de diminution`
+                : "Recettes : aucun changement";
+  $("#barExpTitle").innerHTML = `<strong>${expTxt}</strong> — <span style='color:var(--you);font-weight:700'>Vous (${expYou>=0?'+':''}${fmtM(expYou)} M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (${expRef>=0?'+':''}${fmtM(expRef)} M€)</span>`;
+  $("#barRevTitle").innerHTML = `<strong>${revTxt}</strong> — <span style='color:var(--you);font-weight:700'>Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
 }
 
-/* --------- SYNTHÈSE (texte + barres par poste) ---------- */
-function buildListItems(kind, items, maxItems=9999){
+/* --------- SYNTHÈSE (texte clair + barres par poste, SANS emoji) ---------- */
+function buildListItems(kind, items){
   const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
@@ -685,7 +667,7 @@ function buildListItems(kind, items, maxItems=9999){
     row.className="item";
     row.innerHTML = `<div class="itemLabel">${it.label}</div><div class="itemVal">${(it.delta>=0?"+":"")}${fmtM(it.delta)} M€</div>`;
     const bar = document.createElement("div");
-    bar.className="barLine"; bar.setAttribute("aria-hidden","true");
+    bar.className="barLine";
 
     const seg = document.createElement("div");
     seg.className="barSeg " + ((kind==="exp" ? it.delta<0 : it.delta>0) ? "segGood":"segBad");
@@ -709,7 +691,7 @@ function buildListItems(kind, items, maxItems=9999){
     container.appendChild(row);
   }
 
-  modified.slice(0,maxItems).forEach(addItem);
+  modified.forEach(addItem);
 }
 
 function buildSummary(){
@@ -717,11 +699,11 @@ function buildSummary(){
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
 
-  // Ligne unique : bravo + montant trouvé (valeur absolue)
-  $("#sumHeadline").innerHTML = `🎯 <strong>Bravo</strong>, vous avez trouvé <strong>${fmtMdAbs(r.savingM)}</strong> pour réduire le déficit de la France.`;
+  // Message simple (icône + bravo)
+  $("#sumHeadline").innerHTML = `🎯 Bravo, vous avez trouvé <strong>${fmtMd(r.savingM)}</strong> pour réduire le déficit de la France.`;
 
-  const expDeltas = CFG.expenses.map((b,i)=>({label:(EXP_EMOJI[b.k]?"<span class='emoji'>"+EXP_EMOJI[b.k]+"</span> ":"")+b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
-  const revDeltas = CFG.revenues.map((b,i)=>({label:(REV_EMOJI[b.k]?"<span class='emoji'>"+REV_EMOJI[b.k]+"</span> ":"")+b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
+  const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
+  const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
 
   $("#listTitleExp").innerHTML = "Dépenses — variations par poste";
   $("#listTitleRev").innerHTML = "Recettes — variations par poste";
@@ -733,7 +715,7 @@ function buildSummary(){
 async function shareSummary(){
   try{
     const r = compute();
-    const textOnly = `J’ai réussi à trouver ${fmtMdAbs(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ? ${SHARE_URL}`;
+    const textOnly = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ? ${SHARE_URL}`;
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (navigator.share){
@@ -760,7 +742,6 @@ async function shareSummary(){
   }
 }
 
-// Génération PNG (utilisé uniquement si partage fichiers possible)
 async function buildSummaryPNG(){
   const r = compute();
   const title = `J’ai trouvé ${fmtM(r.savingM)} M€ d’économies pour la France`;
@@ -848,7 +829,7 @@ async function onValidate(){
   postResponseNoPreflight(buildCompactPayload());
 
   // Affiche synthèse immédiatement puis comparaison
-  $("#summary").style.display="block";
+  const s = $("#summary"); s.hidden=false; s.style.display="block";
   buildSummary();
 
   // Retirer le message sous le bouton
@@ -870,10 +851,10 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Mise à jour numérique (totaux) + barres 0
+  // Totaux + barres 0 (avec libellés)
   const you = compute();
   const ref  = computeRefFromAverages();
-  $("#results").style.display="block";
+  const rEl = $("#results"); rEl.hidden=false; rEl.style.display="block";
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
   // Violons en progressif (un seul GET)
@@ -886,6 +867,10 @@ function onEdit(){
   $("#validateBtn").disabled = false;
   $("#editBtn").style.display = "none";
   $("#validateHint").textContent="Modifiez vos curseurs puis revalidez.";
+
+  // Remasquer les blocs résultats
+  const s = $("#summary"); s.hidden=true; s.style.display="none";
+  const r = $("#results"); r.hidden=true; r.style.display="none";
 }
 
 /* --------- INIT ---------- */
