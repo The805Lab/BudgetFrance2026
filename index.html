@@ -338,10 +338,7 @@ function computeRefFromAverages(){
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
-  return {
-    deltaExpTotal: newExpM - BASE_EXP,
-    deltaRevTotal: newRevM - BASE_REV
-  };
+  return { deltaExpTotal: newExpM - BASE_EXP, deltaRevTotal: newRevM - BASE_REV };
 }
 function updateHUD(){
   const r = compute();
@@ -479,7 +476,7 @@ async function fetchAllDistributions(){
     }
     throw new Error("violin_all empty");
   }catch(e){
-    console.warn("violin_all indisponible, fallback par champ", e);
+    console.warn("violin_all indisponible, fallback champ par champ", e);
     const all = {};
     const tasks = [...FIELD_MAP_EXP, ...FIELD_MAP_REV].map(async m=>{
       const u = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(m.field);
@@ -702,7 +699,7 @@ async function shareSummary(){
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
     if (!isIOS && navigator.canShare){
-      // Image sociale simple
+      // Image sociale (Android/Desktop)
       const W=1200, H=630, pad=40;
       const title = `J’ai trouvé ${fmtMdAbs(r.savingM)}`;
       const subtitle = BRAND;
@@ -755,11 +752,18 @@ async function onValidate(){
   $("#validateHint").textContent = "Réponse envoyée — résultats en cours d’affichage";
   toast("Réponse envoyée — résultats en cours d’affichage");
 
-  // POST (non bloquant)
+  // POST (non bloquant) — évite le préflight iOS
   const payload = buildCompactPayload();
-  (async ()=>{ try{
-      await fetch(ENDPOINT_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
-    }catch(_){ } })();
+  (async ()=>{
+    try{
+      const body = "payload=" + encodeURIComponent(JSON.stringify(payload));
+      await fetch(ENDPOINT_URL, {
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+        body
+      });
+    }catch(_){ /* on n'interrompt pas l'UX */ }
+  })();
 
   // Synthèse immédiate
   $("#summary").style.display="block";
