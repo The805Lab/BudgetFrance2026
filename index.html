@@ -37,8 +37,11 @@
 
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
   .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overscroll-behavior:contain;overflow:visible}
-  .section.exp{background:var(--expBg)} .section.rev{background:var(--revBg)}
-  .head{padding:12px 14px;background:rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;font-weight:700;flex-wrap:wrap}
+  .section.exp{background:var(--expBg);border-color:rgba(22,163,74,.45)}
+  .section.rev{background:var(--revBg);border-color:rgba(239,68,68,.45)}
+  .head{padding:12px 14px;background:rgba(255,255,255,.06);display:flex;gap:12px;align-items:center;font-weight:700;flex-wrap:wrap;border-left:6px solid transparent}
+  .section.exp .head{border-left-color:var(--ok)}
+  .section.rev .head{border-left-color:var(--bad)}
   .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:#0b152f;color:#dce7ff;font-size:.8rem}
   .row{padding:12px 14px;border-top:1px dashed #274067}
   .label{font-weight:700}
@@ -72,7 +75,7 @@
 
   .btn{display:inline-flex;gap:.6rem;align-items:center;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px 16px;cursor:pointer;font-weight:700;font-size:1.02rem}
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
-  .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
+  .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px)}
 
   .results{display:none}
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
@@ -94,6 +97,8 @@
   .listWrap{display:grid;grid-template-columns:1fr;gap:10px}
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
+  .listBox.exp{border-color:rgba(22,163,74,.55)}
+  .listBox.rev{border-color:rgba(239,68,68,.55)}
   .listTitle{font-weight:700;margin-bottom:6px}
   .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
 
@@ -103,11 +108,24 @@
   .itemVal{font-variant-numeric:tabular-nums}
   .barLine{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
   .barSeg{position:absolute;top:0;height:100%}
-  .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.55);opacity:.6}
-  .segGood{background:rgba(22,163,74,.9)}
-  .segBad{background:rgba(239,68,68,.9)}
-  .seeMore{display:none}
+  .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.7);opacity:.9}
 
+  /* Style jauge totaux */
+  .segMedian{background:rgba(234,179,8,.35)}
+  .segYou{
+    background:
+      repeating-linear-gradient(45deg, rgba(56,189,248,.9) 0 6px, rgba(56,189,248,.3) 6px 12px),
+      rgba(56,189,248,.35);
+  }
+  .barKey{display:flex;gap:12px;align-items:center;color:#cbd5e1;font-size:.9rem;margin-top:6px}
+  .sw{display:inline-block;width:14px;height:10px;border-radius:3px;border:1px solid #334155}
+  .sw.you{background:
+      repeating-linear-gradient(45deg, rgba(56,189,248,.9) 0 6px, rgba(56,189,248,.3) 6px 12px),
+      rgba(56,189,248,.35)}
+  .sw.median{background:rgba(234,179,8,.5)}
+
+  /* Emoji label */
+  .emoji{margin-right:.25rem}
   /* Gel après validation (sécurité) */
   body[data-frozen="1"] input[type=range],
   body[data-frozen="1"] .nudge{pointer-events:none}
@@ -121,7 +139,7 @@
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-    <!-- Logo The805Lab (inline SVG rond + mot-symbole sur 3 lignes) -->
+    <!-- Logo The805Lab (inline SVG rond + mot-symbole sur 3 lignes, tailles + grandes) -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
       <svg viewBox="0 0 64 64" role="img" aria-label="The805Lab">
         <defs>
@@ -132,9 +150,9 @@
         </defs>
         <circle cx="32" cy="32" r="30" fill="url(#gradBR)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
         <g font-family="Inter,system-ui,Segoe UI,Roboto,Arial" fill="#e8f0ff" font-weight="800">
-          <text x="32" y="24" text-anchor="middle" font-size="10">The</text>
-          <text x="32" y="36" text-anchor="middle" font-size="12">805</text>
-          <text x="32" y="48" text-anchor="middle" font-size="10">Lab</text>
+          <text x="32" y="23" text-anchor="middle" font-size="12">The</text>
+          <text x="32" y="37" text-anchor="middle" font-size="16">805</text>
+          <text x="32" y="51" text-anchor="middle" font-size="12">Lab</text>
         </g>
       </svg>
     </div>
@@ -143,12 +161,12 @@
   <!-- Intro pédagogique -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
-      <strong>Pourquoi cet exercice ?</strong><br/>
-      Le déficit public correspond à la différence entre toutes les dépenses de l’État et des administrations publiques et leurs recettes sur une année. En 2024, la France dépense encore davantage qu’elle ne reçoit : la dette augmente. L’objectif européen est de revenir vers 3 % du PIB de déficit.<br/>
-      Ici, vous testez des arbitrages pour trouver entre <strong>40 et 45 Md€</strong> – ordre de grandeur discuté politiquement en ce moment – en jouant sur des postes de dépenses et de recettes, afin de visualiser les impacts et vous comparez aux autres Français.
+      <strong>Pourquoi ce simulateur ?</strong><br/>
+      Le déficit public, c’est la différence entre toutes les dépenses de l’État et des administrations publiques et leurs recettes sur une année. En 2024, la France dépense encore davantage qu’elle ne reçoit : la dette augmente. L’objectif européen est de revenir vers <strong>3 % du PIB</strong> de déficit, contre <strong>5,8 % en 2024</strong>.<br/>
+      Ici, vous proposez des évolutions sur les dépenses et les recettes pour trouver <strong>entre 40 et 45 Md€</strong> de réduction du déficit – ordre de grandeur discuté politiquement en ce moment. Vous pourrez ensuite <strong>comparer</strong> vos résultats à ceux des autres répondants.
     </div>
     <div class="hint" style="margin-top:8px;color:#a7b5cf">
-      <strong>Nota bene.</strong> Exercice volontairement <em>simplifié</em> : on ajuste des pourcentages sur de grandes catégories de dépenses et de recettes. Cela ne correspond pas directement à des mesures détaillées, mais permet de se faire un avis sur les efforts à répartir.
+      <strong>Nota bene.</strong> Exercice volontairement <em>simplifié</em> : on ajuste les grands postes via des <em>pourcentages</em>. Cela ne correspond pas directement à des mesures détaillées, mais aide à se faire un avis <em>sur où mettre les efforts</em>.
     </div>
   </div>
 
@@ -161,7 +179,7 @@
   </div>
 
   <!-- Recettes -->
-  <div class="section rev" aria-label="Réglages des recettes">
+  <div class="section rev" aria-label="Réglages des recettes" style="margin-top:22px">
     <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="revContainer"></div>
   </div>
@@ -188,12 +206,12 @@
 
     <div class="listWrap">
       <!-- Dépenses -->
-      <div class="listBox">
+      <div class="listBox exp">
         <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
         <div id="sumExpList"></div>
       </div>
       <!-- Recettes -->
-      <div class="listBox">
+      <div class="listBox rev">
         <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
         <div id="sumRevList"></div>
       </div>
@@ -207,20 +225,28 @@
 
     <!-- Barres centrées sur 0 : Vous vs Médiane (totaux) -->
     <div class="synCard">
-      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong></div>
+      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Dépenses : —</strong></div>
       <div class="barLine" style="margin-bottom:6px">
-        <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barExpRef" style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barExpYou" style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.85)"></div>
+        <div class="barSeg segMedian" id="barExpRef"></div>
+        <div class="barSeg segYou" id="barExpYou"></div>
+      </div>
+      <div class="barKey" id="barExpKey">
+        <span class="sw median"></span> Médiane <span id="barExpRefVal"></span>
+        <span class="sw you"></span> Vous <span id="barExpYouVal"></span>
       </div>
     </div>
 
     <div class="synCard" style="margin-top:10px">
-      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong></div>
+      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Recettes : —</strong></div>
       <div class="barLine" style="margin-bottom:6px">
-        <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barRevRef" style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barRevYou" style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.85)"></div>
+        <div class="barSeg segMedian" id="barRevRef"></div>
+        <div class="barSeg segYou" id="barRevYou"></div>
+      </div>
+      <div class="barKey" id="barRevKey">
+        <span class="sw median"></span> Médiane <span id="barRevRefVal"></span>
+        <span class="sw you"></span> Vous <span id="barRevYouVal"></span>
       </div>
     </div>
 
@@ -254,8 +280,17 @@
 
 <script>
 /* --------- CONFIG ---------- */
-const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec"; // <= mets ici l'URL /exec du déploiement en cours
-const SHARE_URL = window.location.origin + window.location.pathname; // ou colle l’URL publique si besoin
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
+const SHARE_URL = window.location.origin + window.location.pathname;
+
+/* Emojis par catégorie */
+const EXP_EMOJI = {
+  prot_soc:"🛡️", sante:"🏥", education:"🎓", serv_gen:"🏛️", interets_dette:"💸",
+  aff_econ:"💼", defense:"🚀", ordre_secu:"🚓", logement:"🏠", environnement:"🌿", culture:"🎭"
+};
+const REV_EMOJI = {
+  imp_prod:"🧾", cotis:"👥", ir:"👤", is:"🏢", autres_rec:"📦"
+};
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -294,6 +329,7 @@ const state = {
 /* --------- UTILS ---------- */
 const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
+const fmtMdAbs = n => Math.round(Math.abs(n)/1000).toLocaleString("fr-FR") + " Md€";
 const fmtMd = n => {
   const sign = n<0 ? "-" : (n>0 ? "" : "");
   const abs = Math.round(Math.abs(n)/1000);
@@ -301,6 +337,11 @@ const fmtMd = n => {
 };
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
+function titleChange(label, delta){
+  const abs = fmtMdAbs(delta);
+  const word = delta<0 ? "diminution" : delta>0 ? "augmentation" : "aucune variation";
+  return delta===0 ? `${label} : ${word}` : `${label} : ${abs} de ${word}`;
+}
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -315,24 +356,11 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  // Sommes positives/négatives par famille (pour le texte clair)
-  let expPos=0, expNeg=0;
-  CFG.expenses.forEach((b,i)=>{
-    const d = Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base;
-    if (d>0) expPos += d; else expNeg += d;
-  });
-  let revPos=0, revNeg=0;
-  CFG.revenues.forEach((b,i)=>{
-    const d = Math.round(b.base*(1+state.revPct[i]/100)) - b.base;
-    if (d>0) revPos += d; else revNeg += d;
-  });
-
-  // Δ totaux signés (centrés 0)
   const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
   const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
 
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM,
-    expPos, expNeg, revPos, revNeg, deltaExpTotal, deltaRevTotal};
+    deltaExpTotal, deltaRevTotal};
 }
 function computeRefFromAverages(){
   const pctE = state.avgExpPct || [];
@@ -344,8 +372,6 @@ function computeRefFromAverages(){
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
   return {
-    cutsExp: CFG.expenses.reduce((sum,b,i)=>{ const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0); },0),
-    incRev: CFG.revenues.reduce((sum,b,i)=>{ const d = newRev[i]-b.base; return sum + (d>0 ? d : 0); },0),
     deltaExpTotal: newExpM - BASE_EXP,
     deltaRevTotal: newRevM - BASE_REV
   };
@@ -370,8 +396,9 @@ function renderBlock(container, list, kind){
     row.className="row";
     const id=`${kind}_${idx}`;
     const disabledAttr = b.locked ? "disabled" : "";
+    const emoji = kind==="exp" ? (EXP_EMOJI[b.k]||"") : (REV_EMOJI[b.k]||"");
     row.innerHTML = `
-      <div class="label">${b.label}</div>
+      <div class="label"><span class="emoji">${emoji}</span>${b.label}</div>
       ${b.info?`<div class="detailInfo">${b.info}</div>`:""}
       <div class="baseInfo">Base : ${Math.round(b.base/1000)} Md€</div>
       <div class="sliderWrap">
@@ -453,14 +480,12 @@ function buildCompactPayload(){
 }
 function postResponseNoPreflight(payloadObj){
   const params = new URLSearchParams({ payload: JSON.stringify(payloadObj) });
-  // 1) Essai beacon (fiable iOS quand l’onglet bouge)
   try{
     const ok = navigator.sendBeacon(ENDPOINT_URL, new Blob([params.toString()], {type:'application/x-www-form-urlencoded;charset=UTF-8'}));
     if (ok) return;
   }catch(_){}
-  // 2) Fallback fetch en form-urlencoded (pas d’en-têtes -> pas de préflight)
   try{
-    fetch(ENDPOINT_URL, { method:'POST', body: params }); // pas de await
+    fetch(ENDPOINT_URL, { method:'POST', body: params });
   }catch(_){}
 }
 
@@ -574,10 +599,7 @@ async function renderAllViolinsProgressive(){
   });
 
   const all = await fetchAllDistributions();
-  if (!all){ // fallback si agrégateur indispo
-    // Ne rien planter, juste laisser des blocs vides.
-    return;
-  }
+  if (!all){ return; }
 
   const jobs = allMaps.map(m=>({m,divId:"v-"+m.id, data: all[m.field] || {values:[],stats:{}} }));
   const firstWave = jobs.slice(0,4);
@@ -596,6 +618,9 @@ async function renderAllViolinsProgressive(){
 
 /* --------- BARRES totales centrées sur 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
+function setSegment(segEl, zeroPct, val){
+  const min = 0, max = 100; // on travaille déjà en pourcentages
+}
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
   const span = Math.max(...vals) - Math.min(...vals);
@@ -603,15 +628,41 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   const dmin = Math.min(...vals) - pad;
   const dmax = Math.max(...vals) + pad;
 
-  const setPos = (id,val)=>{ $(id).style.left = pctInDomain(val, dmin, dmax) + "%"; };
-  setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
-  setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
+  function placeBar(linePrefix, youVal, refVal){
+    const zeroPct = pctInDomain(0, dmin, dmax);
+    const youPct  = pctInDomain(youVal, dmin, dmax);
+    const refPct  = pctInDomain(refVal, dmin, dmax);
 
-  $("#barExpTitle").innerHTML = "<strong>Variation totale des dépenses (M€)</strong> — <span style='color:var(--you);font-weight:700'>Vous (" + (expYou>=0?"+":"") + fmtM(expYou) + " M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (" + (expRef>=0?"+":"") + fmtM(expRef) + " M€)</span>";
-  $("#barRevTitle").innerHTML = "<strong>Variation totale des recettes (M€)</strong> — <span style='color:var(--you);font-weight:700'>Vous (" + (revYou>=0?"+":"") + fmtM(revYou) + " M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (" + (revRef>=0?"+":"") + fmtM(revRef) + " M€)</span>";
+    const youLeft = Math.min(zeroPct, youPct);
+    const youW    = Math.max(2, Math.abs(youPct - zeroPct));
+    const refLeft = Math.min(zeroPct, refPct);
+    const refW    = Math.max(2, Math.abs(refPct - zeroPct));
+
+    // segments
+    const refEl = document.querySelector(`#${linePrefix}Ref`);
+    const youEl = document.querySelector(`#${linePrefix}You`);
+    const zeroEl = document.querySelector(`#${linePrefix}Zero`);
+    if (refEl){ refEl.style.left = refLeft + "%"; refEl.style.width = refW + "%"; }
+    if (youEl){ youEl.style.left = youLeft + "%"; youEl.style.width = youW + "%"; }
+    if (zeroEl){ zeroEl.style.left = zeroPct + "%"; }
+
+    // titre + légende (avec signe masqué dans le titre, on met la nature)
+    if (linePrefix==="barExp"){
+      $("#barExpTitle").innerHTML = "<strong>"+titleChange("Dépenses", youVal)+"</strong>";
+      $("#barExpRefVal").textContent = "("+ (refVal>=0?"+":"") + fmtM(refVal) +" M€)";
+      $("#barExpYouVal").textContent = "("+ (youVal>=0?"+":"") + fmtM(youVal) +" M€)";
+    } else {
+      $("#barRevTitle").innerHTML = "<strong>"+titleChange("Recettes", youVal)+"</strong>";
+      $("#barRevRefVal").textContent = "("+ (refVal>=0?"+":"") + fmtM(refVal) +" M€)";
+      $("#barRevYouVal").textContent = "("+ (youVal>=0?"+":"") + fmtM(youVal) +" M€)";
+    }
+  }
+
+  placeBar("barExp", expYou, expRef);
+  placeBar("barRev", revYou, revRef);
 }
 
-/* --------- SYNTHÈSE (texte clair + barres par poste) ---------- */
+/* --------- SYNTHÈSE (texte + barres par poste) ---------- */
 function buildListItems(kind, items, maxItems=9999){
   const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
@@ -666,23 +717,11 @@ function buildSummary(){
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
 
-  // Texte clair avec sommes positif/négatif
-  const depTxt = r.deltaExpTotal<0
-    ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
-    : r.deltaExpTotal>0
-      ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
-      : `Vous n’avez pas modifié le total des dépenses.`;
+  // Ligne unique : bravo + montant trouvé (valeur absolue)
+  $("#sumHeadline").innerHTML = `🎯 <strong>Bravo</strong>, vous avez trouvé <strong>${fmtMdAbs(r.savingM)}</strong> pour réduire le déficit de la France.`;
 
-  const recTxt = r.deltaRevTotal>0
-    ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
-    : r.deltaRevTotal<0
-      ? `Vous avez <strong>réduit</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
-      : `Vous n’avez pas modifié le total des recettes.`;
-
-  $("#sumHeadline").innerHTML = `🎯 ${depTxt} ${recTxt} Globalement, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>.`;
-
-  const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
-  const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
+  const expDeltas = CFG.expenses.map((b,i)=>({label:(EXP_EMOJI[b.k]?"<span class='emoji'>"+EXP_EMOJI[b.k]+"</span> ":"")+b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
+  const revDeltas = CFG.revenues.map((b,i)=>({label:(REV_EMOJI[b.k]?"<span class='emoji'>"+REV_EMOJI[b.k]+"</span> ":"")+b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
 
   $("#listTitleExp").innerHTML = "Dépenses — variations par poste";
   $("#listTitleRev").innerHTML = "Recettes — variations par poste";
@@ -694,16 +733,14 @@ function buildSummary(){
 async function shareSummary(){
   try{
     const r = compute();
-    const textOnly = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ? ${SHARE_URL}`;
+    const textOnly = `J’ai réussi à trouver ${fmtMdAbs(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ? ${SHARE_URL}`;
 
-    // iOS/Safari : texte + lien uniquement (évite les ouvertures d’onglet)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (navigator.share){
       if (isIOS){
         await navigator.share({ text: textOnly, title:"The805Lab - Simulateur Budget" });
         return;
       }
-      // Android/desktop compatible : on essaie l’image, sinon texte seul
       try{
         const pngBlob = await buildSummaryPNG();
         const file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"});
@@ -715,7 +752,6 @@ async function shareSummary(){
       await navigator.share({ text:textOnly, title:"The805Lab - Simulateur Budget" });
       return;
     }
-    // Fallback : copie dans le presse-papier + toast
     try{ await navigator.clipboard.writeText(textOnly); toast("Message copié. Collez-le dans votre app de messagerie."); }
     catch(_){ toast("Partage non supporté. Copiez/collez ce message : " + textOnly); }
   }catch(e){
@@ -815,7 +851,7 @@ async function onValidate(){
   $("#summary").style.display="block";
   buildSummary();
 
-  // Nettoyer la ligne sous le bouton (retirer le message)
+  // Retirer le message sous le bouton
   $("#validateHint").textContent = "";
 
   // Récupère référence (moyennes) + count puis affiche barres et violons
