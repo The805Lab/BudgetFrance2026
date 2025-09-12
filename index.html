@@ -3,16 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>The805Lab - Simulateur Budget</title>
+<title>The805Lab – Simulateur Budget</title>
 
-<!-- Social (facultatif mais recommandé) -->
-<meta property="og:title" content="The805Lab - Simulateur Budget">
-<meta property="og:site_name" content="The805Lab">
-<meta property="og:description" content="Trouvez 40 Md€ en ajustant dépenses et recettes, puis comparez votre scénario.">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-
-<!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
 <style>
@@ -29,13 +21,13 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
-  /* Header: titre + logo à droite (même sur mobile) */
-  .topHeader{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-bottom:6px}
+  /* En-tête + logo toujours à droite (même sur mobile) */
+  .topHeader{display:grid;grid-template-columns:1fr auto;align-items:start;gap:12px;margin-bottom:6px}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
-  .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px}
+  .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px;margin-bottom:10px}
 
   .brandBadge805{display:flex;align-items:center;justify-content:center}
-  .brandBadge805 svg{display:block;width:36px;height:36px}
+  .brandBadge805 svg{display:block;width:34px;height:34px}
 
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
   .bar>span{display:block;height:100%;background:linear-gradient(90deg,#dc2626,#eab308,#16a34a);width:0%}
@@ -79,11 +71,11 @@
   .results{display:none}
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
 
-  /* Grille des violons */
+  /* Violins */
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
-  .footer{color:var(--muted);font-size:.85rem;margin-top:16px;position:relative;padding-bottom:12px}
+  .footer{color:var(--muted);font-size:.85rem;margin-top:16px;padding-bottom:8px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
 
   /* Synthèse */
@@ -97,9 +89,8 @@
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
   .listTitle{font-weight:700;margin-bottom:6px}
-  .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
 
-  /* Mini-bar par poste */
+  /* Mini-bar */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
   .itemLabel{color:#dbe7ff}
   .itemVal{font-variant-numeric:tabular-nums}
@@ -116,51 +107,42 @@
 </style>
 </head>
 <body>
-
 <div class="wrap" aria-live="polite">
   <div class="topHeader">
     <div>
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-    <!-- Logo The805Lab -->
+    <!-- Logo -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
       <svg viewBox="0 0 48 48" role="img" aria-label="The805Lab">
-        <defs>
-          <linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0" stop-color="#2563eb"/>
-            <stop offset="1" stop-color="#ef4444"/>
-          </linearGradient>
-        </defs>
-        <circle cx="24" cy="24" r="22" fill="url(#gradBR)" opacity="0.9" stroke="#21315a" stroke-width="2"/>
+        <defs><linearGradient id="gradBR" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs>
+        <circle cx="24" cy="24" r="22" fill="url(#gradBR)" opacity="0.85" stroke="#21315a" stroke-width="2"/>
         <text x="24" y="29" text-anchor="middle" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" font-weight="800" font-size="16" fill="#e8f0ff">805</text>
       </svg>
     </div>
   </div>
 
-  <!-- Intro -->
   <div class="card" style="background:#0b1935;border-color:#1e2d55;">
     <div class="subtitle" style="color:#d9e3ff">
       En 2024, la France a dépensé plus qu’elle n’a reçu : c’est le <strong>déficit</strong>. L’Europe vise un retour vers <strong>3 % du PIB</strong> de déficit. <br/>
-      Ici, ajustez <strong>dépenses</strong> et <strong>recettes</strong> pour viser une économie d’environ <strong>40 Md€</strong> (cible politique discutée) puis comparez votre scénario aux autres.
+      Ici, ajustez <strong>dépenses</strong> et <strong>recettes</strong> pour viser une économie d’environ <strong>40 Md€</strong> puis comparez votre scénario aux autres.
     </div>
   </div>
 
   <div class="bar" aria-hidden="true"><span id="bar"></span></div>
 
-  <!-- Dépenses -->
   <div class="section exp" aria-label="Réglages des dépenses">
     <div class="head">Dépenses <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="expContainer"></div>
   </div>
 
-  <!-- Recettes -->
   <div class="section rev" aria-label="Réglages des recettes">
     <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
     <div id="revContainer"></div>
   </div>
 
-  <!-- Actions -->
   <div class="card">
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button id="validateBtn" class="btn wide" disabled aria-disabled="true">Valider mon budget</button>
@@ -179,17 +161,13 @@
     <div class="sumLine" id="sumHeadline">—</div>
 
     <div class="listWrap">
-      <!-- Dépenses -->
       <div class="listBox">
-        <div class="listTitle" id="listTitleExp">Dépenses — variations par poste</div>
-        <div class="hint" style="margin:-2px 0 8px">Barres par poste : <strong>vert = réduit le déficit</strong>, <strong>rouge = l’augmente</strong>.</div>
+        <div class="listTitle" id="listTitleExp">—</div>
         <div id="sumExpList"></div>
         <button id="sumExpMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
-      <!-- Recettes -->
       <div class="listBox">
-        <div class="listTitle" id="listTitleRev">Recettes — variations par poste</div>
-        <div class="hint" style="margin:-2px 0 8px">Barres par poste : <strong>vert = réduit le déficit</strong>, <strong>rouge = l’augmente</strong>.</div>
+        <div class="listTitle" id="listTitleRev">—</div>
         <div id="sumRevList"></div>
         <button id="sumRevMore" class="seeMore" style="display:none">Voir tout</button>
       </div>
@@ -201,27 +179,21 @@
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Totaux dépenses -->
     <div class="synCard">
-      <div class="hint" id="barExpTitle" style="margin-bottom:6px">
-        <strong>Variation totale des dépenses (M€)</strong>
-      </div>
+      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong></div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barExpRef"  style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barExpYou"  style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barExpRef" style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barExpYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
     </div>
 
-    <!-- Totaux recettes -->
     <div class="synCard" style="margin-top:10px">
-      <div class="hint" id="barRevTitle" style="margin-bottom:6px">
-        <strong>Variation totale des recettes (M€)</strong>
-      </div>
+      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong></div>
       <div class="barLine" style="margin-bottom:6px">
         <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.6)"></div>
-        <div class="barSeg" id="barRevRef"  style="left:50%;width:3px;background:var(--ref)"></div>
-        <div class="barSeg" id="barRevYou"  style="left:50%;width:3px;background:var(--you)"></div>
+        <div class="barSeg" id="barRevRef" style="left:50%;width:3px;background:var(--ref)"></div>
+        <div class="barSeg" id="barRevYou" style="left:50%;width:3px;background:var(--you)"></div>
       </div>
     </div>
 
@@ -229,7 +201,6 @@
       Chaque graphique montre la distribution des réponses (variation en M€ vs 2024).
     </div>
 
-    <!-- Violons -->
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
       <div id="violins-expenses" class="violinsGrid"></div>
@@ -245,7 +216,6 @@
   </div>
 </div>
 
-<!-- HUD -->
 <div id="hud" class="floatBubble" aria-live="polite">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -254,34 +224,31 @@
 <div id="toast" class="toast" role="status"></div>
 
 <script>
-/* --------- BRAND & URL ---------- */
-const BRAND = "The805Lab - Simulateur Budget";
-const SIM_URL = location.href.split('#')[0];
-
 /* --------- CONFIG ---------- */
-const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec"; // NE PAS MODIFIER
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec"; // ta web-app
+const SHARE_URL   = "https://the805lab.com/simulateur-budget"; // <- mets l’URL publique de ton simulateur
 
 const CFG = {
   target:{min:40000, max:45000},
   expenses: [
-    {k:"prot_soc",label:"Protection sociale",base:701400,locked:false,info:"Retraites, assurance chômage, minima sociaux, prestations familiales."},
-    {k:"sante",label:"Santé",base:250500,locked:false,info:"Hôpitaux, soins, médicaments, prévention, santé publique."},
-    {k:"education",label:"Éducation",base:167000,locked:false,info:"Écoles, collèges, lycées, universités, vie étudiante."},
-    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,locked:false,info:"État, administrations centrales, coordination, R&D générale."},
-    {k:"interets_dette",label:"Charges d’intérêts de la dette (non modifiable)",base:58700,locked:true,info:"Service de la dette (verrouillé)."},
-    {k:"aff_econ",label:"Affaires économiques",base:167000,locked:false,info:"Transports, agriculture, énergie, industrie, emploi/investissement."},
-    {k:"defense",label:"Défense",base:75200,locked:false,info:"Armée, équipements, opérations, dissuasion, maintenance."},
-    {k:"ordre_secu",label:"Ordre & sécurité publics",base:50100,locked:false,info:"Police, gendarmerie, justice pénale, prisons, sécurité civile."},
-    {k:"logement",label:"Logement & équipements collectifs",base:30100,locked:false,info:"Aides au logement, urbanisme, infrastructures locales."},
-    {k:"environnement",label:"Protection de l’environnement",base:30100,locked:false,info:"Déchets, eau, air, biodiversité, climat."},
-    {k:"culture",label:"Culture, loisirs et cultes",base:20000,locked:false,info:"Culture, sport, patrimoine, bibliothèques, cultes."},
+    {k:"prot_soc",label:"Protection sociale",base:701400,locked:false,info:"Retraites, chômage, minima sociaux, prestations familiales."},
+    {k:"sante",label:"Santé",base:250500,locked:false,info:"Hôpitaux, soins, médicaments, prévention."},
+    {k:"education",label:"Éducation",base:167000,locked:false,info:"Scolaire et supérieur."},
+    {k:"serv_gen",label:"Services publics généraux (hors intérêts de la dette)",base:120000,locked:false},
+    {k:"interets_dette",label:"Charges d’intérêts de la dette (non modifiable)",base:58700,locked:true},
+    {k:"aff_econ",label:"Affaires économiques",base:167000,locked:false},
+    {k:"defense",label:"Défense",base:75200,locked:false},
+    {k:"ordre_secu",label:"Ordre & sécurité publics",base:50100,locked:false},
+    {k:"logement",label:"Logement & équipements collectifs",base:30100,locked:false},
+    {k:"environnement",label:"Protection de l’environnement",base:30100,locked:false},
+    {k:"culture",label:"Culture, loisirs et cultes",base:20000,locked:false},
   ],
   revenues: [
-    {k:"imp_prod",label:"Impôts sur la production et importations",base:570000,info:"TVA, taxes sur produits/consommations, droits de douane."},
-    {k:"cotis",label:"Cotisations sociales",base:480000,info:"Cotisations employeurs/salariés (retraites, santé, chômage)."},
-    {k:"ir",label:"Impôt sur le revenu (IRPP)",base:120000,info:"Impôt sur le revenu des personnes physiques (prélèvement à la source, acomptes)."},
-    {k:"is",label:"Impôt sur les sociétés",base:80000,info:"Impôt sur les bénéfices des entreprises."},
-    {k:"autres_rec",label:"Autres recettes",base:252000,info:"Dividendes/recettes patrimoniales, amendes, redevances, loyers/cessions, revenus d’actifs, divers."},
+    {k:"imp_prod",label:"Impôts sur la production et importations",base:570000},
+    {k:"cotis",label:"Cotisations sociales",base:480000},
+    {k:"ir",label:"Impôt sur le revenu (IRPP)",base:120000},
+    {k:"is",label:"Impôt sur les sociétés",base:80000},
+    {k:"autres_rec",label:"Autres recettes",base:252000},
   ],
   range:{min:-15,max:15}
 };
@@ -298,10 +265,9 @@ const state = {
 /* --------- UTILS ---------- */
 const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
-const fmtMd = n => { const sign = n<0 ? "-" : (n>0 ? "" : ""); const abs = Math.round(Math.abs(n)/1000); return sign + abs.toLocaleString("fr-FR") + " Md€"; };
-const fmtMdAbs = n => { const abs = Math.round(Math.abs(n)/1000); return abs.toLocaleString("fr-FR") + " Md€"; };
+const fmtMd = n => { const s = Math.sign(n); const abs = Math.round(Math.abs(n)/1000); return (s<0?"-":s>0?"+":"") + abs.toLocaleString("fr-FR") + " Md€"; };
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
-function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2200); }
 
 /* --------- CALCULS ---------- */
 function compute(){
@@ -309,25 +275,20 @@ function compute(){
   const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+state.revPct[i]/100)) );
   const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
-  const baseDef = BASE_EXP - BASE_REV;
+  const baseDef  = BASE_EXP - BASE_REV;
 
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
-  const newDef = newExpM - newRevM;
+  const newDef  = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  const expDeltaSigned = newExpM - BASE_EXP; // <0 = dépenses réduites
-  const revDeltaSigned = newRevM - BASE_REV; // >0 = recettes augmentées
+  const deltasExp = CFG.expenses.map((b,i)=> newExp[i]-b.base);
+  const deltasRev = CFG.revenues.map((b,i)=> newRev[i]-b.base);
 
-  const expDeltas = CFG.expenses.map((b,i)=> Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base);
-  const revDeltas = CFG.revenues.map((b,i)=> Math.round(b.base*(1+state.revPct[i]/100)) - b.base);
-  const expCuts = expDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0);
-  const expAdds = expDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);
-  const revAdds = revDeltas.filter(d=>d>0).reduce((s,d)=>s+d,0);
-  const revCuts = revDeltas.filter(d=>d<0).reduce((s,d)=>s+(-d),0);
+  const deltaExpTotal = deltasExp.reduce((a,b)=>a+b,0);   // <0 = dépenses réduites
+  const deltaRevTotal = deltasRev.reduce((a,b)=>a+b,0);   // >0 = recettes augmentées
 
-  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM,
-          expDeltaSigned, revDeltaSigned, expCuts, expAdds, revAdds, revCuts};
+  return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, deltaExpTotal, deltaRevTotal, deltasExp, deltasRev};
 }
 function computeRefFromAverages(){
   const pctE = state.avgExpPct || [];
@@ -336,9 +297,9 @@ function computeRefFromAverages(){
   const newRev = CFG.revenues.map((b,i)=> Math.round(b.base*(1+(pctR[i]||0)/100)) );
   const BASE_EXP = CFG.expenses.reduce((s,b)=>s+b.base,0);
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
-  const newExpM = newExp.reduce((s,x)=>s+x,0);
-  const newRevM = newRev.reduce((s,x)=>s+x,0);
-  return { deltaExpTotal: newExpM - BASE_EXP, deltaRevTotal: newRevM - BASE_REV };
+  const deltaExpTotal = newExp.reduce((s,x)=>s+x,0) - BASE_EXP;
+  const deltaRevTotal = newRev.reduce((s,x)=>s+x,0) - BASE_REV;
+  return {deltaExpTotal, deltaRevTotal};
 }
 function updateHUD(){
   const r = compute();
@@ -353,7 +314,7 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- UI (sliders) ---------- */
+/* --------- UI RENDER ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
@@ -428,21 +389,21 @@ function renderBlock(container, list, kind){
   });
 }
 
-/* --------- BACK (payload + envoi) ---------- */
+/* --------- BACK PAYLOAD ---------- */
 function buildCompactPayload(){
   const r=compute();
   return {
-    dataset:"Budget 2026 (base 2024) — normalisation répondant",
+    dataset:"RN",
     unit:"M€",
-    totals2024:{expenses:r.BASE_EXP, revenues:r.BASE_REV, deficit:r.baseDef},
-    target:CFG.target, savingsM:r.savingM,
-    e: state.expPct.slice(), r: state.revPct.slice(),
+    target:{min:CFG.target.min, max:CFG.target.max},
+    savingsM:r.savingM,
     newExpM:r.newExpM, newRevM:r.newRevM, newDeficitM:r.newDeficitM,
+    e: state.expPct.slice(), r: state.revPct.slice(),
     meta:{ua:navigator.userAgent}, ts:new Date().toISOString()
   };
 }
 
-/* --------- VIOLINS : un seul fetch avec fallback ---------- */
+/* --------- VIOLINS ---------- */
 const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
@@ -463,33 +424,23 @@ const FIELD_MAP_REV = [
   {id:"autres_rec", label:"Autres recettes", field:"R_autres_rec_delta_M€"},
 ];
 
-let _allViolinData = null;
-async function fetchAllDistributions(){
-  if (_allViolinData) return _allViolinData;
+async function fetchDistributionAll(){
   try{
     const url = ENDPOINT_URL + "?action=violin_all";
     const r = await fetch(url, {method:"GET", cache:"no-cache"});
     const j = await r.json();
-    if (j && j.ok && j.fields && Object.keys(j.fields).length){
-      _allViolinData = j.fields;
-      return _allViolinData;
-    }
-    throw new Error("violin_all empty");
-  }catch(e){
-    console.warn("violin_all indisponible, fallback champ par champ", e);
-    const all = {};
-    const tasks = [...FIELD_MAP_EXP, ...FIELD_MAP_REV].map(async m=>{
-      const u = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(m.field);
-      try{
-        const r = await fetch(u, {method:"GET", cache:"no-cache"});
-        const j = await r.json();
-        if (j && j.ok) all[m.field] = { values:j.values||[], stats:j.stats||{count:0,min:0,max:0,median:0} };
-      }catch(_){}
-    });
-    await Promise.all(tasks);
-    _allViolinData = all;
-    return _allViolinData;
-  }
+    if (j && j.ok && Array.isArray(j.items)) return j.items; // [{field,values,stats}]
+  }catch(e){}
+  return null;
+}
+async function fetchDistributionSingle(field){
+  try{
+    const url = ENDPOINT_URL + "?action=violin&field=" + encodeURIComponent(field);
+    const r = await fetch(url, {method:"GET", cache:"no-cache"});
+    const j = await r.json();
+    if (j && j.ok && Array.isArray(j.values)) return {field, values:j.values, stats:j.stats||{min:0,max:0,median:0}};
+  }catch(e){}
+  return {field, values:[], stats:{min:0,max:0,median:0}};
 }
 
 function myDeltaForField(field){
@@ -513,8 +464,8 @@ function myDeltaForField(field){
 function drawViolinHybrid(divId, values, stats, myValueME, label){
   const violin = {
     type: "violin", orientation: "h",
-    x: (values && values.length) ? values : [0],
-    y: (values && values.length) ? values.map(_ => "") : [""],
+    x: values.length? values : [0],
+    y: values.map(_ => ""),
     name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
     marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
@@ -522,14 +473,10 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
 
-  const medianX = (typeof stats?.median === "number" && isFinite(stats.median)) ? stats.median : 0;
-  const sMin = (typeof stats?.min === "number" && isFinite(stats.min)) ? stats.min : 0;
-  const sMax = (typeof stats?.max === "number" && isFinite(stats.max)) ? stats.max : 0;
+  const medianX = (typeof stats?.median === "number") ? stats.median : 0;
 
-  // Toujours inclure 0, 'vous' et 'médiane'
-  let min = Math.min(sMin, myValueME||0, medianX, 0);
-  let max = Math.max(sMax, myValueME||0, medianX, 0);
-  if (min === max){ min -= 10; max += 10; }
+  const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
+  const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const margin = Math.max(10, (max - min) * 0.06);
 
   const shapes = [
@@ -558,14 +505,14 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS (progressif) ---------- */
+/* --------- RÉSULTATS ---------- */
 async function renderAllViolinsProgressive(){
   const expWrap = $("#violins-expenses");
   const revWrap = $("#violins-revenues");
   expWrap.innerHTML=""; revWrap.innerHTML="";
 
-  const maps = [...FIELD_MAP_EXP, ...FIELD_MAP_REV];
-  maps.forEach(m=>{
+  const allMaps = [...FIELD_MAP_EXP, ...FIELD_MAP_REV];
+  allMaps.forEach(m=>{
     const div = document.createElement("div");
     div.id = "v-" + m.id;
     div.style.height = "280px";
@@ -576,22 +523,23 @@ async function renderAllViolinsProgressive(){
     (FIELD_MAP_EXP.includes(m) ? expWrap : revWrap).appendChild(div);
   });
 
-  const all = await fetchAllDistributions();
+  let all = await fetchDistributionAll();
+  if (!all){ // fallback par champ
+    for (const m of allMaps){
+      const j = await fetchDistributionSingle(m.field);
+      const myVal = myDeltaForField(m.field);
+      drawViolinHybrid("v-"+m.id, j.values||[], j.stats||{}, myVal, m.label);
+      await new Promise(r=>setTimeout(r, 20));
+    }
+    return;
+  }
 
-  const jobs = maps.map(m=>({m,divId:"v-"+m.id}));
-  const firstWave = jobs.slice(0,4);
-  await Promise.all(firstWave.map(async (j)=>{
-    const pack = all[j.m.field] || {values:[], stats:{count:0,min:0,max:0,median:0}};
-    const myVal = myDeltaForField(j.m.field);
-    drawViolinHybrid(j.divId, pack.values||[], pack.stats||{}, myVal, j.m.label);
-  }));
-
-  const rest = jobs.slice(4);
-  for (const j of rest){
-    const pack = all[j.m.field] || {values:[], stats:{count:0,min:0,max:0,median:0}};
-    const myVal = myDeltaForField(j.m.field);
-    drawViolinHybrid(j.divId, pack.values||[], pack.stats||{}, myVal, j.m.label);
-    await new Promise(r=>setTimeout(r, 30));
+  const map = new Map(all.map(x=>[x.field,x]));
+  for (const m of allMaps){
+    const pack = map.get(m.field) || {values:[], stats:{min:0,max:0,median:0}};
+    const myVal = myDeltaForField(m.field);
+    drawViolinHybrid("v-"+m.id, pack.values||[], pack.stats||{}, myVal, m.label);
+    await new Promise(r=>setTimeout(r, 20));
   }
 }
 
@@ -608,11 +556,11 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
   setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
 
-  $("#barExpTitle").innerHTML = `<strong>Variation totale des dépenses (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous (${expYou>=0?"+":""}${fmtM(expYou)} M€)</span>, <span style="color:var(--ref);font-weight:700">Médiane (${expRef>=0?"+":""}${fmtM(expRef)} M€)</span>`;
-  $("#barRevTitle").innerHTML = `<strong>Variation totale des recettes (M€)</strong> — <span style="color:var(--you);font-weight:700">Vous (${revYou>=0?"+":""}${fmtM(revYou)} M€)</span>, <span style="color:var(--ref);font-weight:700">Médiane (${revRef>=0?"+":""}${fmtM(revRef)} M€)</span>`;
+  $("#barExpTitle").innerHTML = "<strong>Variation totale des dépenses (M€)</strong> — Vous (" + (expYou>=0?"+":"") + fmtM(expYou) + " M€), Médiane (" + (expRef>=0?"+":"") + fmtM(expRef) + " M€)";
+  $("#barRevTitle").innerHTML = "<strong>Variation totale des recettes (M€)</strong> — Vous (" + (revYou>=0?"+":"") + fmtM(revYou) + " M€), Médiane (" + (revRef>=0?"+":"") + fmtM(revRef) + " M€)";
 }
 
-/* --------- LISTES synthèse ---------- */
+/* --------- SYNTHÈSE ---------- */
 function buildListItems(kind, items, maxItems=6){
   const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
   const top = modified.slice(0,maxItems);
@@ -645,97 +593,51 @@ function buildListItems(kind, items, maxItems=6){
     zero.className = "barZero";
     zero.style.left = zeroPct + "%";
 
-    bar.appendChild(seg);
-    bar.appendChild(zero);
-
-    const wrap = document.createElement("div");
-    wrap.appendChild(bar);
-    row.appendChild(wrap);
-    container.appendChild(row);
+    bar.appendChild(seg); bar.appendChild(zero);
+    const wrap = document.createElement("div"); wrap.appendChild(bar);
+    row.appendChild(wrap); container.appendChild(row);
   }
 
   top.forEach(addItem);
 
   const btn = kind==="exp" ? $("#sumExpMore") : $("#sumRevMore");
-  if (rest.length){
-    btn.style.display="inline-flex";
-    btn.onclick = ()=>{ rest.forEach(addItem); btn.style.display="none"; };
-  } else btn.style.display="none";
+  if (rest.length){ btn.style.display="inline-flex"; btn.onclick = ()=>{ rest.forEach(addItem); btn.style.display="none"; }; }
+  else btn.style.display="none";
 }
 
 function buildSummary(){
   const r = compute();
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
-  $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMdAbs(r.savingM)}</strong>.`;
+  $("#sumHeadline").innerHTML = `Bravo, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>.`;
 
-  const depTxt = r.expDeltaSigned < 0
-    ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMdAbs(r.expDeltaSigned)}</strong>.`
-    : r.expDeltaSigned > 0
-      ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMdAbs(r.expDeltaSigned)}</strong>.`
-      : `Vos dépenses sont <strong>inchangées</strong>.`;
-  const recTxt = r.revDeltaSigned > 0
-    ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMdAbs(r.revDeltaSigned)}</strong>.`
-    : r.revDeltaSigned < 0
-      ? `Vous avez <strong>réduit</strong> les recettes de <strong>${fmtMdAbs(r.revDeltaSigned)}</strong>.`
-      : `Vos recettes sont <strong>inchangées</strong>.`;
-
-  $("#listTitleExp").innerHTML = `${depTxt}`;
-  $("#listTitleRev").innerHTML = `${recTxt}`;
+  // Titres avec signes
+  const expVerb = r.deltaExpTotal<0 ? "réduit" : r.deltaExpTotal>0 ? "augmenté" : "modifié";
+  const revVerb = r.deltaRevTotal>0 ? "augmenté" : r.deltaRevTotal<0 ? "diminué" : "modifié";
+  $("#listTitleExp").innerHTML = `Vous avez <strong>${expVerb}</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong> — Barres par poste : <em>vert = réduit le déficit, rouge = l’augmente</em>.`;
+  $("#listTitleRev").innerHTML = `Vous avez <strong>${revVerb}</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong> — Barres par poste : <em>vert = réduit le déficit, rouge = l’augmente</em>.`;
 
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
   const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
-
   buildListItems("exp", expDeltas);
   buildListItems("rev", revDeltas);
 }
 
-/* --------- PARTAGE (iOS texte; Android/Desktop image si possible) ---------- */
+/* --------- PARTAGE (texte fiable iOS/Android) ---------- */
 async function shareSummary(){
+  const r = compute();
+  const msg = `J’ai réussi à trouver ${fmtMd(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ? ${SHARE_URL}`;
+
   try{
-    const r = compute();
-    const msg = `J’ai réussi à trouver ${fmtMdAbs(r.savingM)} pour le budget de la France sur ce simulateur. Et toi ?`;
-    const shareText = `${msg}\n${SIM_URL}`;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-    if (!isIOS && navigator.canShare){
-      // Image sociale (Android/Desktop)
-      const W=1200, H=630, pad=40;
-      const title = `J’ai trouvé ${fmtMdAbs(r.savingM)}`;
-      const subtitle = BRAND;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-        <defs><linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#0c1636"/><stop offset="1" stop-color="#0b172f"/></linearGradient></defs>
-        <rect width="100%" height="100%" fill="url(#bg)"/>
-        <style>.t{fill:#E8F0FF;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}</style>
-        <text x="${pad}" y="${pad+26}" class="t" font-size="32" font-weight="700">${title}</text>
-        <text x="${pad}" y="${pad+58}" class="t" font-size="20" opacity=".85">${subtitle}</text>
-        <text x="${pad}" y="${H-pad}" class="t" font-size="16" opacity=".7">${SIM_URL}</text>
-      </svg>`;
-      const svgBlob = new Blob([svg], {type:'image/svg+xml'});
-      const url = URL.createObjectURL(svgBlob);
-      const img = new Image();
-      await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; if('decode' in img) img.decode().then(res).catch(()=>{}); });
-      const canvas = document.createElement('canvas'); canvas.width=W; canvas.height=H;
-      const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0);
-      let pngBlob = await new Promise(resolve=>{ try{ canvas.toBlob(b=>resolve(b||null),"image/png",0.92); }catch(_){ resolve(null); } });
-      if(!pngBlob){ const dataURL=canvas.toDataURL("image/png",0.92); const bin=atob(dataURL.split(',')[1]); const ia=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) ia[i]=bin.charCodeAt(i); pngBlob=new Blob([ia],{type:"image/png"}); }
-      URL.revokeObjectURL(url);
-
-      const file = new File([pngBlob], "the805lab-simulateur-budget.png", {type:"image/png"});
-      if (navigator.canShare({files:[file]})){
-        try{ await navigator.share({ files:[file], text: shareText, title: BRAND }); return; }catch(_){}
-      }
-    }
-
     if (navigator.share){
-      try{ await navigator.share({ text: shareText, title: BRAND }); return; }catch(_){}
+      await navigator.share({text: msg}); // un seul lien, pas d’image
+    } else {
+      // fallback desktop : copie + toast
+      await navigator.clipboard.writeText(msg);
+      toast("Message copié dans le presse-papiers.");
     }
-
-    try{ await navigator.clipboard.writeText(shareText); toast("Message copié dans le presse-papiers ✨"); }
-    catch(_){ location.href = `mailto:?subject=${encodeURIComponent(BRAND)}&body=${encodeURIComponent(shareText)}`; }
-  }catch(e){
-    console.error(e);
-    toast("Impossible de préparer le partage.");
+  }catch(_){
+    // utilisateur annule → on ne fait rien
   }
 }
 
@@ -752,24 +654,20 @@ async function onValidate(){
   $("#validateHint").textContent = "Réponse envoyée — résultats en cours d’affichage";
   toast("Réponse envoyée — résultats en cours d’affichage");
 
-  // POST (non bloquant) — évite le préflight iOS
+  // POST form-urlencoded (fiable iOS) + keepalive
   const payload = buildCompactPayload();
-  (async ()=>{
-    try{
-      const body = "payload=" + encodeURIComponent(JSON.stringify(payload));
-      await fetch(ENDPOINT_URL, {
-        method:"POST",
-        headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
-        body
-      });
-    }catch(_){ /* on n'interrompt pas l'UX */ }
-  })();
+  const body = "payload=" + encodeURIComponent(JSON.stringify(payload));
+  fetch(ENDPOINT_URL, {
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded; charset=utf-8"},
+    body, keepalive:true
+  }).catch(()=>{ /* on n'interrompt pas l’UX */ });
 
   // Synthèse immédiate
   $("#summary").style.display="block";
   buildSummary();
 
-  // Référence (moyennes sliders) + count
+  // Référence moyenne + count
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -785,13 +683,13 @@ async function onValidate(){
     $("#ansCountLine").textContent = `Réponses enregistrées : —`;
   }
 
-  // Comparaison
+  // Totaux comparés
   const you = compute();
   const ref  = computeRefFromAverages();
   $("#results").style.display="block";
-  renderBarsZero(you.expDeltaSigned, ref.deltaExpTotal || 0, you.revDeltaSigned, ref.deltaRevTotal || 0);
+  renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
-  // Violons (progressif)
+  // Violons progressifs
   await renderAllViolinsProgressive();
 }
 
