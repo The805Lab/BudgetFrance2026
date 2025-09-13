@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <title>The805Lab - Simulateur Budget</title>
 
-<!-- Plotly -->
+<!-- Plotly pour les distributions -->
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
 <style>
@@ -13,7 +13,10 @@
     --bg:#0a1022; --panel:#0f1a33; --panel2:#0b1530; --ring:#21315a;
     --text:#e8f0ff; --muted:#a7b5cf;
     --ok:#16a34a; --bad:#ef4444;
-    --expBg:#0e254f; --revBg:#0b1f45;
+    --expBg:#120f05;      /* fond dépenses (orange très sombre) */
+    --expBorder:#b45309;  /* orange foncé */
+    --revBg:#0f0a24;      /* fond recettes (violet très sombre) */
+    --revBorder:#7c3aed;  /* violet */
     --chip:#0c1636; --brand:#2563eb;
     --you:#38bdf8; --ref:#eab308; --axis:#94a3b8;
   }
@@ -21,13 +24,14 @@
   body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;touch-action:pan-y}
   .wrap{max-width:980px;margin:0 auto;padding:16px}
 
+  /* Top header */
   .topHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:nowrap}
   .titleCol{min-width:0;flex:1 1 auto}
   h1{margin:0;font-size:1.22rem;line-height:1.25}
   .subtitle{color:var(--muted);font-size:.92rem;margin-top:4px;margin-bottom:10px}
 
   .brandBadge805{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-  .brandBadge805 svg{display:block;width:56px;height:56px} /* même taille qu'avant */
+  .brandBadge805 svg{display:block;width:56px;height:56px}
   @media (max-width:380px){ .brandBadge805 svg{width:48px;height:48px} }
 
   .bar{height:10px;background:#1a2746;border-radius:999px;overflow:hidden;margin:8px 0 14px}
@@ -35,7 +39,8 @@
 
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:14px;margin:12px 0}
   .section{border-radius:16px;border:1px solid var(--ring);margin:14px 0;overscroll-behavior:contain;overflow:visible}
-  .section.exp{background:var(--expBg)} .section.rev{background:var(--revBg)}
+  .section.exp{background:var(--expBg); border-color:var(--expBorder)}
+  .section.rev{background:var(--revBg); border-color:var(--revBorder)}
   .head{padding:12px 14px;background:rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;font-weight:700;flex-wrap:wrap}
   .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:#0b152f;color:#dce7ff;font-size:.8rem}
   .row{padding:12px 14px;border-top:1px dashed #274067}
@@ -43,6 +48,9 @@
   .hint{color:var(--muted);font-size:.9rem;margin-top:2px}
   .detailInfo{color:#97a8c9;font-size:.86rem;margin-top:4px}
   .baseInfo{color:#cbd5e1;font-size:.86rem;margin-top:2px}
+
+  .divider{height:2px; background:linear-gradient(90deg, var(--expBorder), transparent)}
+  .divider.rev{background:linear-gradient(90deg, var(--revBorder), transparent)}
 
   .sliderWrap{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center;margin-top:8px}
   .nudge{width:48px;height:48px;border-radius:12px;border:1px solid var(--ring);background:#0b1633;color:#cfe1ff;cursor:pointer;font-weight:700;font-size:1rem;touch-action:manipulation}
@@ -59,6 +67,7 @@
   .delta{font-variant-numeric:tabular-nums}
   .delta.gain{color:var(--ok)} .delta.loss{color:var(--bad)}
 
+  /* HUD flottant */
   .floatBubble{
     position:fixed; right:14px; bottom:14px; z-index:50;background:#0b172f;border:1px solid var(--ring);
     border-radius:12px; padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35); font-size:.95rem;
@@ -71,7 +80,10 @@
   .btn:disabled{background:#334155;color:#94a3b8;cursor:not-allowed}
   .btn.wide{width:100%} @media (min-width:760px){.btn.wide{width:auto;padding:12px 18px}}
 
+  /* Affichage des résultats : cachés par défaut, visibles avec .show */
   .results{display:none}
+  .results.show{display:block}
+
   .legend{color:var(--muted);font-size:.9rem;margin:6px 0 8px}
 
   /* Grille des violons */
@@ -81,7 +93,7 @@
   .footer{color:var(--muted);font-size:.85rem;margin-top:16px;position:relative;padding-bottom:12px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
 
-  /* Synthèse */
+  /* Synthèse (barres centrées sur 0) */
   .synCard{background:#0b1935;border:1px solid #1e2d55;border-radius:14px;padding:14px}
   .synHeader{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
   .synBadge{border:1px solid #274067;border-radius:999px;padding:2px 8px;color:#d9e3ff;background:#0c1a3a;font-size:.8rem}
@@ -92,20 +104,24 @@
   @media (min-width:760px){.listWrap{grid-template-columns:1fr 1fr}}
   .listBox{border:1px dashed #2a3c64;border-radius:12px;padding:10px}
   .listTitle{font-weight:700;margin-bottom:6px}
-  .zeroLine{position:relative;height:2px;background:rgba(148,163,184,.5);margin:8px 0}
 
-  /* mini bar item */
+  /* Mini-bar per item (synthèse) */
   .item{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
   .itemLabel{color:#dbe7ff}
   .itemVal{font-variant-numeric:tabular-nums}
-  .barLine{position:relative;height:16px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
-  .barSeg{position:absolute;top:0;bottom:0;width:12px;transform:translateX(-50%);border-radius:2px}
-  .barSeg.zero{width:2px;background:rgba(148,163,184,.6)}
-  .barSeg.ref{background:rgba(234,179,8,.45);box-shadow:inset 0 0 0 1px rgba(234,179,8,.6)}
-  .barSeg.you{
-    background:repeating-linear-gradient(45deg, rgba(56,189,248,.5) 0 6px, rgba(56,189,248,0) 6px 12px);
-    border-top:1px solid rgba(56,189,248,.65);
-    border-bottom:1px solid rgba(56,189,248,.65);
+  .barLine{position:relative;height:14px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
+  .barSeg{position:absolute;top:0;height:100%}
+  .barZero{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.65);opacity:.9;z-index:4}
+  .segGood{background:rgba(22,163,74,.9)}
+  .segBad{background:rgba(239,68,68,.9)}
+
+  /* Totaux: jauge centrée zéro + médiane vs vous (transparents) */
+  .barRange{position:relative;height:18px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
+  .rangeRef{position:absolute;top:0;height:100%;background:rgba(234,179,8,.28); /* jaune translucide */ z-index:2}
+  .rangeYou{position:absolute;top:0;height:100%;
+    background:rgba(56,189,248,.30); /* bleu translucide */
+    border-top:1px solid rgba(56,189,248,.45); border-bottom:1px solid rgba(56,189,248,.45);
+    z-index:3
   }
 
   /* Gel après validation */
@@ -122,17 +138,20 @@
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
 
-    <!-- Logo The805Lab (fidèle au visuel fourni) -->
+    <!-- Logo The805Lab (SVG fidèle au badge fourni) -->
     <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
       <svg viewBox="0 0 100 100" role="img" aria-label="The805Lab">
         <defs>
+          <!-- dégradé bleu -> rouge comme sur le visuel -->
           <linearGradient id="g805" x1="15%" y1="10%" x2="85%" y2="90%">
             <stop offset="0%"  stop-color="#0F4C81"/>
             <stop offset="55%" stop-color="#41536B"/>
             <stop offset="100%" stop-color="#B2271C"/>
           </linearGradient>
         </defs>
+        <!-- léger liseré clair autour -->
         <circle cx="50" cy="50" r="48" fill="url(#g805)" stroke="#e5e7eb" stroke-width="1.2"/>
+        <!-- typographie en 3 lignes, centrée, tracking un peu ouvert -->
         <g fill="#ffffff" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" font-weight="800" text-anchor="middle">
           <text x="50" y="28" font-size="14" letter-spacing="2.5">THE</text>
           <text x="50" y="61" font-size="40">805</text>
@@ -159,12 +178,14 @@
   <!-- Dépenses -->
   <div class="section exp" aria-label="Réglages des dépenses">
     <div class="head">Dépenses <span class="badge">curseurs −15 % à +15 %</span></div>
+    <div class="divider"></div>
     <div id="expContainer"></div>
   </div>
 
   <!-- Recettes -->
   <div class="section rev" aria-label="Réglages des recettes">
     <div class="head">Recettes <span class="badge">curseurs −15 % à +15 %</span></div>
+    <div class="divider rev"></div>
     <div id="revContainer"></div>
   </div>
 
@@ -178,7 +199,7 @@
     <div class="hint" id="validateHint" style="margin-top:6px;">Le bouton s’active quand l’économie est entre 40 000 et 45 000 M€.</div>
   </div>
 
-  <!-- Synthèse -->
+  <!-- Synthèse (cachée) -->
   <div id="summary" class="card results" aria-label="Synthèse de mes résultats">
     <div class="synHeader">
       <h2 class="synH">Synthèse de mes résultats</h2>
@@ -200,27 +221,26 @@
     </div>
   </div>
 
-  <!-- Comparaison -->
+  <!-- Comparaison (cachée) -->
   <div id="results" class="card results">
     <h2 style="margin:0 0 10px;font-size:1.06rem">Mes résultats comparés aux autres répondants</h2>
     <div class="hint" id="ansCountLine" style="margin:-2px 0 8px;color:#cbd5e1"></div>
 
-    <!-- Totaux centrés sur 0 -->
     <div class="synCard">
-      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Variation totale des dépenses (M€)</strong></div>
-      <div class="barLine" style="margin-bottom:6px">
-        <div class="barSeg zero" id="barExpZero"></div>
-        <div class="barSeg ref"  id="barExpRef"></div>
-        <div class="barSeg you"  id="barExpYou"></div>
+      <div class="hint" id="barExpTitle" style="margin-bottom:6px"><strong>Dépenses : —</strong></div>
+      <div class="barRange" style="margin-bottom:6px; position:relative">
+        <div class="barSeg" id="barExpZero" style="left:50%;width:2px;background:rgba(148,163,184,.8);z-index:4"></div>
+        <div class="rangeRef" id="barExpRefRange" style="left:50%;width:0%"></div>
+        <div class="rangeYou" id="barExpYouRange" style="left:50%;width:0%"></div>
       </div>
     </div>
 
     <div class="synCard" style="margin-top:10px">
-      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Variation totale des recettes (M€)</strong></div>
-      <div class="barLine" style="margin-bottom:6px">
-        <div class="barSeg zero" id="barRevZero"></div>
-        <div class="barSeg ref"  id="barRevRef"></div>
-        <div class="barSeg you"  id="barRevYou"></div>
+      <div class="hint" id="barRevTitle" style="margin-bottom:6px"><strong>Recettes : —</strong></div>
+      <div class="barRange" style="margin-bottom:6px; position:relative">
+        <div class="barSeg" id="barRevZero" style="left:50%;width:2px;background:rgba(148,163,184,.8);z-index:4"></div>
+        <div class="rangeRef" id="barRevRefRange" style="left:50%;width:0%"></div>
+        <div class="rangeYou" id="barRevYouRange" style="left:50%;width:0%"></div>
       </div>
     </div>
 
@@ -228,13 +248,14 @@
       Chaque graphique montre la distribution des réponses (variation en M€ vs 2024).
     </div>
 
-    <!-- Violons -->
     <div class="section exp" style="margin-top:10px">
       <div class="head">Dépenses — variation (M€)</div>
+      <div class="divider"></div>
       <div id="violins-expenses" class="violinsGrid"></div>
     </div>
     <div class="section rev" style="margin-top:10px">
       <div class="head">Recettes — variation (M€)</div>
+      <div class="divider rev"></div>
       <div id="violins-revenues" class="violinsGrid"></div>
     </div>
   </div>
@@ -244,7 +265,7 @@
   </div>
 </div>
 
-<!-- HUD -->
+<!-- Bulle flottante -->
 <div id="hud" class="floatBubble" aria-live="polite">
   <div>Économie : <strong id="hudSaving">0 M€</strong></div>
   <div style="color:var(--muted)">Écart : <strong id="hudGap">≥40 000 M€</strong></div>
@@ -256,6 +277,16 @@
 /* --------- CONFIG ---------- */
 const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxHnolZm-C31zBPKrg7sWLNLGD9PELL5en5OBDjGuDjPvgZydE_cY_WoNv7Q_-ms8Ur/exec";
 const SHARE_URL = window.location.origin + window.location.pathname;
+
+/* Emoji uniquement pour les CURSEURS */
+const EMOJI_EXP = {
+  prot_soc:"🧓", sante:"🏥", education:"🎓", serv_gen:"⚙️",
+  interets_dette:"💶", aff_econ:"🚧", defense:"🚀", ordre_secu:"🚔",
+  logement:"🏠", environnement:"🌿", culture:"🎭"
+};
+const EMOJI_REV = {
+  imp_prod:"🛍️", cotis:"💼", ir:"👤💶", is:"🏢💶", autres_rec:"📦"
+};
 
 const CFG = {
   target:{min:40000, max:45000},
@@ -294,7 +325,11 @@ const state = {
 /* --------- UTILS ---------- */
 const $ = sel => document.querySelector(sel);
 const fmtM = n => (Math.round(n)).toLocaleString("fr-FR");
-const fmtMd = n => { const sign = n<0 ? "-" : (n>0 ? "" : ""); const abs = Math.round(Math.abs(n)/1000); return sign + abs.toLocaleString("fr-FR") + " Md€"; };
+const fmtMd = n => {
+  const sign = n<0 ? "-" : (n>0 ? "" : "");
+  const abs = Math.round(Math.abs(n)/1000);
+  return sign + abs.toLocaleString("fr-FR") + " Md€";
+};
 const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
 function toast(msg){ const el=$("#toast"); el.textContent=msg; el.style.display="block"; setTimeout(()=>{el.style.display="none"}, 2400); }
 
@@ -311,8 +346,8 @@ function compute(){
   const newDef = newExpM - newRevM;
   const savingM = baseDef - newDef;
 
-  const deltaExpTotal = newExpM - BASE_EXP;
-  const deltaRevTotal = newRevM - BASE_REV;
+  const deltaExpTotal = newExpM - BASE_EXP; // <0 économies
+  const deltaRevTotal = newRevM - BASE_REV; // >0 recettes en plus
 
   return {BASE_EXP, BASE_REV, baseDef, newExp, newRev, newExpM, newRevM, newDeficitM:newDef, savingM, deltaExpTotal, deltaRevTotal};
 }
@@ -325,12 +360,7 @@ function computeRefFromAverages(){
   const BASE_REV = CFG.revenues.reduce((s,b)=>s+b.base,0);
   const newExpM = newExp.reduce((s,x)=>s+x,0);
   const newRevM = newRev.reduce((s,x)=>s+x,0);
-  return {
-    cutsExp: CFG.expenses.reduce((sum,b,i)=>{ const d = newExp[i]-b.base; return sum + (d<0 ? -d : 0); },0),
-    incRev: CFG.revenues.reduce((sum,b,i)=>{ const d = newRev[i]-b.base; return sum + (d>0 ? d : 0); },0),
-    deltaExpTotal: newExpM - BASE_EXP,
-    deltaRevTotal: newRevM - BASE_REV
-  };
+  return { deltaExpTotal: newExpM - BASE_EXP, deltaRevTotal: newRevM - BASE_REV };
 }
 function updateHUD(){
   const r = compute();
@@ -345,15 +375,16 @@ function updateHUD(){
   $("#hud").classList.toggle("ok", inRange);
 }
 
-/* --------- UI (sliders) ---------- */
+/* --------- UI (curseurs + emoji) ---------- */
 function renderBlock(container, list, kind){
   list.forEach((b,idx)=>{
     const row = document.createElement("div");
     row.className="row";
     const id=`${kind}_${idx}`;
     const disabledAttr = b.locked ? "disabled" : "";
+    const emoji = (kind==="exp" ? EMOJI_EXP[b.k] : EMOJI_REV[b.k]) || "";
     row.innerHTML = `
-      <div class="label">${b.label}</div>
+      <div class="label">${emoji ? `<span style="margin-right:6px">${emoji}</span>`:""}${b.label}</div>
       ${b.info?`<div class="detailInfo">${b.info}</div>`:""}
       <div class="baseInfo">Base : ${Math.round(b.base/1000)} Md€</div>
       <div class="sliderWrap">
@@ -420,7 +451,7 @@ function renderBlock(container, list, kind){
   });
 }
 
-/* --------- BACK (POST sans préflight) ---------- */
+/* --------- BACK (payload + envoi, SANS PRÉFLIGHT) ---------- */
 function buildCompactPayload(){
   const r=compute();
   return {
@@ -439,10 +470,12 @@ function postResponseNoPreflight(payloadObj){
     const ok = navigator.sendBeacon(ENDPOINT_URL, new Blob([params.toString()], {type:'application/x-www-form-urlencoded;charset=UTF-8'}));
     if (ok) return;
   }catch(_){}
-  try{ fetch(ENDPOINT_URL, { method:'POST', body: params }); }catch(_){}
+  try{
+    fetch(ENDPOINT_URL, { method:'POST', body: params });
+  }catch(_){}
 }
 
-/* --------- Violin helpers ---------- */
+/* --------- VIOLINS (Plotly) ---------- */
 const FIELD_MAP_EXP = [
   {id:"prot_soc", label:"Protection sociale", field:"E_prot_soc_delta_M€"},
   {id:"sante", label:"Santé", field:"E_sante_delta_M€"},
@@ -484,20 +517,23 @@ function myDeltaForField(field){
 function drawViolinHybrid(divId, values, stats, myValueME, label){
   const violin = {
     type: "violin", orientation: "h",
-    x: values.length? values : [0], y: values.map(_ => ""), name: label,
+    x: values.length? values : [0],
+    y: values.map(_ => ""),
+    name: label,
     points: "all", jitter: 0.6, scalemode: "count", pointpos: 0,
-    marker: { size: 5, opacity: 0.35, color: "rgba(245,203,92,0.7)" },
-    fillcolor: "rgba(245,203,92,0.25)", line: { color: "rgba(0,0,0,0)" },
+    marker: { size: 5, opacity: 0.3, color: "rgba(245,203,92,0.7)" },
+    fillcolor: "rgba(245,203,92,0.18)", /* plus léger pour ne pas masquer */
+    line: { color: "rgba(0,0,0,0)" },
     hovertemplate: "%{x:.0f} M€<extra></extra>"
   };
   const medianX = (typeof stats.median === "number") ? stats.median : 0;
 
   const min = Math.min(stats?.min ?? 0, myValueME ?? 0, medianX ?? 0, 0);
   const max = Math.max(stats?.max ?? 0, myValueME ?? 0, medianX ?? 0, 0);
-  const margin = Math.max(10, (max - min) * 0.06);
+  const margin = Math.max(10, (max - min) * 0.08); // marge un peu plus large
 
   const shapes = [
-    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"rgba(234,179,8,0.65)", width:6 } },
+    { type:"line", x0: medianX, x1: medianX, y0: -0.6, y1: 0.6, line:{ color:"#eab308", width:6 } },
     { type:"line", x0: myValueME, x1: myValueME, y0: -0.7, y1: 0.7, line:{ color:"#38bdf8", width:6 } },
     { type:"line", x0: 0, x1: 0, y0: -0.8, y1: 0.8, line:{ color:"rgba(148,163,184,0.45)", width:2, dash:"dot" } }
   ];
@@ -510,8 +546,8 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
 
   const layout = {
     paper_bgcolor:"#111827", plot_bgcolor:"#111827", font:{color:"#e2e8f0"},
-    /* marges élargies pour que la bordure de la carte reste visible */
-    margin:{l:28,r:28,t:40,b:40},
+    /* marges plus généreuses pour ne pas rogner les cadres */
+    margin:{l:40,r:36,t:28,b:56},
     title:{ text: label, x:0, xanchor:"left", y:0.98, font:{size:14} },
     xaxis:{ title:"Variation (en M€)", gridcolor:"#334155", zerolinecolor:"#334155",
             range:[ min - margin, max + margin ], tickformat:",.0f" },
@@ -523,7 +559,7 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   Plotly.newPlot(divId, [violin], layout, config);
 }
 
-/* --------- RÉSULTATS (GET unique + rendu progressif) ---------- */
+/* --------- RÉSULTATS (un GET) ---------- */
 async function fetchAllDistributions(){
   try{
     const url = ENDPOINT_URL + "?action=violins";
@@ -542,12 +578,12 @@ async function renderAllViolinsProgressive(){
   allMaps.forEach(m=>{
     const div = document.createElement("div");
     div.id = "v-" + m.id;
-    div.style.height = "280px";
+    /* hauteur réduite + padding pour éviter qu'ils mangent les bordures */
+    div.style.height = "240px";
     div.style.background = "rgba(255,255,255,.02)";
     div.style.border = "1px dashed #2a3c64";
     div.style.borderRadius = "10px";
-    div.style.padding = "12px 14px";           /* plus de marge interne */
-    div.style.boxSizing = "border-box";
+    div.style.padding = "10px";
     (FIELD_MAP_EXP.includes(m) ? expWrap : revWrap).appendChild(div);
   });
 
@@ -569,7 +605,7 @@ async function renderAllViolinsProgressive(){
   }
 }
 
-/* --------- BARRES totales centrées sur 0 ---------- */
+/* --------- Jauges totales centrées 0 ---------- */
 function pctInDomain(val, min, max){ if (max===min) return 50; return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)); }
 function renderBarsZero(expYou, expRef, revYou, revRef){
   const vals = [expYou, expRef, revYou, revRef, 0].filter(v=>typeof v==="number" && isFinite(v));
@@ -578,23 +614,38 @@ function renderBarsZero(expYou, expRef, revYou, revRef){
   const dmin = Math.min(...vals) - pad;
   const dmax = Math.max(...vals) + pad;
 
-  const setPos = (sel,val)=>{ document.querySelector(sel).style.left = pctInDomain(val, dmin, dmax) + "%"; };
-  setPos("#barExpZero", 0); setPos("#barExpYou", expYou); setPos("#barExpRef", expRef);
-  setPos("#barRevZero", 0); setPos("#barRevYou", revYou); setPos("#barRevRef", revRef);
+  const setRange = (zeroId, youId, refId, youVal, refVal)=>{
+    const zeroPct = pctInDomain(0, dmin, dmax);
+    const youPct  = pctInDomain(youVal, dmin, dmax);
+    const refPct  = pctInDomain(refVal, dmin, dmax);
+    $(zeroId).style.left = zeroPct + "%";
 
-  $("#barExpTitle").innerHTML =
-    "<strong>Variation totale des dépenses (M€)</strong> — " +
-    "<span style='color:var(--you);font-weight:700'>Vous (" + (expYou>=0?"+":"") + fmtM(expYou) + " M€)</span>, " +
-    "<span style='color:var(--ref);font-weight:700'>Médiane (" + (expRef>=0?"+":"") + fmtM(expRef) + " M€)</span>";
+    const setSpan = (elId, valPct)=>{
+      const left = Math.min(zeroPct, valPct);
+      const width = Math.abs(valPct - zeroPct);
+      const el = $(elId);
+      el.style.left = left + "%";
+      el.style.width = Math.max(1, width) + "%";
+    };
+    setSpan(youId, youPct);
+    setSpan(refId, refPct);
+  };
 
-  $("#barRevTitle").innerHTML =
-    "<strong>Variation totale des recettes (M€)</strong> — " +
-    "<span style='color:var(--you);font-weight:700'>Vous (" + (revYou>=0?"+":"") + fmtM(revYou) + " M€)</span>, " +
-    "<span style='color:var(--ref);font-weight:700'>Médiane (" + (revRef>=0?"+":"") + fmtM(revRef) + " M€)</span>";
+  setRange("#barExpZero", "#barExpYouRange", "#barExpRefRange", expYou, expRef);
+  setRange("#barRevZero", "#barRevYouRange", "#barRevRefRange", revYou, revRef);
+
+  const expTxt = expYou<0 ? `Dépenses : ${fmtMd(expYou)} de diminution`
+                : expYou>0 ? `Dépenses : ${fmtMd(expYou)} d’augmentation`
+                : "Dépenses : aucun changement";
+  const revTxt = revYou>0 ? `Recettes : ${fmtMd(revYou)} d’augmentation`
+                : revYou<0 ? `Recettes : ${fmtMd(revYou)} de diminution`
+                : "Recettes : aucun changement";
+  $("#barExpTitle").innerHTML = `<strong>${expTxt}</strong> — <span style='color:var(--you);font-weight:700'>Vous (${expYou>=0?'+':''}${fmtM(expYou)} M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (${expRef>=0?'+':''}${fmtM(expRef)} M€)</span>`;
+  $("#barRevTitle").innerHTML = `<strong>${revTxt}</strong> — <span style='color:var(--you);font-weight:700'>Vous (${revYou>=0?'+':''}${fmtM(revYou)} M€)</span>, <span style='color:var(--ref);font-weight:700'>Médiane (${revRef>=0?'+':''}${fmtM(revRef)} M€)</span>`;
 }
 
-/* --------- SYNTHÈSE ---------- */
-function buildListItems(kind, items, maxItems=9999){
+/* --------- Synthèse (texte + mini-barres) ---------- */
+function buildListItems(kind, items){
   const modified = items.filter(d=>d.delta!==0).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta));
   const container = kind==="exp" ? $("#sumExpList") : $("#sumRevList");
   container.innerHTML = "";
@@ -616,23 +667,22 @@ function buildListItems(kind, items, maxItems=9999){
     row.className="item";
     row.innerHTML = `<div class="itemLabel">${it.label}</div><div class="itemVal">${(it.delta>=0?"+":"")}${fmtM(it.delta)} M€</div>`;
     const bar = document.createElement("div");
-    bar.className="barLine"; bar.setAttribute("aria-hidden","true");
+    bar.className="barLine";
 
     const seg = document.createElement("div");
-    seg.className="barSeg " + ((kind==="exp" ? it.delta<0 : it.delta>0) ? "segGood":"segBad"); // (classe non stylée, simple info)
+    seg.className="barSeg " + ((kind==="exp" ? it.delta<0 : it.delta>0) ? "segGood":"segBad");
     const zeroPct = pctInDomain(0, min, max);
     const valPct  = pctInDomain(it.delta, min, max);
     const left = Math.min(zeroPct, valPct);
     const width = Math.abs(valPct - zeroPct);
-    const segDiv = document.createElement("div");
-    segDiv.style.position="absolute"; segDiv.style.top="0"; segDiv.style.bottom="0";
-    segDiv.style.left = left + "%";
-    segDiv.style.width = Math.max(2, width) + "%";
-    segDiv.style.background = ((kind==="exp" ? it.delta<0 : it.delta>0) ? "rgba(22,163,74,.9)" : "rgba(239,68,68,.9)");
-    const zero = document.createElement("div");
-    zero.className = "barZero"; zero.style.left = zeroPct + "%";
+    seg.style.left = left + "%";
+    seg.style.width = Math.max(2, width) + "%";
 
-    bar.appendChild(segDiv);
+    const zero = document.createElement("div");
+    zero.className = "barZero";
+    zero.style.left = zeroPct + "%";
+
+    bar.appendChild(seg);
     bar.appendChild(zero);
 
     const wrap = document.createElement("div");
@@ -641,26 +691,14 @@ function buildListItems(kind, items, maxItems=9999){
     container.appendChild(row);
   }
 
-  modified.slice(0,maxItems).forEach(addItem);
+  modified.forEach(addItem);
 }
+
 function buildSummary(){
   const r = compute();
   const inRange = (r.savingM>=CFG.target.min && r.savingM<=CFG.target.max);
   $("#targetBadge").textContent = inRange ? "Dans la cible" : "Hors cible";
-
-  const depTxt = r.deltaExpTotal<0
-    ? `Vous avez <strong>réduit</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
-    : r.deltaExpTotal>0
-      ? `Vous avez <strong>augmenté</strong> les dépenses de <strong>${fmtMd(r.deltaExpTotal)}</strong>.`
-      : `Vous n’avez pas modifié le total des dépenses.`;
-
-  const recTxt = r.deltaRevTotal>0
-    ? `Vous avez <strong>augmenté</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
-    : r.deltaRevTotal<0
-      ? `Vous avez <strong>réduit</strong> les recettes de <strong>${fmtMd(r.deltaRevTotal)}</strong>.`
-      : `Vous n’avez pas modifié le total des recettes.`;
-
-  $("#sumHeadline").innerHTML = `🎯 ${depTxt} ${recTxt} Globalement, vous réduisez le déficit de <strong>${fmtMd(r.savingM)}</strong>.`;
+  $("#sumHeadline").innerHTML = `🎯 Bravo, vous avez trouvé <strong>${fmtMd(r.savingM)}</strong> pour réduire le déficit de la France.`;
 
   const expDeltas = CFG.expenses.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+(b.locked?0:state.expPct[i])/100)) - b.base}));
   const revDeltas = CFG.revenues.map((b,i)=>({label:b.label, delta: Math.round(b.base*(1+state.revPct[i]/100)) - b.base}));
@@ -671,7 +709,7 @@ function buildSummary(){
   buildListItems("rev", revDeltas);
 }
 
-/* --------- PARTAGE ---------- */
+/* --------- Partage ---------- */
 async function shareSummary(){
   try{
     const r = compute();
@@ -679,7 +717,10 @@ async function shareSummary(){
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (navigator.share){
-      if (isIOS){ await navigator.share({ text: textOnly, title:"The805Lab - Simulateur Budget" }); return; }
+      if (isIOS){
+        await navigator.share({ text: textOnly, title:"The805Lab - Simulateur Budget" });
+        return;
+      }
       try{
         const pngBlob = await buildSummaryPNG();
         const file = new File([pngBlob], "budgetlab-mes-resultats.png", {type:"image/png"});
@@ -693,7 +734,10 @@ async function shareSummary(){
     }
     try{ await navigator.clipboard.writeText(textOnly); toast("Message copié. Collez-le dans votre app de messagerie."); }
     catch(_){ toast("Partage non supporté. Copiez/collez ce message : " + textOnly); }
-  }catch(e){ console.error(e); toast("Partage indisponible sur cet appareil."); }
+  }catch(e){
+    console.error(e);
+    toast("Partage indisponible sur cet appareil.");
+  }
 }
 
 async function buildSummaryPNG(){
@@ -744,15 +788,25 @@ async function buildSummaryPNG(){
   const svgBlob = new Blob([svg], {type:'image/svg+xml'});
   const url = URL.createObjectURL(svgBlob);
   const img = new Image();
-  await new Promise((resolve,reject)=>{ img.onload = resolve; img.onerror = reject; img.src = url; if ('decode' in img) { img.decode().then(resolve).catch(()=>{}); }});
-  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0); URL.revokeObjectURL(url);
+  await new Promise((resolve,reject)=>{
+    img.onload = resolve; img.onerror = reject; img.src = url;
+    if ('decode' in img) { img.decode().then(resolve).catch(()=>{}); }
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img,0,0);
+  URL.revokeObjectURL(url);
 
-  let pngBlob = await new Promise(resolve=>{ try{ canvas.toBlob(b=>resolve(b||null),"image/png",0.92); }catch(_){ resolve(null); }});
+  let pngBlob = await new Promise(resolve=>{
+    try{ canvas.toBlob(b=>resolve(b||null),"image/png",0.92); }catch(_){ resolve(null); }
+  });
   if(!pngBlob){
     const dataURL = canvas.toDataURL("image/png",0.92);
-    const bstr = atob(dataURL.split(',')[1]); const mime = dataURL.split(',')[0].split(':')[1].split(';')[0];
-    const ia = new Uint8Array(bstr.length); for (let i=0;i<bstr.length;i++) ia[i]=bstr.charCodeAt(i);
+    const bstr = atob(dataURL.split(',')[1]);
+    const mime = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    const ia = new Uint8Array(bstr.length);
+    for (let i=0;i<bstr.length;i++) ia[i]=bstr.charCodeAt(i);
     pngBlob = new Blob([ia],{type:mime});
   }
   return pngBlob;
@@ -769,12 +823,17 @@ async function onValidate(){
   editBtn.style.display = "inline-flex";
   shareBtn.style.display = "inline-flex";
 
+  // POST fire-and-forget
   postResponseNoPreflight(buildCompactPayload());
 
-  $("#summary").style.display="block";
+  // Affiche synthèse immédiatement puis comparaison
+  $("#summary").classList.add("show");
   buildSummary();
+
+  // Nettoyer la ligne sous le bouton
   $("#validateHint").textContent = "";
 
+  // Référence (moyennes) + count puis barres et violons
   try{
     const statsRes = await fetch(ENDPOINT_URL + "?stats=1", {method:"GET", cache:"no-cache"});
     const stats = await statsRes.json();
@@ -786,21 +845,28 @@ async function onValidate(){
     } else {
       $("#ansCountLine").textContent = `Réponses enregistrées : —`;
     }
-  }catch(_){ $("#ansCountLine").textContent = `Réponses enregistrées : —`; }
+  }catch(_){
+    $("#ansCountLine").textContent = `Réponses enregistrées : —`;
+  }
 
   const you = compute();
   const ref  = computeRefFromAverages();
-  $("#results").style.display="block";
+  $("#results").classList.add("show");
   renderBarsZero(you.deltaExpTotal, ref.deltaExpTotal || 0, you.deltaRevTotal, ref.deltaRevTotal || 0);
 
   await renderAllViolinsProgressive();
 }
+
 function onEdit(){
   state.submitted = false;
   document.body.removeAttribute('data-frozen');
   $("#validateBtn").disabled = false;
   $("#editBtn").style.display = "none";
   $("#validateHint").textContent="Modifiez vos curseurs puis revalidez.";
+
+  // Remasquer les blocs résultats
+  $("#summary").classList.remove("show");
+  $("#results").classList.remove("show");
 }
 
 /* --------- INIT ---------- */
@@ -811,6 +877,10 @@ function init(){
   $("#validateBtn").addEventListener("click", onValidate);
   $("#editBtn").addEventListener("click", onEdit);
   $("#shareBtn").addEventListener("click", shareSummary);
+
+  // Sécurité iOS : garantir masquage initial
+  $("#summary").classList.remove("show");
+  $("#results").classList.remove("show");
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
