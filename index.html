@@ -14,11 +14,11 @@
     --text:#e8f0ff; --muted:#a7b5cf;
     --ok:#16a34a; --bad:#ef4444;
 
-    /* ↓↓↓ Demande : Dépenses en bleu très légèrement plus foncé que le fond ↓↓↓ */
-    --expBg:#081226;        /* bleu + sombre que --bg */
-    --expBorder:#1b2f5b;    /* bleu un peu plus marqué pour le contour */
-    /* Recettes inchangées */
-    --revBg:#0f0a24;      
+    /* Dépenses : bleu très légèrement plus foncé que le fond */
+    --expBg:#081226;
+    --expBorder:#1b2f5b;
+    /* Recettes */
+    --revBg:#0f0a24;
     --revBorder:#7c3aed;
 
     --chip:#0c1636; --brand:#2563eb;
@@ -94,6 +94,17 @@
   .violinsGrid{display:grid;grid-template-columns:1fr;gap:12px}
   @media (min-width:760px){.violinsGrid{grid-template-columns:1fr 1fr}}
 
+  /* Conteneur stable pour chaque violon (évite le “collapse” iOS et les débordements) */
+  .violinBox{
+    height:210px;
+    overflow:hidden;
+    padding:10px 12px;
+    background:rgba(255,255,255,.02);
+    border:1px dashed #2a3c64;
+    border-radius:10px;
+  }
+  @media (max-width:520px){ .violinBox{ height:200px; } }
+
   .footer{color:var(--muted);font-size:.85rem;margin-top:16px;position:relative;padding-bottom:12px}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#0b172f;border:1px solid var(--ring);color:#e6f0ff;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:60;display:none}
 
@@ -119,7 +130,7 @@
   .segGood{background:rgba(22,163,74,.9)}
   .segBad{background:rgba(239,68,68,.9)}
 
-  /* Totaux: jauge centrée zéro + médiane vs vous (déjà corrigées précédemment) */
+  /* Totaux: jauge centrée zéro + médiane vs vous */
   .barRange{position:relative;height:18px;border:1px solid #233047;border-radius:999px;background:#0b1633;overflow:hidden}
   .rangeRef{
     position:absolute; top:1px; bottom:1px; z-index:2;
@@ -153,28 +164,24 @@
       <h1>À vous de trouver <strong>40 Md€</strong> pour le budget 2026 de la France</h1>
       <div class="subtitle">Référence : <em>base 2024</em></div>
     </div>
-   <!-- Logo The805Lab (SVG fidèle au badge fourni) -->
-<div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
-  <svg viewBox="0 0 100 100" role="img" aria-label="The805Lab">
-    <defs>
-      <!-- dégradé bleu -> rouge comme sur le visuel -->
-      <linearGradient id="g805" x1="15%" y1="10%" x2="85%" y2="90%">
-        <stop offset="0%"  stop-color="#0F4C81"/>
-        <stop offset="55%" stop-color="#41536B"/>
-        <stop offset="100%" stop-color="#B2271C"/>
-      </linearGradient>
-    </defs>
-    <!-- léger liseré clair autour -->
-    <circle cx="50" cy="50" r="48" fill="url(#g805)" stroke="#e5e7eb" stroke-width="1.2"/>
-    <!-- typographie en 3 lignes, centrée, tracking un peu ouvert -->
-    <g fill="#ffffff" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" font-weight="800" text-anchor="middle">
-      <text x="50" y="28" font-size="14" letter-spacing="2.5">THE</text>
-      <text x="50" y="61" font-size="40">805</text>
-      <text x="50" y="82" font-size="16" letter-spacing="2">LAB</text>
-    </g>
-  </svg>
-</div>
-
+    <!-- Logo The805Lab (SVG fidèle au badge fourni) -->
+    <div class="brandBadge805" aria-label="The805Lab" title="The805Lab">
+      <svg viewBox="0 0 100 100" role="img" aria-label="The805Lab">
+        <defs>
+          <linearGradient id="g805" x1="15%" y1="10%" x2="85%" y2="90%">
+            <stop offset="0%"  stop-color="#0F4C81"/>
+            <stop offset="55%" stop-color="#41536B"/>
+            <stop offset="100%" stop-color="#B2271C"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#g805)" stroke="#e5e7eb" stroke-width="1.2"/>
+        <g fill="#ffffff" font-family="Inter,system-ui,Segoe UI,Roboto,Arial" font-weight="800" text-anchor="middle">
+          <text x="50" y="28" font-size="14" letter-spacing="2.5">THE</text>
+          <text x="50" y="61" font-size="40">805</text>
+          <text x="50" y="82" font-size="16" letter-spacing="2">LAB</text>
+        </g>
+      </svg>
+    </div>
   </div>
 
   <!-- Intro -->
@@ -547,10 +554,9 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
   const margin = Math.max(10, (max - min) * 0.06);
 
   const shapes = [
-    /* ↓↓↓ réduction de l'amplitude verticale pour rester dans le cadre ↓↓↓ */
     { type:"line", x0: medianX, x1: medianX, y0: -0.42, y1: 0.42, line:{ color:"#eab308", width:6 } },
     { type:"line", x0: myValueME, x1: myValueME, y0: -0.46, y1: 0.46, line:{ color:"#38bdf8", width:6 } },
-    { type:"line", x0: 0, x1: 0, y0: -0.52, y1: 0.52, line:{ color:"rgba(255,255,255,0.75)", width:2, dash:"dot" } }
+    { type:"line", x0: 0, x1: 0, y0: -0.52, y1: 0.52, line:{ color:"rgba(255,255,255,0.85)", width:2, dash:"dot" } }
   ];
   const annotations = [
     { x: myValueME, y: 0.58, text: "Vous : " + fmtM(myValueME) + " M€", showarrow:true, arrowhead:6, ax:0, ay:-26,
@@ -561,8 +567,7 @@ function drawViolinHybrid(divId, values, stats, myValueME, label){
 
   const layout = {
     paper_bgcolor:"#111827", plot_bgcolor:"#111827", font:{color:"#e2e8f0"},
-    /* ↓↓↓ hauteur plus basse + marges plus généreuses pour ne plus déborder ↓↓↓ */
-    height: 185,
+    autosize:true,                                /* ← remplace l'ancienne height fixe */
     margin:{l:48,r:30,t:42,b:26},
     title:{ text: label, x:0, xanchor:"left", y:0.98, font:{size:14} },
     xaxis:{ title:null, gridcolor:"#334155", zerolinecolor:"#334155",
@@ -594,12 +599,8 @@ async function renderAllViolinsProgressive(){
   allMaps.forEach(m=>{
     const div = document.createElement("div");
     div.id = "v-" + m.id;
-    /* ↓↓↓ conteneur qui “clipse” proprement le graphe + un peu plus d'air ↓↓↓ */
-    div.style.background = "rgba(255,255,255,.02)";
-    div.style.border = "1px dashed #2a3c64";
-    div.style.borderRadius = "10px";
-    div.style.padding = "10px 12px";
-    div.style.overflow = "hidden";
+    /* conteneur dédié et stable */
+    div.className = "violinBox";
     (FIELD_MAP_EXP.includes(m) ? expWrap : revWrap).appendChild(div);
   });
 
